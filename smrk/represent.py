@@ -18,7 +18,9 @@ class Subject:
         self.time = None
 
     def at_place(self, location: str) -> None:
-        if isinstance(location, str):
+        if len(location) <1:
+            self.place = "Prague"
+        elif isinstance(location, str):
             self.place = location
         else:
             self.place = str(location)
@@ -46,4 +48,4 @@ class Subject:
         return object_list, self.computed.planets_degrees_ut, label_list
 
     def report(self):
-        Report(self.computed).print_report()
+        return Report(self.computed)
