@@ -1,3 +1,4 @@
+from context import Actual
 from datetime import datetime
 from dateutil.parser import parse
 from kerykeion import AstrologicalSubject, KerykeionChartSVG, Report
@@ -18,28 +19,22 @@ class Subject:
         self.time = None
 
     def at_place(self, location: str) -> None:
-        if len(location) <1:
-            self.place = "Prague"
-        elif isinstance(location, str):
-            self.place = location
-        else:
-            self.place = str(location)
+        self.place = Actual(location, t="loc")
 
     def at_time(self, time: str) -> None:
-        if isinstance(time, str) and len(time) > 0:
-            self.time = parse(time)
-        elif isinstance(time, datetime):
-            self.time = time
-        else:
-            self.time = datetime.now()
+        self.time = Actual(time, t="date")
         self.computed = AstrologicalSubject(
             self.name,
-            self.time.year,
-            self.time.month,
-            self.time.day,
-            self.time.hour,
-            self.time.minute,
-            self.place,
+            self.time.value.year,
+            self.time.value.month,
+            self.time.value.day,
+            self.time.value.hour,
+            self.time.value.minute,
+            lng=self.place.value.longitude,
+            lat=self.place.value.latitude,
+            tz_str=self.place.tz,
+            city=self.place.value.address,
+            nation="GB",
         )
 
     def data(self):

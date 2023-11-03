@@ -2,6 +2,7 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # Import the 3D plotting toolkit
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import plotly.graph_objs as go
 
 
 def display_radial(categories: list, values_degrees: list, labels: list) -> None:
@@ -22,6 +23,38 @@ def display_radial(categories: list, values_degrees: list, labels: list) -> None
     ax.set_xticks(theta)
     ax.set_xticklabels(categories)
     plt.show()
+
+
+def figure_3d(objects: object):
+    figure = go.Figure()
+    for o in objects:
+        # Convert altitude and azimuth to polar coordinates
+        azimuth = (90 - objects[o][0].degrees) % 360
+        altitude = 90 - objects[o][1].degrees
+        # Create a scatter plot for each object
+        figure.add_trace(
+            go.Scatterpolar(
+                r=[altitude],
+                theta=[azimuth],
+                mode="markers",
+                marker=dict(
+                    size=5,
+                    opacity=0.75,
+                ),
+                name=o,
+            )
+        )
+    #
+    figure.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, 90],
+            ),
+        ),
+        title="Celestial Coordinates of Planets",
+    )
+    return figure
 
 
 def display_3d(categories: list, values_degrees: list, labels: list) -> None:

@@ -1,15 +1,15 @@
 from context import Actual
 from current import Observation
+from display import figure_3d
 from represent import Subject
 import streamlit as st
 from translation import change_language
 
 
 def main():
-    # 1 - initial language setting 
+    # 1 - initial language setting
     # TODO: language will be read from CSV file
     lang = change_language(default="cz")
-    
 
     # 2 - set page layout
     st.set_page_config(
@@ -18,11 +18,11 @@ def main():
         layout="wide",
         initial_sidebar_state="expanded",
     )
-    st.title("Astro - visualizer")
+    # st.title("Astro - visualizer")
     sidebar_cont = {
         "first": st.sidebar.container(),
         "second": st.sidebar.container(),
-        "confirm": st.sidebar.container()
+        "confirm": st.sidebar.container(),
     }
 
     with sidebar_cont["first"]:
@@ -32,7 +32,7 @@ def main():
                 loc1 = st.text_input(lang["place"])
                 start_date = st.date_input(lang["date"], value=Actual().value)
                 start_time = st.time_input(lang["time"], Actual().value)
-                st.form_submit_button("Verify setup")
+                st.form_submit_button("Verify setup")  # TODO: translate
     with sidebar_cont["second"]:
         with st.expander(lang["second"]):
             with st.form(key="second_info"):
@@ -40,20 +40,26 @@ def main():
                 loc2 = st.text_input(lang["place"])
                 end_date = st.date_input(lang["date"], value=Actual().value)
                 end_time = st.time_input(lang["time"], Actual().value)
-                st.form_submit_button("This will be a combination....")
+                st.form_submit_button("Verify setup")  # TODO: translate
     with sidebar_cont["confirm"]:
         with st.form(key="confirmation"):
-            computation = st.selectbox(lang["repr"],
-                                  [lang[val] for val in lang.keys() if "repr_" in val])
+            computation = st.selectbox(
+                lang["repr"], [lang[val] for val in lang.keys() if "repr_" in val]
+            )
             compute = st.form_submit_button(lang["run"])
 
     # 3 - act if button pressed
     if compute:  # CASE selected custom fields to visualize
-        st.write(" ".join((lang["display"], name1, lang["in_time"], str(start_date), "loc:", loc1)))
+        st.write(
+            " ".join(
+                (lang["display"], name1, lang["in_time"], str(start_date), "loc:", loc1)
+            )
+        )
         if computation == lang["repr_real"]:
             look = Observation()
-            planets = look.where_is(Actual().value)
-            st.write(planets)
+            planets = look.where_is(Actual().value, of="altaz")
+            figure = figure_3d(planets)
+            st.plotly_chart(figure, theme="streamlit", use_container_width=True)
         elif computation == lang["repr_zodi"]:
             someone = Subject(name1)
             someone.at_place(loc1)
@@ -65,19 +71,19 @@ def main():
             someone.at_place(loc1)
             someone.at_time(start_date)
             report = someone.report()
-            st.markdown(report.houses_table.replace('+', '|'))
+            st.markdown(report.houses_table.replace("+", "|"))
         elif computation == lang["repr_plan"]:
             someone = Subject(name1)
             someone.at_place(loc1)
             someone.at_time(start_date)
             report = someone.report()
-            st.markdown(report.planets_table.replace('+', '|'))
+            st.markdown(report.planets_table.replace("+", "|"))
         elif computation == lang["repr_moon"]:
             someone = Subject(name1)
             someone.at_place(loc1)
             someone.at_time(start_date)
             report = someone.report()
-            st.markdown(report.data_table.replace('+', '|'))
+            st.markdown(report.data_table.replace("+", "|"))
     else:
         st.write(lang["run"])
 

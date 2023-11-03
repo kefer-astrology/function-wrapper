@@ -29,12 +29,20 @@ class Observation:
             "pluto": self.system[9],
         }
 
-    def where_is(self, t: object) -> object:
+    def where_is(self, t: object, of: str = "radec") -> object:
         if self.observed:
             return self.centerpoint.at(self.format_time(t)).observe(self.observed)
-        else:
+        elif of == "radec":
             return {
                 planet: self.centerpoint.at(self.format_time(t)).observe(vector).radec()
+                for planet, vector in self.o.items()
+            }
+        else:
+            return {
+                planet: self.centerpoint.at(self.format_time(t))
+                .observe(vector)
+                .apparent()
+                .altaz()
                 for planet, vector in self.o.items()
             }
 
