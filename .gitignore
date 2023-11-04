@@ -162,9 +162,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# source and result files for astro computation
+# source,cache and result files for astro computation
+cache/
 result/
 source/
-
-# cache for computations
-cache/
