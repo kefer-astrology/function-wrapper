@@ -5,7 +5,7 @@ from pathlib import Path
 
 def settings_file() -> Path:
     temp = Path(__file__).parent  # db file stored in the same folder
-    print(f"Returned value: {temp / 'settings.db'}")
+    # print(f"Returned value: {temp / 'settings.db'}")
     return temp / "settings.db"
 
 
@@ -17,4 +17,4 @@ def change_language(default: str = "cz") -> dict:
 
 if __name__ == "__main__":
     t = change_language("cz")
-    print(t["display"])
+    # print(t["display"])
