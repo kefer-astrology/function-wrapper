@@ -122,6 +122,8 @@ celerybeat.pid
 # Environments
 .env
 .venv
+# specific venv name
+astro/
 env/
 venv/
 ENV/

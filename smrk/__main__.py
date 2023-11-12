@@ -3,28 +3,24 @@ from display import display_radial, display_3d
 from pathlib import Path
 from represent import Subject, Relation
 import sys
-from translation import change_language
+from settings import change_language
 
-
-def create_dir(dir_name):
-    """try to create directory and continue of exists
-    %dir_name% path to directory
-    """
+def create_dir(location):
     try:
-        Path(dir_name).mkdir(parents=True, exist_ok=False)
+        Path(location).mkdir(parents=True, exist_ok=False)
     except FileExistsError:
-        print(f"Folder {dir_name} is already there")
+        print(f"Folder {location} is already there")
     else:
-        print(f"Folder {dir_name} was created")
+        print(f"Folder {location} was created")
 
 
-def get_source_file(dir_name: str = "source", file_name="de430.bsp"):
-    path = Path(f"./{dir_name}/{file_name}")
+def get_source_file(location: str = "source", file_name="de430.bsp"):
+    path = Path(f"./{location}/{file_name}")
     if path.is_file():
-        print(f"SPK file ./{dir_name}/{file_name} exists...")
+        print(f"SPK file ./{location}/{file_name} exists...")
     else:
         print(
-            f"SPK file ./{dir_name}/{file_name} downloading, wait some time please..."
+            f"SPK file ./{location}/{file_name} downloading, wait some time please..."
         )
         # https://stackoverflow.com/questions/11768214/python-download-a-file-from-an-ftp-server
         import shutil
@@ -34,9 +30,9 @@ def get_source_file(dir_name: str = "source", file_name="de430.bsp"):
         bsp_location = f"https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/{file_name}"
 
         with closing(request.urlopen(bsp_location)) as r:
-            with open(f"./{dir_name}/{file_name}", "wb") as f:
+            with open(f"./{location}/{file_name}", "wb") as f:
                 shutil.copyfileobj(r, f)
-        print(f"SPK file ./{dir_name}/{file_name} downloaded ....")
+        print(f"SPK file ./{location}/{file_name} downloaded ....")
 
 
 if __name__ == "__main__":

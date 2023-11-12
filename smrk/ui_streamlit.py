@@ -3,7 +3,7 @@ from current import Observation
 from display import figure_3d
 from represent import Subject
 import streamlit as st
-from translation import change_language
+from settings import change_language
 
 
 def main():
@@ -32,7 +32,9 @@ def main():
                 loc1 = st.text_input(lang["place"])
                 start_date = st.date_input(lang["date"], value=Actual().value)
                 start_time = st.time_input(lang["time"], Actual().value)
-                st.form_submit_button("Verify setup")  # TODO: translate
+                st.form_submit_button(
+                    "Verify setup", use_container_width=True
+                )  # TODO: translate, on_click=set1()
     with sidebar_cont["second"]:
         with st.expander(lang["second"]):
             with st.form(key="second_info"):
@@ -40,7 +42,9 @@ def main():
                 loc2 = st.text_input(lang["place"])
                 end_date = st.date_input(lang["date"], value=Actual().value)
                 end_time = st.time_input(lang["time"], Actual().value)
-                st.form_submit_button("Verify setup")  # TODO: translate
+                st.form_submit_button(
+                    "Verify setup", use_container_width=True
+                )  # TODO: translate, on_click=set2()
     with sidebar_cont["confirm"]:
         with st.form(key="confirmation"):
             computation = st.selectbox(
