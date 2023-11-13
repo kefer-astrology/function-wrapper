@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time, date
 from dateutil.parser import parse
 from geopy.geocoders import Nominatim
 from geopy.location import Location
@@ -7,19 +7,21 @@ from timezonefinder import TimezoneFinder
 
 class Actual:
     # Universal holder for time & position
-    # TODO: handle various data formats (d/m/y, y/m/d, ...)
-    def __init__(self, content: str = "", t: str = "time") -> None:
+    # TODO: 1/ handle various data formats (d/m/y, y/m/d, ...)
+    # TODO: 2/ adjust for multiple items passed (kwargs)
+    def __init__(self, *kwargs, t: str = "time") -> None:
         if t == "time" or t == "date":
             self.service = None
-            if isinstance(content, str) and len(content) > 0:
-                self.value = parse(content)
-            elif isinstance(content, datetime):
-                self.value = content
+            if isinstance(kwargs, str) and len(kwargs) > 0:
+                self.value = parse(kwargs)
+            elif isinstance(kwargs, (datetime, date, time)):
+                self.value = kwargs
             else:
+                print("Defaulting to current time stamp")
                 self.value = datetime.now()
         elif t == "place" or t == "loc":
             self.service = Nominatim(user_agent="astro")
-            self.value = self.move_around_globe(content)
+            self.value = self.move_around_globe(kwargs)
             self.tz = self.what_time_zone()
         else:
             print(f"Unknown format of a context detected: {t}")
@@ -33,7 +35,7 @@ class Actual:
     def add_some_time(self, of):
         if isinstance(of, str):
             self.value += parse(of)
-        elif isinstance(of, datetime):
+        elif isinstance(of, (datetime, date, time)):
             self.value = datetime.combine(self.value, of)
 
     def move_around_globe(self, city: str):
@@ -55,6 +57,14 @@ class Actual:
         else:
             tf = TimezoneFinder()
             return tf.timezone_at(lng=self.value.longitude, lat=self.value.latitude)
+
+
+def combine_date_time(date, time):
+    return datetime.combine(date, time)
+
+
+def now():
+    return datetime.now()
 
 
 if __name__ == "__main__":
