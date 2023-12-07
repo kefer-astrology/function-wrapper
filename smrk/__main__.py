@@ -1,7 +1,7 @@
 import argparse
 from display import display_radial, display_3d
 from pathlib import Path
-from represent import Subject, Relation
+from project import Subject, Relation
 import sys
 from settings import change_language
 

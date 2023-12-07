@@ -1,7 +1,8 @@
-from datetime import datetime, time, date
+from datetime import datetime, time, date, timedelta
 from dateutil.parser import parse
 from geopy.geocoders import Nominatim
 from geopy.location import Location
+import pytz
 from timezonefinder import TimezoneFinder
 
 
@@ -33,7 +34,9 @@ class Actual:
             return str(self.value)
 
     def add_some_time(self, of):
-        if isinstance(of, str):
+        if isinstance(of, int):
+            self.value += timedelta(days=of)
+        elif isinstance(of, str):
             self.value += parse(of)
         elif isinstance(of, (datetime, date, time)):
             self.value = datetime.combine(self.value, of)
@@ -58,9 +61,16 @@ class Actual:
             tf = TimezoneFinder()
             return tf.timezone_at(lng=self.value.longitude, lat=self.value.latitude)
 
+    def assign_time_zone(self, tz=None):
+        # UTC by default, TODO: sanity check
+        if not tz:
+            self.value = self.value.replace(tzinfo=pytz.UTC)
+        else:
+            self.value = self.value.replace(tzinfo=tz)
 
-def combine_date_time(date, time):
-    return datetime.combine(date, time)
+
+def combine_date_time(input_date, input_time):
+    return datetime.combine(input_date, input_time)
 
 
 def now():

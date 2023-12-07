@@ -1,7 +1,7 @@
 from context import Actual, combine_date_time, now
-from current import Observation
+from current import Observation, Almanac
 from display import figure_3d
-from represent import Subject
+from project import Subject
 import streamlit as st
 from settings import change_language
 
@@ -83,11 +83,14 @@ def main():
             figure = figure_3d(planets)
             st.plotly_chart(figure, theme="streamlit", use_container_width=True)
         elif computation == lang["repr_zodi"]:
-            someone = Subject(name1)
-            someone.at_place(loc1)
-            someone.at_time(date1)
-            report = someone.report()
-            st.write(report.print_report())
+            look = Almanac(atype="season")
+            st.warning(f'{lang["spring"]} {lang["equinox"]}: ')
+            st.line_chart(look.report())
+            # someone = Subject(name1)
+            # someone.at_place(loc1)
+            # someone.at_time(date1)
+            # report = someone.report()
+            # st.write(report.print_report())
         elif computation == lang["repr_hous"]:
             someone = Subject(name1)
             someone.at_place(loc1)
@@ -101,11 +104,9 @@ def main():
             report = someone.report()
             st.markdown(report.planets_table.replace("+", "|"))
         elif computation == lang["repr_moon"]:
-            someone = Subject(name1)
-            someone.at_place(loc1)
-            someone.at_time(date1)
-            report = someone.report()
-            st.markdown(report.data_table.replace("+", "|"))
+            look = Almanac()
+            st.warning("Moon phases report")
+            st.line_chart(look.report())
     else:
         st.write(lang["run"])
 

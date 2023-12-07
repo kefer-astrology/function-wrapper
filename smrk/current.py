@@ -1,3 +1,4 @@
+from context import Actual
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from display import generate_moon_dec, generate_planets_dec, generate_skyfield_data
@@ -5,15 +6,17 @@ import pandas as pd
 from skyfield.api import load, Topos
 from skyfield import timelib, almanac
 
+
 # plt.rcParams["figure.figsize"] = (16, 6) # (w, h)
 
 
 class Observation:
     def __init__(
-        self, source_file: str = "de430.bsp", lat: str = "50.1 N", lon: str = "14.4 E"
+            self, source_file: str = "de430.bsp", lat: str = "50.1 N", lon: str = "14.4 E"
     ):
+        self.almanac = None
         self.system = load(f"./source/{source_file}")
-        self.centerpoint = self.system["earth"] + Topos(lat, lon)
+        self.center_point = self.system["earth"] + Topos(lat, lon)
         self.ts = load.timescale()
         self.observed = None
         self.o = {
@@ -31,15 +34,15 @@ class Observation:
 
     def where_is(self, t: object, of: str = "radec") -> object:
         if self.observed:
-            return self.centerpoint.at(self.format_time(t)).observe(self.observed)
+            return self.center_point.at(self.format_time(t)).observe(self.observed)
         elif of == "radec":
             return {
-                planet: self.centerpoint.at(self.format_time(t)).observe(vector).radec()
+                planet: self.center_point.at(self.format_time(t)).observe(vector).radec()
                 for planet, vector in self.o.items()
             }
         else:
             return {
-                planet: self.centerpoint.at(self.format_time(t))
+                planet: self.center_point.at(self.format_time(t))
                 .observe(vector)
                 .apparent()
                 .altaz()
@@ -50,14 +53,14 @@ class Observation:
         # %t%: timestamp value
         if self.observed:
             return (
-                self.centerpoint.at(self.format_time(t))
+                self.center_point.at(self.format_time(t))
                 .observe(self.observed)
                 .radec()[1]
                 .degrees
             )
         else:
             return {
-                planet: self.centerpoint.at(self.format_time(t))
+                planet: self.center_point.at(self.format_time(t))
                 .observe(vector)
                 .radec()[1]
                 .degrees
@@ -67,7 +70,7 @@ class Observation:
     def distance(self, t):
         # %t%: timestamp value
         return (
-            self.centerpoint.at(self.format_time(t))
+            self.center_point.at(self.format_time(t))
             .observe(self.observed)
             .radec()[-1]
             .au
@@ -75,7 +78,7 @@ class Observation:
 
     def moon_phase(self, t):
         # %t%: timestamp value
-        return almanac.moon_phase(self.system, self.centerpoint.at(self.format_time(t)))
+        return almanac.moon_phase(self.system, self.center_point.at(self.format_time(t)))
 
     def format_time(self, ts_object: object, format: str = "%Y-%m-%d %H:%M") -> object:
         if isinstance(ts_object, timelib.Time):
@@ -92,13 +95,47 @@ class Observation:
             return ts_object
 
 
+class Almanac(Observation):
+    def __init__(self, ts_from=Actual(), ts_to=Actual(), context=almanac.MOON_PHASES, atype="moon"):
+        # days (+150 / -150)
+        super().__init__()
+        if atype == 'moon':
+            ts_from, ts_to = self.span(days=30, start=ts_from, end=ts_to)
+            self.observed = almanac.find_discrete(ts_from, ts_to, almanac.moon_phases(self.system))
+            self.almanac = almanac.MOON_PHASES
+        elif atype == "season":
+            ts_from, ts_to = self.span(days=365, start=ts_from, end=ts_to)
+            self.observed = almanac.find_discrete(ts_from, ts_to, almanac.seasons(self.system))
+            self.almanac = almanac.SEASONS
+        elif atype == "meridian":
+            ts_from, ts_to = self.span(days=100, start=ts_from, end=ts_to)
+            self.observed = almanac.find_discrete(ts_from, ts_to, almanac.meridian_transits(self.system))
+            self.almanac = almanac.MERIDIAN_TRANSITS
+
+    def report(self):
+        o_o = {}
+        for index in range(len(self.observed[0])):
+            evt_time = self.observed[0][index].utc_strftime()
+            o_o [evt_time] = self.almanac[self.observed[-1][index]]
+        return o_o
+
+    def span(self, days, start, end):
+        start.add_some_time((-1)*days/2)
+        start.assign_time_zone()
+        end.add_some_time(days/2)
+        end.assign_time_zone()
+        return self.ts.from_datetime(start.value), self.ts.from_datetime(end.value)
+
+
+
+
 def frequency(day=0, hour=0, minute=0):
     if minute:
         return f"{minute}min"
     elif hour:
-        return f"{60*hour}min"
+        return f"{60 * hour}min"
     elif day:
-        return f"{1440*day}min"  # 1 day timestep
+        return f"{1440 * day}min"  # 1 day timestep
 
 
 def observer(start, end, gran):
@@ -111,9 +148,9 @@ def observer(start, end, gran):
     """
     comp = Observation()
     print(
-        f"""from {start.strftime('%d/%m/%Y')} to {end.strftime('%d/%m/%Y')} at time step {gran.total_seconds()/60} minutes"""
+        f"""from {start.strftime('%d/%m/%Y')} to {end.strftime('%d/%m/%Y')} at time step {gran.total_seconds() / 60} minutes"""
     )
-    time_span = pd.date_range(start, end, freq=f"{int(gran.total_seconds()/60)}min")
+    time_span = pd.date_range(start, end, freq=f"{int(gran.total_seconds() / 60)}min")
     obs = pd.DataFrame(time_span, columns=["date_time"])
     for obj in comp.o.keys():
         # print(dir(obj))
@@ -137,7 +174,7 @@ def time_frame_computation():
     end_point = start_point + relativedelta(days=1)
     granularity = timedelta(hours=1)
 
-    print("Time settings verificaion:")
+    print("Time settings verification:")
     print(f"  Start: {start_point.strftime('%d/%m/%Y %H:%M:%S')}")
     print(f"  Finish: {end_point.strftime('%d/%m/%Y %H:%M:%S')}")
     print(f"  Time step: {granularity} hours")
@@ -150,5 +187,7 @@ def time_frame_computation():
 
 
 if __name__ == "__main__":
-    simple_observe()
+    a = Almanac(atype="season")
+    print(a.report())
+    # simple_observe()
     # time_frame_computation()

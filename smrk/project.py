@@ -1,6 +1,6 @@
 from context import Actual
-from datetime import datetime
-from dateutil.parser import parse
+# from datetime import datetime
+# from dateutil.parser import parse
 from kerykeion import AstrologicalSubject, KerykeionChartSVG, Report
 
 
@@ -14,6 +14,7 @@ class Relation:
 
 class Subject:
     def __init__(self, name: str) -> None:
+        self.computed = None
         self.name = name
         self.place = None
         self.time = None
@@ -30,10 +31,10 @@ class Subject:
             self.time.value.day,
             self.time.value.hour,
             self.time.value.minute,
-            lng=self.place.value.longitude,
-            lat=self.place.value.latitude,
-            tz_str=self.place.tz,
-            city=self.place.value.address,
+            lng=self.place.value.longitude if self.place.value else "",
+            lat=self.place.value.latitude if self.place.value else "",
+            tz_str=self.place.tz if self.place.value else "",
+            city=self.place.value.address if self.place.value else "",
             nation="GB",
         )
 
