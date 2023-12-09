@@ -12,7 +12,7 @@ def main():
 
     # 2 - set page layout
     st.set_page_config(
-        page_title="Astro visualization app",
+        page_title="Astro visualization application",
         page_icon="✨",
         layout="wide",
         initial_sidebar_state="expanded",
