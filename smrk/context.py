@@ -11,16 +11,16 @@ class Actual:
     # TODO: 1/ handle various data formats (d/m/y, y/m/d, ...)
     # TODO: 2/ adjust for multiple items passed (kwargs)
     def __init__(self, *kwargs, t: str = "time") -> None:
-        if t == "time" or t == "date":
+        if t in {"time", "date"}:
             self.service = None
-            if isinstance(kwargs, str) and len(kwargs) > 0:
+            if isinstance(kwargs, str) and kwargs:
                 self.value = parse(kwargs)
             elif isinstance(kwargs, (datetime, date, time)):
                 self.value = kwargs
             else:
                 print("Defaulting to current time stamp")
                 self.value = datetime.now()
-        elif t == "place" or t == "loc":
+        elif t in {"place", "loc"}:
             self.service = Nominatim(user_agent="astro")
             self.value = self.move_around_globe(kwargs)
             self.tz = self.what_time_zone()
@@ -46,10 +46,7 @@ class Actual:
             return self.service.geocode("Prague", language="en")
         elif isinstance(city, str):
             x = self.service.geocode(city, language="en")
-            if not x:
-                return self.service.geocode("Prague", language="en")
-            else:
-                return x
+            return self.service.geocode("Prague", language="en") if not x else x
         else:
             print(f"What? {city}")
             return None
@@ -57,9 +54,8 @@ class Actual:
     def what_time_zone(self) -> None:
         if not self.value:
             return "Europe/Prague"
-        else:
-            tf = TimezoneFinder()
-            return tf.timezone_at(lng=self.value.longitude, lat=self.value.latitude)
+        tf = TimezoneFinder()
+        return tf.timezone_at(lng=self.value.longitude, lat=self.value.latitude)
 
     def assign_time_zone(self, tz=None):
         # UTC by default, TODO: sanity check
