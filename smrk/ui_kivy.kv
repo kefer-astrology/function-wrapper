@@ -1,0 +1,38 @@
+BoxLayout:
+    orientation: 'vertical'
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: '40dp'
+
+        MDRaisedButton:
+            text: 'Open Side Menu'
+            on_press: app.root.ids.nav_drawer.set_state('toggle')
+
+        MDRaisedButton:
+            text: 'Home'
+            on_press: app.show_message('Home Button Pressed')
+
+        MDRaisedButton:
+            text: 'About'
+            on_press: app.show_message('About Button Pressed')
+
+        MDRaisedButton:
+            text: 'Contact'
+            on_press: app.show_message('Contact Button Pressed')
+
+
+    MDBoxLayout:
+        orientation: 'horizontal'
+        MDNavigationDrawer:
+            id: nav_drawer
+
+        BoxLayout:
+            orientation: 'vertical'
+
+            MDLabel:
+                text: 'Content Goes Here'
+                rgba:0,1,0,0.4
+                halign: 'center'
+                valign: 'center'
