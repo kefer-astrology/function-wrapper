@@ -13,13 +13,14 @@ class Relation:
 
 
 class Subject:
-    def __init__(self, name: str) -> None:
+    def __init__(self, s_name: str, s_type: str="Tropic") -> None:
         self.computed = None
-        self.name = name
+        self.name = s_name
         self.place = None
         self.time = None
+        self.type = s_type
 
-    def at_place(self, location: str) -> None:
+    def at_place(self, location: object) -> None:
         self.place = Actual(location, t="loc")
 
     def at_time(self, time: str) -> None:
@@ -35,6 +36,7 @@ class Subject:
             lat=self.place.value.latitude if self.place.value else "",
             tz_str=self.place.tz if self.place.value else "",
             city=self.place.value.address if self.place.value else "",
+            zodiac_type=self.type,
             nation="GB",
         )
 

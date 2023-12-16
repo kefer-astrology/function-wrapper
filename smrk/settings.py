@@ -4,9 +4,8 @@ from pathlib import Path
 
 
 def settings_file() -> Path:
-    temp = Path(__file__).parent  # db file stored in the same folder
-    # print(f"Returned value: {temp / 'settings.db'}")
-    return temp / "settings.db"
+    # print(f"Returned value: {Path(__file__).parent / 'settings.db'}")
+    return Path(__file__).parent / "settings.db"
 
 
 def change_language(default: str = "cz") -> dict:

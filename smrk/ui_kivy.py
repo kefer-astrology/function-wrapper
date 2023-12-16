@@ -1,6 +1,4 @@
 from context import Actual, combine_date_time, now
-from current import Observation, Almanac
-from display import figure_3d
 from kivymd.uix.button import MDRaisedButton
 from kivymd.uix.dialog import MDDialog
 from kivymd.app import MDApp
@@ -10,18 +8,12 @@ from settings import change_language
 class MyApp(MDApp):
     def prepare_content(self, date: str="", place: str=""):
         # 1 - initial setting
-        self.date = Actual()
         self.location = Actual(t="place")
         #self.name = ""
     
     def draw_content(self, name="Johny"):
         self.name = name
-        look = Observation(  # Prague hardcode for now
-                lat=50.08804,  # first_event_place.value.latitude,
-                lon=14.42076,  # first_event_place.value.longitude,
-                )
-        planets = look.where_is(self.date, of="altaz")
-        return figure_3d(planets)
+        # return figure_3d()
 
     def build(self):
         return Builder.load_file("ui_kivy.kv")

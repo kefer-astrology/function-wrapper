@@ -1,5 +1,4 @@
 from context import Actual, combine_date_time, now
-from current import Observation, Almanac
 from display import figure_3d
 from project import Subject
 import streamlit as st
@@ -74,21 +73,20 @@ def main():
                 (lang["display"], name1, lang["in_time"], str(date1), "loc:", loc1)
             )
         )
-        if computation == lang["repr_real"]:
-            look = Observation(  # Prague hardcode for now
-                lat=50.08804,  # first_event_place.value.latitude,
-                lon=14.42076,  # first_event_place.value.longitude,
-            )
-            planets = look.where_is(first_event, of="altaz")
-            figure = figure_3d(planets)
-            st.plotly_chart(figure, theme="streamlit", use_container_width=True)
-        elif computation == lang["repr_zodi"]:
-            look = Almanac(atype="season")
-            st.warning(f'{lang["spring"]} {lang["equinox"]}: ')
-            st.line_chart(look.report())
-            # someone = Subject(name1)
-            # someone.at_place(loc1)
-            # someone.at_time(date1)
+        if computation == lang["repr_tropic"]:
+            first_event = combine_date_time(date1, date1_time)
+            someone = Subject(name1)
+            someone.at_place(Actual(loc1, t="place"))
+            st.warning(f'{lang["date"]}: {first_event} / {lang["loc"]} {someone.place}')
+            someone.at_time(first_event)
+            report = someone.report()
+            st.write(report.print_report())
+        elif computation == lang["repr_sider"]:
+            st.warning(f'{lang["date"]}: {first_event}')
+            someone = Subject(name1, s_type="Sidereal")
+            someone.at_place(Actual(loc1, t="place"))
+            st.warning(f'{lang["date"]}: {first_event} / {lang["loc"]} {someone.place}')
+            someone.at_time(first_event)
             # report = someone.report()
             # st.write(report.print_report())
         elif computation == lang["repr_hous"]:
@@ -104,9 +102,7 @@ def main():
             report = someone.report()
             st.markdown(report.planets_table.replace("+", "|"))
         elif computation == lang["repr_moon"]:
-            look = Almanac()
-            st.warning("Moon phases report")
-            st.line_chart(look.report())
+            st.warning("Moon phases report - not active for now")
     else:
         st.write(lang["run"])
 
