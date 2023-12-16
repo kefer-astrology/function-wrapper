@@ -1,5 +1,5 @@
 from context import Actual, combine_date_time, now
-from display import figure_3d
+from visual import figure_3d
 from project import Subject
 import streamlit as st
 from settings import change_language

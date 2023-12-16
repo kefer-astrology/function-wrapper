@@ -6,13 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="a8c729cb-a5ed-4fd0-8580-225b58c80502" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/smrk/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/__main__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/smrk/current.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/smrk/project.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/project.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/smrk/settings.db" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/settings.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/smrk/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/smrk/ui_kivy.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/ui_kivy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/smrk/display.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/visual.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/smrk/ui_streamlit.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/ui_streamlit.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -53,7 +48,7 @@
     "deletionFromPopupRequiresConfirmation": "false",
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "/home/jav/Documents/Space/AstroSmrk",
+    "last_opened_file_path": "/home/jav/Documents/Script",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
     "vue.rearranger.settings.migration": "true"
   }
