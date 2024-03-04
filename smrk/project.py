@@ -1,4 +1,5 @@
 from context import Actual
+
 # from datetime import datetime
 # from dateutil.parser import parse
 from kerykeion import AstrologicalSubject, KerykeionChartSVG, Report
@@ -13,7 +14,7 @@ class Relation:
 
 
 class Subject:
-    def __init__(self, s_name: str, s_type: str="Tropic") -> None:
+    def __init__(self, s_name: str, s_type: str = "Tropic") -> None:
         self.computed = None
         self.name = s_name
         self.place = None

@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime
 from context import Actual
 
+
 class Context(unittest.TestCase):
     def test_current_timestamp(self):
         self.assertEqual(Actual().value, datetime.now())
@@ -14,10 +15,11 @@ class Context(unittest.TestCase):
 
     def test_false_location_fallback(self):
         self.assertEqual(Actual("Blabla", t="place").value, "Prague")
-    
+
     # - date inputs check also
     # - as well as various places
     # - add negative time
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

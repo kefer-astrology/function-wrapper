@@ -49,7 +49,7 @@ def main():
                 lang["repr"], [lang[val] for val in lang.keys() if "repr_" in val]
             )
             compute = st.form_submit_button(lang["run"])
-    
+
     first_event = combine_date_time(date1, date1_time)
     first_event_place = Actual(loc1, t="place")
     second_event = combine_date_time(date2, date2_time)
@@ -64,7 +64,9 @@ def main():
         st.write(f" {lang['place']}: {second_event_place.value}")
         st.write(f"{lang['date']}: {second_event}")
     elif compute:  # ready for computation
-        st.warning(f'{lang["display"]} {name1}: {lang["date"]} {first_event} / {lang["loc"]} {first_event_place}')
+        st.warning(
+            f'{lang["display"]} {name1}: {lang["date"]} {first_event} / {lang["loc"]} {first_event_place}'
+        )
         if computation == lang["repr_tropic"]:
             someone = Subject(name1)
             someone.at_place(first_event_place)
