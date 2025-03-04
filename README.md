@@ -11,7 +11,7 @@
 
 Funkční vrstva v živém modu:
 
-
+- https://kefer-astrology.streamlit.app/
 
 Příprava prostředí: 
 
