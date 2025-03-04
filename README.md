@@ -20,7 +20,7 @@ Příprava prostředí:
    - Windows: `astro\Scripts\activate`
    - Linux `source ./astro/bin/activate`
 3. install libraries:
-   - generate requirements 
+   - generate requirements `pip-compile --upgrade --strip-extras requirements.in`
    - install from generated req file `pip install -r requirements.txt`
 4. run the wrapper ui helper:
    - default `python module` runs on streamlit (`python -m streamlit run module/ui_streamlit.py`)
