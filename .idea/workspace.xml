@@ -5,10 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a8c729cb-a5ed-4fd0-8580-225b58c80502" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.devcontainer/devcontainer.json" beforeDir="false" afterPath="$PROJECT_DIR$/.devcontainer/devcontainer.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/smrk/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/__main__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/smrk/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/context.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/smrk/ui_streamlit.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/ui_streamlit.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/__main__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/context.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/project.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/settings.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/settings.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/ui_kivy.kv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/ui_kivy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/ui_streamlit.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/z_visual.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dates_places.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dates_places.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,20 +61,21 @@
     "Python tests.Python tests for dates_places.Context.test_julian_timestamp.executor": "Debug",
     "Python tests.Python tests for dates_places.Context.test_no_location_fallback.executor": "Debug",
     "Python.Kivy.executor": "Run",
-    "Python.Streamlit.executor": "Debug",
-    "Python.test plotly.executor": "Debug",
+    "Python.Streamlit.executor": "Run",
+    "Python.test plotly.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "WebServerToolWindowFactoryState": "false",
     "deletionFromPopupRequiresConfirmation": "false",
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "/home/jav/Documents/vcf_editor",
+    "last_opened_file_path": "/home/jav/Documents/Space/Kefer Astrology/function-wrapper",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Python.Streamlit">
+  <component name="RunManager" selected="Python.Kivy">
     <configuration name="Kivy" type="PythonConfigurationType" factoryName="Python">
       <module name="AstroSmrk" />
       <option name="ENV_FILES" value="" />
@@ -77,7 +90,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="smrk/ui_kivy.py" />
+      <option name="SCRIPT_NAME" value="module/ui_kivy.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -101,7 +114,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="streamlit" />
-      <option name="PARAMETERS" value="run smrk/ui_streamlit.py" />
+      <option name="PARAMETERS" value="run module/ui_streamlit.py" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="true" />
@@ -118,7 +131,7 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="$PROJECT_DIR$/astro/bin/python" />
-      <option name="SDK_NAME" value="Python 3.11 (AstroSmrk)" />
+      <option name="SDK_NAME" value="Python 3.13 virtualenv at ~/Documents/Space/Kefer Astrology/function-wrapper/venv" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -257,7 +270,7 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/smrk/context.py</url>
+          <url>file://$PROJECT_DIR$/module/context.py</url>
           <line>59</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>

@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime
-from smrk.context import Actual
+from module.context import Actual
 
 
 class Context(unittest.TestCase):

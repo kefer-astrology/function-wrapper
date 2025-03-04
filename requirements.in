@@ -1,0 +1,7 @@
+geopy>=2.4.1
+kerykeion>=4.18.1
+matplotlib>=3.9.0
+pandas>=2.2.2
+streamlit>=1.40.2
+timezonefinder>=6.5.8
+plotly>=5.22.0

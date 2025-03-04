@@ -86,7 +86,7 @@ if __name__ == "__main__":
         try:
             from streamlit.web import cli as stcli
 
-            sys.argv = ["streamlit", "run", "./smrk/ui_streamlit.py"]
+            sys.argv = ["streamlit", "run", "./module/ui_streamlit.py"]
             sys.exit(stcli.main())
         except ImportError:
             import ui_streamlit as st
