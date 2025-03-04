@@ -7,7 +7,7 @@
     <list default="true" id="a8c729cb-a5ed-4fd0-8580-225b58c80502" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/smrk/__main__.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/__main__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/smrk/display.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/visual.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/smrk/context.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/context.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/smrk/ui_streamlit.py" beforeDir="false" afterPath="$PROJECT_DIR$/smrk/ui_streamlit.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -42,41 +42,30 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python tests.Python tests for dates_places.Context.executor": "Run",
+    "Python tests.Python tests for dates_places.Context.test_current_timestamp.executor": "Debug",
+    "Python tests.Python tests for dates_places.Context.test_custom_timestamp.executor": "Debug",
+    "Python tests.Python tests for dates_places.Context.test_false_location_fallback.executor": "Debug",
+    "Python tests.Python tests for dates_places.Context.test_julian_timestamp.executor": "Debug",
+    "Python tests.Python tests for dates_places.Context.test_no_location_fallback.executor": "Debug",
+    "Python.Kivy.executor": "Run",
+    "Python.Streamlit.executor": "Debug",
+    "Python.test plotly.executor": "Debug",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
     "deletionFromPopupRequiresConfirmation": "false",
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "/home/jav/Documents/Script",
+    "last_opened_file_path": "/home/jav/Documents/vcf_editor",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RunManager" selected="Python.Streamlit">
-    <configuration name="Date-Time-Place" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="AstroSmrk" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="smrk/context.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="Kivy" type="PythonConfigurationType" factoryName="Python">
       <module name="AstroSmrk" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -99,6 +88,7 @@
     </configuration>
     <configuration name="Streamlit" type="PythonConfigurationType" factoryName="Python">
       <module name="AstroSmrk" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -121,6 +111,7 @@
     </configuration>
     <configuration name="test plotly" type="PythonConfigurationType" factoryName="Python">
       <module name="AstroSmrk" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -141,8 +132,9 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Python tests for dates_places.Context.test_current_timestamp" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+    <configuration name="Python tests for dates_places.Context" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="AstroSmrk" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <option name="SDK_HOME" value="" />
@@ -151,12 +143,13 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;dates_places.Context.test_current_timestamp&quot;" />
+      <option name="_new_target" value="&quot;dates_places.Context&quot;" />
       <option name="_new_targetType" value="&quot;PYTHON&quot;" />
       <method v="2" />
     </configuration>
-    <configuration name="Python tests in dates_places.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+    <configuration name="Python tests for dates_places.Context.test_custom_timestamp" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="AstroSmrk" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <option name="SDK_HOME" value="" />
@@ -165,12 +158,13 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/dates_places.py&quot;" />
-      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <option name="_new_target" value="&quot;dates_places.Context.test_custom_timestamp&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
       <method v="2" />
     </configuration>
-    <configuration name="Python tests in tests" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+    <configuration name="Python tests for dates_places.Context.test_false_location_fallback" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="AstroSmrk" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <option name="SDK_HOME" value="" />
@@ -179,25 +173,57 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests&quot;" />
-      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <option name="_new_target" value="&quot;dates_places.Context.test_false_location_fallback&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for dates_places.Context.test_julian_timestamp" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="AstroSmrk" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;dates_places.Context.test_julian_timestamp&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for dates_places.Context.test_no_location_fallback" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="AstroSmrk" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;dates_places.Context.test_no_location_fallback&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.Streamlit" />
       <item itemvalue="Python.Kivy" />
+      <item itemvalue="Python.Streamlit" />
       <item itemvalue="Python.test plotly" />
-      <item itemvalue="Python.Date-Time-Place" />
-      <item itemvalue="Python tests.Python tests in tests" />
-      <item itemvalue="Python tests.Python tests for dates_places.Context.test_current_timestamp" />
-      <item itemvalue="Python tests.Python tests in dates_places.py" />
+      <item itemvalue="Python tests.Python tests for dates_places.Context" />
+      <item itemvalue="Python tests.Python tests for dates_places.Context.test_custom_timestamp" />
+      <item itemvalue="Python tests.Python tests for dates_places.Context.test_false_location_fallback" />
+      <item itemvalue="Python tests.Python tests for dates_places.Context.test_julian_timestamp" />
+      <item itemvalue="Python tests.Python tests for dates_places.Context.test_no_location_fallback" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.Date-Time-Place" />
-        <item itemvalue="Python tests.Python tests in tests" />
-        <item itemvalue="Python tests.Python tests in dates_places.py" />
-        <item itemvalue="Python tests.Python tests for dates_places.Context.test_current_timestamp" />
+        <item itemvalue="Python tests.Python tests for dates_places.Context" />
+        <item itemvalue="Python tests.Python tests for dates_places.Context.test_false_location_fallback" />
+        <item itemvalue="Python tests.Python tests for dates_places.Context.test_no_location_fallback" />
+        <item itemvalue="Python tests.Python tests for dates_places.Context.test_julian_timestamp" />
+        <item itemvalue="Python tests.Python tests for dates_places.Context.test_custom_timestamp" />
       </list>
     </recent_temporary>
   </component>
@@ -228,9 +254,18 @@
     </option>
   </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/smrk/context.py</url>
+          <line>59</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <watches-manager>
-      <configuration name="PythonConfigurationType">
-        <watch expression="look" language="Python" />
+      <configuration name="tests">
+        <watch expression="Actual(t=&quot;place&quot;).value.address" language="Python" />
       </configuration>
     </watches-manager>
   </component>

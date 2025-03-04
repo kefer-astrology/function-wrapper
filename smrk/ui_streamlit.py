@@ -1,5 +1,5 @@
 from context import Actual, combine_date_time, now
-from visual import figure_3d
+from z_visual import figure_3d
 from project import Subject
 import streamlit as st
 from settings import change_language
@@ -26,8 +26,8 @@ def main():
     with sidebar_cont["first"]:
         with st.expander(lang["first"]):
             with st.form(key="first_info"):
-                name1 = st.text_input(lang["name"])
-                loc1 = st.text_input(lang["place"])
+                name1 = st.text_input(lang["name"], key="name1")
+                loc1 = st.text_input(lang["place"], key="loc1")
                 date1 = st.date_input(lang["date"])
                 date1_time = st.time_input(lang["time"])
                 event1 = st.form_submit_button(
