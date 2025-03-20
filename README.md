@@ -9,10 +9,6 @@
 
 ## Jak to spustit
 
-Funkční vrstva v živém modu:
-
-- https://kefer-astrology.streamlit.app/
-
 Příprava prostředí: 
 
 1. create virtual environment: `python -m venv venv`
