@@ -10,7 +10,7 @@ def settings_file() -> Path:
 
 def change_language(default: str = "cz") -> dict:
     with sqlite3.connect(settings_file()) as dbcon:
-        df = pd.read_sql_query("SELECT * FROM language;", dbcon)
+        df = pd.read_sql_query("SELECT * FROM language ORDER BY id;", dbcon)
     return dict(zip(df["col"], df[default]))
 
 
