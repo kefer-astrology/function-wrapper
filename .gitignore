@@ -173,6 +173,9 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# Obsidian
+.obsidian/
+
 # source,cache and result files for astro computation
 cache/
 result/
