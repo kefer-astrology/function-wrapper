@@ -5,22 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a8c729cb-a5ed-4fd0-8580-225b58c80502" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.devcontainer/devcontainer.json" beforeDir="false" afterPath="$PROJECT_DIR$/.devcontainer/devcontainer.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/module/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/module/__main__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/module/context.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/module/project.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/module/settings.db" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/module/settings.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/module/ui_kivy.kv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/module/ui_kivy.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/module/ui_streamlit.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/module/z_visual.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/dates_places.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dates_places.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,8 +45,8 @@
     "Python tests.Python tests for dates_places.Context.test_false_location_fallback.executor": "Debug",
     "Python tests.Python tests for dates_places.Context.test_julian_timestamp.executor": "Debug",
     "Python tests.Python tests for dates_places.Context.test_no_location_fallback.executor": "Debug",
-    "Python.Kivy.executor": "Run",
-    "Python.Streamlit.executor": "Run",
+    "Python.Kivy.executor": "Debug",
+    "Python.Streamlit.executor": "Debug",
     "Python.test plotly.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -71,11 +56,11 @@
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "/home/jav/Documents/Space/Kefer Astrology/function-wrapper",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Python.Kivy">
+  <component name="RunManager" selected="Python.Streamlit">
     <configuration name="Kivy" type="PythonConfigurationType" factoryName="Python">
       <module name="AstroSmrk" />
       <option name="ENV_FILES" value="" />
@@ -273,6 +258,11 @@
           <url>file://$PROJECT_DIR$/module/context.py</url>
           <line>59</line>
           <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/module/ui_streamlit.py</url>
+          <line>120</line>
+          <option name="timeStamp" value="17" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
