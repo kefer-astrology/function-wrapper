@@ -1,8 +1,8 @@
-from context import Actual, combine_date_time  #, now
-# from z_visual import figure_3d
-from project import Subject
 import streamlit as st
-from settings import change_language
+from utils import Actual, combine_date_time  #, now_utc
+# from z_visual import figure_3d
+from services import Subject
+from workspace import change_language
 
 
 def main():
