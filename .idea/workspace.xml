@@ -6,6 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="a8c729cb-a5ed-4fd0-8580-225b58c80502" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/architecture.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/architecture.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/services.py" beforeDir="false" afterPath="$PROJECT_DIR$/module/services.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/settings.db" beforeDir="false" afterPath="$PROJECT_DIR$/module/settings.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/module/ui_streamlit.py" beforeDir="false" afterPath="$PROJECT_DIR$/module/ui_streamlit.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,29 +43,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python tests.Python tests for dates_places.Context.executor": "Run",
-    "Python tests.Python tests for dates_places.Context.test_current_timestamp.executor": "Debug",
-    "Python tests.Python tests for dates_places.Context.test_custom_timestamp.executor": "Debug",
-    "Python tests.Python tests for dates_places.Context.test_false_location_fallback.executor": "Debug",
-    "Python tests.Python tests for dates_places.Context.test_julian_timestamp.executor": "Debug",
-    "Python tests.Python tests for dates_places.Context.test_no_location_fallback.executor": "Debug",
-    "Python.Kivy.executor": "Debug",
-    "Python.Streamlit.executor": "Debug",
-    "Python.test plotly.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "deletionFromPopupRequiresConfirmation": "false",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "/home/jav/Documents/Space/Kefer Astrology/function-wrapper",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python tests.Python tests for dates_places.Context.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Python tests for dates_places.Context.test_current_timestamp.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.Python tests for dates_places.Context.test_custom_timestamp.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.Python tests for dates_places.Context.test_false_location_fallback.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.Python tests for dates_places.Context.test_julian_timestamp.executor&quot;: &quot;Debug&quot;,
+    &quot;Python tests.Python tests for dates_places.Context.test_no_location_fallback.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.Kivy.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.Streamlit.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.streamlit_new.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.test plotly.executor&quot;: &quot;Run&quot;,
+    &quot;Python.x_utils.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.xui_streamlit.executor&quot;: &quot;Debug&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/jav/Documents/Space/Kefer Astrology/function-wrapper/module&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/module" />
+    </key>
+  </component>
   <component name="RunManager" selected="Python.Streamlit">
     <configuration name="Kivy" type="PythonConfigurationType" factoryName="Python">
       <module name="AstroSmrk" />
@@ -255,14 +269,14 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/module/context.py</url>
-          <line>59</line>
-          <option name="timeStamp" value="13" />
+          <url>file://$PROJECT_DIR$/module/services.py</url>
+          <line>83</line>
+          <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/module/ui_streamlit.py</url>
-          <line>120</line>
-          <option name="timeStamp" value="17" />
+          <line>123</line>
+          <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
