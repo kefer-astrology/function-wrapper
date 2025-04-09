@@ -2,7 +2,8 @@ from models import (
     Location, DateRange, CelestialBody, Aspect, AstroModel,
     ChartConfig, ModelOverrides, BodyDefinition, AspectDefinition, Sign
 )
-from kerykeion import AstrologicalSubject, KerykeionChartSVG, Report
+from kerykeion import AstrologicalSubject, KerykeionChartSVG, Report, KerykeionPointModel
+from pandas import DataFrame
 from typing import Dict, List, Optional
 from utils import Actual
 try:
@@ -100,6 +101,14 @@ def compute_subject(name: str, dt_str: str, loc_str: str, zodiac: str = "Tropic"
         zodiac_type=zodiac,
         nation="GB"
     )
+
+def extract_kerykeion_points(obj) -> DataFrame:
+    data = []
+    for attr_name in dir(obj):
+        attr = getattr(obj, attr_name)
+        if isinstance(attr, KerykeionPointModel):
+            data.append(attr.__dict__)
+    return DataFrame(data)
 
 
 # ─────────────────────
