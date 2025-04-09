@@ -4,6 +4,7 @@
 
 - cache: dočasné soubory pro výpočty
 - module: vlastní aplikace
+- scripts: generátory pro dokumentaci
 - tests: testování scénářů a funkcionalit
 - venv: python prostředí s knihovnami
 
@@ -28,3 +29,4 @@ Příprava prostředí:
 
 Většina práce je provedena modulem [g-battaglia/kerykeion](https://github.com/g-battaglia/kerykeion), který je manipulační vrstva nad knihovnami [astrorigin/pyswisseph](https://github.com/astrorigin/pyswisseph) (známé také jako [švýcarské efemeridy](https://www.astro.com/swisseph/swephinfo_e.htm)), proto přejímáme licenci použitou v těchto balíčcích (GNU Affero GPL v3.0). Další závislosti jsou uvedeny [souboru požadavků](./requirements.in).
 
+Pro NASA JPL efemeridy je použita manipulační knihovna [skyfielders/python-skyfield](https://github.com/skyfielders/python-skyfield)
