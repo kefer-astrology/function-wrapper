@@ -29,7 +29,7 @@ class Actual:
         else:
             raise ValueError(f"Unsupported type flag: {t}")
 
-    def _init_time(self, *args):
+    def _init_time(self, *args) -> None:
         if not args:
             self.value = datetime.now()
         elif isinstance(args[0], (datetime, date, time)):
@@ -41,7 +41,7 @@ class Actual:
         else:
             self.value = datetime.now()
 
-    def _init_place(self, *args):
+    def _init_place(self, *args) -> None:
         self.service = Nominatim(user_agent="astro")
         place_name = args[0] if args and isinstance(args[0], str) else "Prague"
         self.value = self._geocode(place_name)

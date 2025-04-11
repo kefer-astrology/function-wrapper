@@ -1,12 +1,33 @@
+import datetime
 import streamlit as st
+
+from module.models import ChartInstance, Location, ChartSubject, ChartConfig
 from utils import Actual, combine_date_time  #, now_utc
 # from z_visual import figure_3d
 from services import Subject, extract_kerykeion_points
 from workspace import change_language
 
+def prepare_horoscope(name: str='', dt: datetime=None, loc: Location=None) -> ChartInstance:
+    return ChartInstance(
+        id=name,
+        subject=ChartSubject(
+            id=name, name=name, event_time=dt, location=loc
+        ),
+        config=ChartConfig(
+            mode="NATAL", house_system="PLACIDUS", zodiac_type="Tropical",
+            included_points=[], aspect_orbs={'a':1.5}, display_style="",
+            color_theme=''
+        )
+    )
 
 def main():
     # 1 - initial setting
+    if 'settings' not in st.session_state:
+        st.session_state['settings'] = {
+            'chart': None,
+            'language': change_language(default="cz"),
+            'tags': ["Tag 1", "Tag 2", "Tag 3", "Tag 4"]
+        }
     lang = change_language(default="cz")
 
     # 2 - set page layout
@@ -28,16 +49,38 @@ def main():
     event = { 1: {}, 2: {} }
 
     with sidebar_cont["first"]:
-        with st.expander(lang["first_info"]):
-            with st.form(key="first_info"):
-                event[1]["name"] = st.text_input(lang["name"], key="name1")
-                event[1]["input_place"] = st.text_input(lang["place"], key="loc1")
-                event[1]["input_date"] = st.date_input(lang["first_date"])
-                event[1]["input_time"] = st.time_input(lang["time"])
-                event[1]["pressed"] = st.form_submit_button(
-                    lang["control"], use_container_width=True
-                )
+        with st.expander(lang["settings_radix"]):
+            horoscope_name = st.text_input(lang["name_radix"])
+            horoscope_type = st.radio(
+                lang["type_radix"],
+                (lang["nativity_radix"], lang["event_radix"], lang["horar_radix"]),
+                horizontal=True
+            )
+            tags = st.multiselect("Tag", st.session_state['settings']['tags'])
+            date_type = st.radio(
+                lang["date"],
+                (lang["date_gre"], lang["date_jul"]),
+                horizontal=True
+            )
+            input_location = st.text_input(lang["place"], key="location")
+            input_date = st.date_input(lang["first_date"], key="input_date")
+            input_time = st.time_input(lang["time"], key="input_time")
+            # with st.form(key="first_info"):
+            #     event[1]["name"] = st.text_input(lang["name"], key="name1")
+            #     event[1]["input_place"] = st.text_input(lang["place"], key="loc1")
+            #     event[1]["input_date"] = st.date_input(lang["first_date"])
+            #     event[1]["input_time"] = st.time_input(lang["time"])
+            #     event[1]["pressed"] = st.form_submit_button(
+            #         lang["control"], use_container_width=True
+            #     )
     with sidebar_cont["second"]:
+        with st.expander(lang["settings_advanced"]):
+            daylight_saving_time = st.checkbox("Letní čas - automatické detekování", value=True)
+            manual_option = st.radio(
+                "Manuálně",
+                ("NE", "ANO")
+            )
+            # Submit button
         with st.expander(lang["second_info"]):
             with st.form(key="second_info"):
                 event[2]["name"] = st.text_input(lang["name"])
@@ -59,45 +102,17 @@ def main():
             compute = st.button(lang["run"])
 
     # Put dates, times and places together
-    event[1]["datetime"] = combine_date_time(event[1]["input_date"], event[1]["input_time"])
-    event[1]["place"] = Actual(event[1]["input_place"], t="place")
-    event[2]["datetime"] = combine_date_time(event[2]["input_date"], event[2]["input_time"])
-    event[2]["place"] = Actual(event[2]["input_place"], t="place")
+    event[1]["datetime"] = combine_date_time(input_date, input_time)
+    event[1]["place"] = Actual(input_location, t="place")
+    #event[2]["datetime"] = combine_date_time(event[2]["input_date"], event[2]["input_time"])
+    #event[2]["place"] = Actual(event[2]["input_place"], t="place")
 
     # 5 - dynamic content before computation
     if computation == lang["radix_new"]:
         ### TO-DO Nové nastavení pro horoskop
-        st.subheader(lang["settings_radix"])
-        with st.form(key="horoscope_form"):
-            horoscope_name = st.text_input(lang["name_radix"])
-            horoscope_type = st.radio(
-                lang["type_radix"],
-                (lang["nativity_radix"], lang["event_radix"], lang["horar_radix"]),
-                horizontal=True
-            )
-            tags = st.multiselect("Tag", ["Tag 1", "Tag 2", "Tag 3", "Tag 4"])
-            date_type = st.radio(
-                lang["date"],
-                (lang["date_gre"], lang["date_jul"]),
-                horizontal=True
-            )
-            location = st.write(lang["loc"] + ": rozbalit menu vlevo <<")
-            with st.expander(lang["settings_advanced"]):
-                daylight_saving_time = st.checkbox("Letní čas - automatické detekování", value=True)
-                manual_option = st.radio(
-                    "Manuálně",
-                    ("NE", "ANO")
-                )
-                # Submit button
-            new_radix_submit_button = st.form_submit_button("Odeslat")
-
-        if new_radix_submit_button:
-            st.write(lang["name_radix"], horoscope_name)
-            st.write(lang["type_radix"], horoscope_type)
-            st.write("Tag:", tags)
-            st.write("Datum:", date_type)
-            st.write("Letní čas:", "Ano" if daylight_saving_time else "Ne")
-            st.write("Manuálně:", manual_option)
+        st.warning(
+            f'{lang["display"]} {horoscope_name}: {lang["first_date"]} {event[1]["datetime"]} / {lang["loc"]} {input_location}'
+        )
     elif computation == lang["radix_open"]:
         st.file_uploader("Select a file to open")
     elif computation == lang["radix_save"]:
@@ -106,26 +121,23 @@ def main():
         st.warning("Moon phases report - not active for now")
 
     # 6 - act if any button pressed
-    if event[1]["pressed"]:
-        st.write(f'{lang["name"]}: {event[1]["name"]}')
-        st.write(f' {lang["place"]}: {event[1]["place"].value}')
-        st.write(f'{lang["first_date"]}: {event[1]["datetime"]}')
-    elif event[2]["pressed"]:
-        st.write(f'{lang["name"]}: {event[2]["name"]}')
-        st.write(f'{lang["place"]}: {event[2]["place"].value}')
-        st.write(f'{lang["first_date"]}: {event[2]["datetime"]}')
-    elif compute:  # ready for computation
-        st.warning(
-            f'{lang["display"]} {event[1]["name"]}: {lang["first_date"]} {event[1]["datetime"]} / {lang["loc"]} {event[1]["place"]}'
-        )
-        horoscope = Subject(event[1]["name"])  # , s_type="Sidereal"
-        horoscope.at_place(event[1]["place"])
+    # if event[1]["pressed"]:
+    #     st.write(f'{lang["name"]}: {event[1]["name"]}')
+    #     st.write(f' {lang["place"]}: {event[1]["place"].value}')
+    #     st.write(f'{lang["first_date"]}: {event[1]["datetime"]}')
+    # elif event[2]["pressed"]:
+    #     st.write(f'{lang["name"]}: {event[2]["name"]}')
+    #     st.write(f'{lang["place"]}: {event[2]["place"].value}')
+    #     st.write(f'{lang["first_date"]}: {event[2]["datetime"]}')
+    if compute:  # ready for computation
+        horoscope = Subject(horoscope_name)  # , s_type="Sidereal"
+        horoscope.at_place(input_location)
         horoscope.at_time(event[1]["datetime"])
         report = horoscope.report()
         st.table(extract_kerykeion_points(horoscope.computed))
-        st.write(report.print_report())
-        st.markdown(report.houses_table.replace("+", "|"))
-        st.markdown(report.planets_table.replace("+", "|"))
+        #st.write(report.print_report())
+        #st.markdown(report.houses_table.replace("+", "|"))
+        #st.markdown(report.planets_table.replace("+", "|"))
     else:  # default display
         st.warning(lang["run"])
 
