@@ -164,7 +164,7 @@ timezonefinder==6.5.9
     # via -r requirements.in
 toml==0.10.2
     # via streamlit
-tornado==6.4.2
+tornado==6.5.1
     # via streamlit
 typing-extensions==4.13.1
     # via
