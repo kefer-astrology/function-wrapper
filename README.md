@@ -1,16 +1,16 @@
-# Funkční vrstva pro Kefer Astrology
+# Function layer for Kefer Astrology
 
-## Popis:
+## Descriuption:
 
-- cache: dočasné soubory pro výpočty
-- module: vlastní aplikace
-- scripts: generátory pro dokumentaci
-- tests: testování scénářů a funkcionalit
-- venv: python prostředí s knihovnami
+- cache: temporary files for computation
+- module: all the program logic
+- scripts: generators for documentation
+- tests: scenario and functionality testing
+- venv: python environment with libraries
 
-## Jak to spustit
+## How to run
 
-Příprava prostředí: 
+Environment preparation: 
 
 1. create virtual environment: `python -m venv venv`
 2. activate virtual environment:
@@ -25,8 +25,8 @@ Příprava prostředí:
    - parameter `python module kivy` (`python module/ui_kivy.py`)
    - command line UI run with `-t` 
 
-## Jak to funguje
+## How it works
 
-Většina práce je provedena modulem [g-battaglia/kerykeion](https://github.com/g-battaglia/kerykeion), který je manipulační vrstva nad knihovnami [astrorigin/pyswisseph](https://github.com/astrorigin/pyswisseph) (známé také jako [švýcarské efemeridy](https://www.astro.com/swisseph/swephinfo_e.htm)), proto přejímáme licenci použitou v těchto balíčcích (GNU Affero GPL v3.0). Další závislosti jsou uvedeny [souboru požadavků](./requirements.in).
+All the heavy lifting is made by a module [g-battaglia/kerykeion](https://github.com/g-battaglia/kerykeion), manipulation layer over [astrorigin/pyswisseph](https://github.com/astrorigin/pyswisseph) (also known as [swiss ephemerides](https://www.astro.com/swisseph/swephinfo_e.htm)), thus the license is inherited (GNU Affero GPL v3.0). Other dependencies are mentioned in the [requirements file](./requirements.in).
 
-Pro NASA JPL efemeridy je použita manipulační knihovna [skyfielders/python-skyfield](https://github.com/skyfielders/python-skyfield)
+For NASA JPL ephemerides we use [skyfielders/python-skyfield](https://github.com/skyfielders/python-skyfield) which comes with MIT license.
