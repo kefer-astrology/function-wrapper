@@ -1,32 +1,20 @@
 import datetime
 import streamlit as st
 
-from module.models import ChartInstance, Location, ChartSubject, ChartConfig
-from utils import Actual, combine_date_time  #, now_utc
+from models import ChartInstance, Location, ChartSubject, ChartConfig
+from utils import Actual, combine_date_time, prepare_horoscope  #, now_utc
 # from z_visual import figure_3d
 from services import Subject, extract_kerykeion_points
 from workspace import change_language
 
-def prepare_horoscope(name: str='', dt: datetime=None, loc: Location=None) -> ChartInstance:
-    return ChartInstance(
-        id=name,
-        subject=ChartSubject(
-            id=name, name=name, event_time=dt, location=loc
-        ),
-        config=ChartConfig(
-            mode="NATAL", house_system="PLACIDUS", zodiac_type="Tropical",
-            included_points=[], aspect_orbs={'a':1.5}, display_style="",
-            color_theme=''
-        )
-    )
 
 def main():
     # 1 - initial setting
     if 'settings' not in st.session_state:
-        st.session_state['settings'] = {
-            'chart': None,
-            'language': change_language(default="cz"),
-            'tags': ["Tag 1", "Tag 2", "Tag 3", "Tag 4"]
+        st.session_state["settings"] = {
+            "chart": None,
+            "language": change_language(default="cz"),
+            "tags": ["Tag 1", "Tag 2", "Tag 3", "Tag 4"]
         }
     lang = change_language(default="cz")
 
@@ -130,6 +118,7 @@ def main():
     #     st.write(f'{lang["place"]}: {event[2]["place"].value}')
     #     st.write(f'{lang["first_date"]}: {event[2]["datetime"]}')
     if compute:  # ready for computation
+        st.session_state["settings"]["chart"] = prepare_horoscope(name=horoscope_name, dt=event[1]["datetime"], loc=event[1]["place"])
         horoscope = Subject(horoscope_name)  # , s_type="Sidereal"
         horoscope.at_place(input_location)
         horoscope.at_time(event[1]["datetime"])

@@ -8,7 +8,7 @@ from geopy.exc import GeopyError
 import pytz
 from timezonefinder import TimezoneFinder
 from typing import Optional, Union
-from models import Location, DateRange
+from models import Location, DateRange, ChartInstance, ChartSubject, ChartConfig
 
 
 class Actual:
@@ -85,6 +85,19 @@ class Actual:
             )
         return None
 
+
+def prepare_horoscope(name: str='', dt: datetime=None, loc: Location=None) -> ChartInstance:
+    return ChartInstance(
+        id=name,
+        subject=ChartSubject(
+            id=name, name=name, event_time=dt, location=loc
+        ),
+        config=ChartConfig(
+            mode="NATAL", house_system="PLACIDUS", zodiac_type="Tropical",
+            included_points=[], aspect_orbs={'a':1.5}, display_style="",
+            color_theme=''
+        )
+    )
 
 # Additional Utility Functions
 

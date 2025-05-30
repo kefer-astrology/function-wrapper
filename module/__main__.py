@@ -1,8 +1,8 @@
 import argparse
-from context import Actual
+from utils import Actual
 from kerykeion import AstrologicalSubject, KerykeionChartSVG, Report, Literal
 import sys
-from settings import change_language
+from workspace import change_language
 from z_visual import display_radial, display_3d
 
 
