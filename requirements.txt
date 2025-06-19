@@ -18,11 +18,11 @@ blinker==1.9.0
     # via streamlit
 build==1.2.2.post1
     # via pip-tools
-cachetools==5.5.2
+cachetools==6.1.0
     # via streamlit
 cattrs==25.1.1
     # via requests-cache
-certifi==2025.4.26
+certifi==2025.6.15
     # via requests
 cffi==1.17.1
     # via timezonefinder
@@ -36,7 +36,7 @@ contourpy==1.3.2
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.58.2
+fonttools==4.58.4
     # via matplotlib
 geographiclib==2.0
     # via geopy
@@ -46,7 +46,7 @@ gitdb==4.0.12
     # via gitpython
 gitpython==3.1.44
     # via streamlit
-h3==4.2.2
+h3==4.3.0
     # via timezonefinder
 idna==3.10
     # via
@@ -68,7 +68,7 @@ markupsafe==3.0.2
     # via jinja2
 matplotlib==3.10.3
     # via -r requirements.in
-narwhals==1.42.0
+narwhals==1.43.1
     # via
     #   altair
     #   plotly
@@ -80,7 +80,7 @@ numpy==2.3.0
     #   pydeck
     #   streamlit
     #   timezonefinder
-packaging==24.2
+packaging==25.0
     # via
     #   altair
     #   build
@@ -107,7 +107,7 @@ pyarrow==20.0.0
     # via streamlit
 pycparser==2.22
     # via cffi
-pydantic==2.11.5
+pydantic==2.11.7
     # via kerykeion
 pydantic-core==2.33.2
     # via pydantic
@@ -156,7 +156,7 @@ six==1.17.0
     #   scour
 smmap==5.0.2
     # via gitdb
-streamlit==1.45.1
+streamlit==1.46.0
     # via -r requirements.in
 tenacity==9.1.2
     # via streamlit
@@ -181,7 +181,7 @@ tzdata==2025.2
     # via pandas
 url-normalize==2.2.1
     # via requests-cache
-urllib3==2.4.0
+urllib3==2.5.0
     # via
     #   requests
     #   requests-cache
