@@ -8,8 +8,12 @@ from geopy.exc import GeopyError
 import pytz
 from timezonefinder import TimezoneFinder
 from typing import Optional, Union
-from models import Location, DateRange, ChartInstance, ChartSubject, ChartConfig
 
+import re
+from models import (
+    AspectDefinition, AstroModel, BodyDefinition, DateRange, HouseSystem, ChartConfig, ChartInstance, ChartSubject, 
+    Location, ModelSettings, Sign
+)
 
 class Actual:
     """
@@ -99,6 +103,98 @@ def prepare_horoscope(name: str='', dt: datetime=None, loc: Location=None) -> Ch
         )
     )
 
+
+def parse_sfs_content(content):
+    """
+    Parse the content of a StarFisher .sfs file and map its sections to AstroModel, using BodyDefinition, AspectDefinition, Sign, ModelSettings, etc.
+    Returns (AstroModel, display_config_dict)
+    """
+    bodies = []
+    aspects = []
+    signs = []
+    model_settings = {}
+    display_config = {}
+    current_section = None
+    current_obj = None
+    obj_props = {}
+    def flush_obj():
+        nonlocal current_section, current_obj, obj_props
+        if current_section == 'Body' and current_obj:
+            bodies.append(BodyDefinition(
+                id=current_obj,
+                glyph=obj_props.get('Glyph', ''),
+                formula=obj_props.get('Formula', ''),
+                element=obj_props.get('Element'),
+                avg_speed=float(obj_props.get('AvgSpeed', '0').replace(":", ".").replace("'", "")) if obj_props.get('AvgSpeed') else 0.0,
+                max_orb=float(obj_props.get('MaxOrb', '0').replace(":", ".").replace("'", "")) if obj_props.get('MaxOrb') else 0.0,
+                i18n={k: v for k, v in obj_props.items() if k in ('Caption', 'Abbreviation')}
+            ))
+        elif current_section == 'Aspect' and current_obj:
+            aspects.append(AspectDefinition(
+                id=current_obj,
+                glyph=obj_props.get('Glyph', ''),
+                angle=float(obj_props.get('Angle', '0').replace(":", ".").replace("'", "")) if obj_props.get('Angle') else 0.0,
+                default_orb=float(obj_props.get('Orb', '0').replace(":", ".").replace("'", "")) if obj_props.get('Orb') else 0.0,
+                i18n={k: v for k, v in obj_props.items() if k in ('Caption', 'Abbreviation')}
+            ))
+        elif current_section == 'Sign' and current_obj:
+            signs.append(Sign(
+                name=current_obj,
+                glyph=obj_props.get('Glyph', ''),
+                abbreviation=obj_props.get('Abbreviation', ''),
+                element=obj_props.get('Element', ''),
+                i18n={k: v for k, v in obj_props.items() if k in ('Caption',)}
+            ))
+        current_obj = None
+        obj_props = {}
+
+    # MAIN PARSING LOOP
+    for line in content.splitlines():
+        line = line.strip()
+        if not line or line.startswith('//'):
+            continue
+        # Section start
+        m = re.match(r'_settings\.(Body|Aspect|Sign)\.New\((\w+)\);', line)
+        if m:
+            flush_obj()
+            current_section, current_obj = m.group(1), m.group(2)
+            obj_props = {}
+            continue
+        # Property assignment for object
+        m = re.match(r'_settings\.(Body|Aspect|Sign)\.(\w+)\.(\w+) = "?(.*?)"?;', line)
+        if m:
+            section, obj, prop, value = m.groups()
+            if section == current_section and obj == current_obj:
+                obj_props[prop] = value
+            continue
+        # Model/Display/Other assignment
+        m = re.match(r'_settings\.(Model|Display)\.(\w+) = "?(.*?)"?;', line)
+        if m:
+            section, key, value = m.groups()
+            if section == 'Model':
+                model_settings[key] = value
+            elif section == 'Display':
+                display_config[key] = value
+            continue
+    
+    flush_obj()  # Final object
+    # Map model_settings to ModelSettings dataclass (partial, extend as needed)
+    ms = ModelSettings(
+        default_house_system=HouseSystem(model_settings.get('DefaultHouseSystem', 'PLACIDUS')) if 'DefaultHouseSystem' in model_settings else HouseSystem.PLACIDUS,
+        default_aspects=[],  # Could parse from model_settings if present
+        default_bodies=[],   # Could parse from model_settings if present
+        standard_orb=float(model_settings.get('StandardComparisonOrbCoef', 1.0)) if 'StandardComparisonOrbCoef' in model_settings else 1.0
+    )
+    model = AstroModel(
+        name="content",
+        body_definitions=bodies,
+        aspect_definitions=aspects,
+        signs=signs,
+        settings=ms
+    )
+    return model, display_config
+
+
 # Additional Utility Functions
 
 def now_utc() -> datetime:
@@ -131,11 +227,31 @@ def location_equals(loc1: Location, loc2: Location) -> bool:
 
 if __name__ == "__main__":
     # simple test
-    # this module is responsible for displaying dates and places properly
-    print(Actual())  # default fallback - current date and time
-    print(Actual("15.5.2020"))
-    print(Actual("11/9/1982 11:59"))
-    print(Actual(t="place"))  # default fallback for location
-    print(Actual("Prague", t="place"))
-    print(Actual("Praha", t="place"))  # supports multiple languages
-    print(Actual("Kdesicosi", t="place"))  # also for unknown ones
+    if 1 == 2:
+        # this module is responsible for displaying dates and places properly
+        print(Actual())  # default fallback - current date and time
+        print(Actual("15.5.2020"))
+        print(Actual("11/9/1982 11:59"))
+        print(Actual(t="place"))  # default fallback for location
+        print(Actual("Prague", t="place"))
+        print(Actual("Praha", t="place"))  # supports multiple languages
+        print(Actual("Kdesicosi", t="place"))  # also for unknown ones
+        print("*"*50)
+    else:
+        # Test parse_sfs_content with encoding detection
+        sfs_path = "/home/jav/Documents/Space/Kefer Astrology/function-wrapper/init.sfs"
+        encodings = ["utf-8-sig", "utf-16", "latin-1", "windows-1250"]
+        sfs_content = None
+        for enc in encodings:
+            try:
+                with open(sfs_path, encoding=enc) as f:
+                    sfs_content = f.read()
+                break
+            except Exception:
+                continue
+        if sfs_content is None:
+            print(f"Could not decode {sfs_path} with utf-8, utf-16, windows-1250, or latin-1.")
+        else:
+            model, display = parse_sfs_content(sfs_content)
+            print(f"AstroModel: {model}")
+            print(f"Display config: {display}")

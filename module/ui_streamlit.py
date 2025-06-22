@@ -2,7 +2,7 @@ import datetime
 import streamlit as st
 
 from models import ChartInstance, Location, ChartSubject, ChartConfig
-from utils import Actual, combine_date_time, prepare_horoscope  #, now_utc
+from utils import Actual, parse_sfs_content, combine_date_time, prepare_horoscope  #, now_utc
 # from z_visual import figure_3d
 from services import Subject, extract_kerykeion_points
 from workspace import change_language
@@ -102,7 +102,31 @@ def main():
             f'{lang["display"]} {horoscope_name}: {lang["first_date"]} {event[1]["datetime"]} / {lang["loc"]} {input_location}'
         )
     elif computation == lang["radix_open"]:
-        st.file_uploader("Select a file to open")
+        uploaded_file = st.file_uploader("Select a file to open", type=["sfs"])
+        if uploaded_file is not None:
+            encodings = ["utf-8-sig", "utf-16", "latin-1"]
+            content = None
+            for enc in encodings:
+                try:
+                    uploaded_file.seek(0)
+                    content = uploaded_file.read().decode(enc)
+                    break
+                except Exception:
+                    continue
+            if content is None:
+                st.error("Could not decode file with utf-8, utf-16, or latin-1.")
+            else:
+                try:
+                    astro_model, display_config = parse_sfs_content(content)
+                    st.success("SFS file loaded successfully!")
+                    st.write(f"Model name: {astro_model.name}")
+                    st.write(f"Bodies: {astro_model.body_definitions}")
+                    st.write(f"Aspects: {len(astro_model.aspect_definitions)}")
+                    st.write(f"Signs: {len(astro_model.signs)}")
+                    st.write("Display config:", display_config)
+                except Exception as e:
+                    st.error(f"Failed to parse SFS file: {e}")
+
     elif computation == lang["radix_save"]:
         st.file_uploader("Here will be a set of adjustments....")
     elif computation == lang["radix_moon"]:
