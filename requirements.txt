@@ -22,7 +22,7 @@ cachetools==6.1.0
     # via streamlit
 cattrs==25.1.1
     # via requests-cache
-certifi==2025.6.15
+certifi==2025.7.14
     # via requests
 cffi==1.17.1
     # via timezonefinder
@@ -36,7 +36,9 @@ contourpy==1.3.2
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
-fonttools==4.58.4
+flatbuffers==25.2.10
+    # via timezonefinder
+fonttools==4.59.0
     # via matplotlib
 geographiclib==2.0
     # via geopy
@@ -56,7 +58,7 @@ jinja2==3.1.6
     # via
     #   altair
     #   pydeck
-jsonschema==4.24.0
+jsonschema==4.25.0
     # via altair
 jsonschema-specifications==2025.4.1
     # via jsonschema
@@ -68,11 +70,11 @@ markupsafe==3.0.2
     # via jinja2
 matplotlib==3.10.3
     # via -r requirements.in
-narwhals==1.43.1
+narwhals==1.47.1
     # via
     #   altair
     #   plotly
-numpy==2.3.0
+numpy==2.3.1
     # via
     #   contourpy
     #   matplotlib
@@ -87,11 +89,11 @@ packaging==25.0
     #   matplotlib
     #   plotly
     #   streamlit
-pandas==2.3.0
+pandas==2.3.1
     # via
     #   -r requirements.in
     #   streamlit
-pillow==11.2.1
+pillow==11.3.0
     # via
     #   matplotlib
     #   streamlit
@@ -99,11 +101,11 @@ pip-tools==7.4.1
     # via -r requirements.in
 platformdirs==4.3.8
     # via requests-cache
-plotly==6.1.2
+plotly==6.2.0
     # via -r requirements.in
 protobuf==6.31.1
     # via streamlit
-pyarrow==20.0.0
+pyarrow==21.0.0
     # via streamlit
 pycparser==2.22
     # via cffi
@@ -142,7 +144,7 @@ requests==2.32.4
     #   streamlit
 requests-cache==1.2.1
     # via kerykeion
-rpds-py==0.25.1
+rpds-py==0.26.0
     # via
     #   jsonschema
     #   referencing
@@ -156,17 +158,17 @@ six==1.17.0
     #   scour
 smmap==5.0.2
     # via gitdb
-streamlit==1.46.0
+streamlit==1.47.0
     # via -r requirements.in
 tenacity==9.1.2
     # via streamlit
-timezonefinder==6.5.9
+timezonefinder==6.6.2
     # via -r requirements.in
 toml==0.10.2
     # via streamlit
 tornado==6.5.1
     # via streamlit
-typing-extensions==4.14.0
+typing-extensions==4.14.1
     # via
     #   altair
     #   cattrs
