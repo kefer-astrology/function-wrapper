@@ -61,7 +61,6 @@ def main():
             #     event[1]["pressed"] = st.form_submit_button(
             #         lang["control"], use_container_width=True
             #     )
-    with sidebar_cont["second"]:
         with st.expander(lang["settings_advanced"]):
             daylight_saving_time = st.checkbox("Letní čas - automatické detekování", value=True)
             manual_option = st.radio(
@@ -69,6 +68,7 @@ def main():
                 ("NE", "ANO")
             )
             # Submit button
+    with sidebar_cont["second"]:
         with st.expander(lang["second_info"]):
             with st.form(key="second_info"):
                 event[2]["name"] = st.text_input(lang["name"])
@@ -126,12 +126,13 @@ def main():
                     st.write("Display config:", display_config)
                 except Exception as e:
                     st.error(f"Failed to parse SFS file: {e}")
-
     elif computation == lang["radix_save"]:
         st.file_uploader("Here will be a set of adjustments....")
     elif computation == lang["radix_moon"]:
         st.warning("Moon phases report - not active for now")
-
+    elif computation == lang["radix_aspect"]:
+        if not event[2]["name"]:
+            st.warning("Please set up also second event")
     # 6 - act if any button pressed
     # if event[1]["pressed"]:
     #     st.write(f'{lang["name"]}: {event[1]["name"]}')
