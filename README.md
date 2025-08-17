@@ -1,6 +1,6 @@
 # Function layer for Kefer Astrology
 
-## Descriuption:
+## Description (folders):
 
 - cache: temporary files for computation
 - module: all the program logic
@@ -12,18 +12,20 @@
 
 Environment preparation: 
 
-1. create virtual environment: `python -m venv venv`
+1. create virtual environment: `python3 -m venv venv`
 2. activate virtual environment:
-   - Windows: `astro\Scripts\activate`
-   - Linux `source ./astro/bin/activate`
+   - Windows: `venv\Scripts\activate`
+   - Linux `source ./venv/bin/activate`
 3. install libraries:
    - generate requirements `pip-compile --upgrade --strip-extras requirements.in`
-   - install from generated req file `pip install -r requirements.txt`
+   - install from generated req file `pip3 install -r requirements.txt`
 4. run the wrapper ui helper:
-   - default `python module` runs on streamlit (`python -m streamlit run module/ui_streamlit.py`)
+   - default `python3 module` runs on streamlit (`python3 -m streamlit run module/ui_streamlit.py`)
    - zbytek TBD
-   - parameter `python module kivy` (`python module/ui_kivy.py`)
+   - parameter `python3 module kivy` (`python3 module/ui_kivy.py`)
    - command line UI run with `-t` 
+5. run tests:
+   - currently using unittest: `python3 -m unittest`
 
 ## How it works
 

@@ -16,29 +16,29 @@ attrs==25.3.0
     #   requests-cache
 blinker==1.9.0
     # via streamlit
-build==1.2.2.post1
+build==1.3.0
     # via pip-tools
 cachetools==6.1.0
     # via streamlit
 cattrs==25.1.1
     # via requests-cache
-certifi==2025.7.14
+certifi==2025.8.3
     # via requests
 cffi==1.17.1
     # via timezonefinder
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via requests
 click==8.2.1
     # via
     #   pip-tools
     #   streamlit
-contourpy==1.3.2
+contourpy==1.3.3
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
 flatbuffers==25.2.10
     # via timezonefinder
-fonttools==4.59.0
+fonttools==4.59.1
     # via matplotlib
 geographiclib==2.0
     # via geopy
@@ -46,9 +46,9 @@ geopy==2.4.1
     # via -r requirements.in
 gitdb==4.0.12
     # via gitpython
-gitpython==3.1.44
+gitpython==3.1.45
     # via streamlit
-h3==4.3.0
+h3==4.3.1
     # via timezonefinder
 idna==3.10
     # via
@@ -62,19 +62,19 @@ jsonschema==4.25.0
     # via altair
 jsonschema-specifications==2025.4.1
     # via jsonschema
-kerykeion==4.26.2
+kerykeion==4.26.3
     # via -r requirements.in
-kiwisolver==1.4.8
+kiwisolver==1.4.9
     # via matplotlib
 markupsafe==3.0.2
     # via jinja2
-matplotlib==3.10.3
+matplotlib==3.10.5
     # via -r requirements.in
-narwhals==1.47.1
+narwhals==2.1.2
     # via
     #   altair
     #   plotly
-numpy==2.3.1
+numpy==2.3.2
     # via
     #   contourpy
     #   matplotlib
@@ -97,13 +97,13 @@ pillow==11.3.0
     # via
     #   matplotlib
     #   streamlit
-pip-tools==7.4.1
+pip-tools==7.5.0
     # via -r requirements.in
 platformdirs==4.3.8
     # via requests-cache
-plotly==6.2.0
+plotly==6.3.0
     # via -r requirements.in
-protobuf==6.31.1
+protobuf==6.32.0
     # via streamlit
 pyarrow==21.0.0
     # via streamlit
@@ -144,7 +144,7 @@ requests==2.32.4
     #   streamlit
 requests-cache==1.2.1
     # via kerykeion
-rpds-py==0.26.0
+rpds-py==0.27.0
     # via
     #   jsonschema
     #   referencing
@@ -158,15 +158,15 @@ six==1.17.0
     #   scour
 smmap==5.0.2
     # via gitdb
-streamlit==1.47.0
+streamlit==1.48.1
     # via -r requirements.in
 tenacity==9.1.2
     # via streamlit
-timezonefinder==6.6.2
+timezonefinder==8.0.0
     # via -r requirements.in
 toml==0.10.2
     # via streamlit
-tornado==6.5.1
+tornado==6.5.2
     # via streamlit
 typing-extensions==4.14.1
     # via
