@@ -36,7 +36,7 @@ MDScreen:
                 id: toolbar_icons
                 spacing: "4dp"
 
-                # File-ish
+                # File actions
                 MDIconButton:
                     icon: "file-plus"
                     on_release: app.on_toolbar("new_chart")
@@ -44,172 +44,153 @@ MDScreen:
                     icon: "folder-open"
                     on_release: app.on_toolbar("open_chart")
                 MDIconButton:
-                    icon: "content-save"
-                    on_release: app.on_toolbar("save_chart")
-                MDIconButton:
                     icon: "export"
                     on_release: app.on_toolbar("export_chart")
-
-                # ---- TOP-LEVEL VIEW SWITCHERS ----
                 MDIconButton:
-                    icon: "orbit"
-                    on_release: app.set_view("aspects")
+                    icon: "folder-cog"
+                    on_release: app.on_toolbar("open_workspace")
                 MDIconButton:
-                    icon: "satellite-variant"
-                    on_release: app.set_view("transits")
-                MDIconButton:
-                    icon: "arrow-decision-auto"
-                    on_release: app.set_view("progressions")
-                MDIconButton:
-                    icon: "account-heart-outline"
-                    on_release: app.set_view("synastry")
-
-                # misc tools
-                MDIconButton:
-                    icon: "account"
-                    on_release: app.on_toolbar("subject")
-                MDIconButton:
-                    icon: "calendar-clock"
-                    on_release: app.on_toolbar("time")
-                MDIconButton:
-                    icon: "table"
-                    on_release: app.on_toolbar("objects")
+                    icon: "chart-donut"
+                    on_release: app.on_toolbar("chart_settings")
                 MDIconButton:
                     icon: "cog"
                     on_release: app.on_toolbar("settings")
-                MDIconButton:
-                    icon: "palette"
-                    on_release: app.on_toolbar("theme")
-                MDIconButton:
-                    icon: "help-circle-outline"
-                    on_release: app.on_toolbar("help")
 
         # ===================== CENTER (3 COLUMNS) =====================
         MDBoxLayout:
             id: center_area
             orientation: "horizontal"
 
-            # -------- Left column (15%) : 3 expandable sections
+            # -------- Left column (20%) : 3 expandable sections
             MDBoxLayout:
                 id: left_col
                 orientation: "vertical"
-                size_hint_x: .15
+                size_hint_x: .20
                 padding: "8dp"
                 spacing: "8dp"
 
-                # Subject info panel
-                MDCard:
-                    radius: "12dp"
+                AnchorLayout:
+                    anchor_x: "left"
+                    anchor_y: "top"
                     MDBoxLayout:
                         orientation: "vertical"
-                        padding: "8dp"
-                        spacing: "6dp"
+                        spacing: "8dp"
+                        size_hint_y: None
+                        height: self.minimum_height
 
-                        # Header (click to expand/collapse)
-                        MDButton:
-                            style: "text"
-                            on_release: app.toggle_section("subject")
-                            MDButtonText:
-                                text: "Subject Info"
+                        # Subject info panel
+                        MDCard:
+                            radius: "12dp"
+                            MDBoxLayout:
+                                orientation: "vertical"
+                                padding: "8dp"
+                                spacing: "6dp"
 
-                        # Content
-                        MDBoxLayout:
-                            id: subject_content
-                            orientation: "vertical"
-                            spacing: "6dp"
-                            padding: "4dp"
-                            size_hint_y: None
-                            height: "0dp"
-                            opacity: 0
+                                # Header (click to expand/collapse)
+                                MDButton:
+                                    style: "text"
+                                    on_release: app.toggle_section("subject")
+                                    MDButtonText:
+                                        text: "Subject Info"
 
-                            MDTextField:
-                                id: subject_name
-                                hint_text: "Name"
-                                text: app.current_person_name
-                            MDTextField:
-                                id: subject_place
-                                hint_text: "Birth place"
-                            MDTextField:
-                                id: subject_notes
-                                hint_text: "Notes"
+                                # Content
+                                MDBoxLayout:
+                                    id: subject_content
+                                    orientation: "vertical"
+                                    spacing: "6dp"
+                                    padding: "4dp"
+                                    size_hint_y: None
+                                    height: "0dp"
+                                    opacity: 0
 
-                # Time settings panel
-                MDCard:
-                    radius: "12dp"
-                    MDBoxLayout:
-                        orientation: "vertical"
-                        padding: "8dp"
-                        spacing: "6dp"
+                                    MDTextField:
+                                        id: subject_name
+                                        hint_text: "Name"
+                                        text: app.current_person_name
+                                    MDTextField:
+                                        id: subject_place
+                                        hint_text: "Birth place"
+                                    MDTextField:
+                                        id: subject_notes
+                                        hint_text: "Notes"
 
-                        MDButton:
-                            style: "text"
-                            on_release: app.toggle_section("time")
-                            MDButtonText:
-                                text: "Time Settings"
+                        # Time settings panel
+                        MDCard:
+                            radius: "12dp"
+                            MDBoxLayout:
+                                orientation: "vertical"
+                                padding: "8dp"
+                                spacing: "6dp"
 
-                        MDBoxLayout:
-                            id: time_content
-                            orientation: "vertical"
-                            spacing: "6dp"
-                            padding: "4dp"
-                            size_hint_y: None
-                            height: "0dp"
-                            opacity: 0
+                                MDButton:
+                                    style: "text"
+                                    on_release: app.toggle_section("time")
+                                    MDButtonText:
+                                        text: "Time Settings"
 
-                            MDTextField:
-                                id: date_input
-                                hint_text: "Date (YYYY-MM-DD)"
-                            MDTextField:
-                                id: time_input
-                                hint_text: "Time (HH:MM)"
-                            MDTextField:
-                                id: tz_input
-                                hint_text: "Timezone (e.g., CET)"
+                                MDBoxLayout:
+                                    id: time_content
+                                    orientation: "vertical"
+                                    spacing: "6dp"
+                                    padding: "4dp"
+                                    size_hint_y: None
+                                    height: "0dp"
+                                    opacity: 0
 
-                # Transits options panel
-                MDCard:
-                    radius: "12dp"
-                    MDBoxLayout:
-                        orientation: "vertical"
-                        padding: "8dp"
-                        spacing: "6dp"
+                                    MDTextField:
+                                        id: date_input
+                                        hint_text: "Date (YYYY-MM-DD)"
+                                    MDTextField:
+                                        id: time_input
+                                        hint_text: "Time (HH:MM)"
+                                    MDTextField:
+                                        id: tz_input
+                                        hint_text: "Timezone (e.g., CET)"
 
-                        MDButton:
-                            style: "text"
-                            on_release: app.toggle_section("transits")
-                            MDButtonText:
-                                text: "Transits Options"
+                        # Transits options panel
+                        MDCard:
+                            radius: "12dp"
+                            MDBoxLayout:
+                                orientation: "vertical"
+                                padding: "8dp"
+                                spacing: "6dp"
 
-                        MDBoxLayout:
-                            id: transits_content
-                            orientation: "vertical"
-                            spacing: "6dp"
-                            padding: "4dp"
-                            size_hint_y: None
-                            height: "0dp"
-                            opacity: 0
+                                MDButton:
+                                    style: "text"
+                                    on_release: app.toggle_section("transits")
+                                    MDButtonText:
+                                        text: "Transits Options"
 
-                            MDCheckbox:
-                                id: show_outer
-                                size_hint_x: None
-                                width: "32dp"
-                            MDLabel:
-                                text: "Show outer planets"
-                                adaptive_height: True
+                                MDBoxLayout:
+                                    id: transits_content
+                                    orientation: "vertical"
+                                    spacing: "6dp"
+                                    padding: "4dp"
+                                    size_hint_y: None
+                                    height: "0dp"
+                                    opacity: 0
 
-                            MDCheckbox:
-                                id: show_asteroids
-                                size_hint_x: None
-                                width: "32dp"
-                            MDLabel:
-                                text: "Include asteroids"
-                                adaptive_height: True
+                                    MDCheckbox:
+                                        id: show_outer
+                                        size_hint_x: None
+                                        width: "32dp"
+                                    MDLabel:
+                                        text: "Show outer planets"
+                                        adaptive_height: True
 
-            # -------- Middle column (70%) : radix chart area (reflects current view & person)
+                                    MDCheckbox:
+                                        id: show_asteroids
+                                        size_hint_x: None
+                                        width: "32dp"
+                                    MDLabel:
+                                        text: "Include asteroids"
+                                        adaptive_height: True
+
+            # -------- Middle column (60%) : radix chart area (reflects current view & person)
             MDBoxLayout:
                 id: middle_col
                 orientation: "vertical"
-                size_hint_x: .70
+                size_hint_x: .60
                 padding: "8dp"
                 spacing: "8dp"
 
@@ -220,14 +201,8 @@ MDScreen:
                         orientation: "vertical"
                         padding: "8dp"
                         spacing: "6dp"
-                        # Placeholder canvas for the chart
-                        canvas.before:
-                            Color:
-                                rgba: 0.08, 0.1, 0.12, 1
-                            RoundedRectangle:
-                                pos: self.pos
-                                size: self.size
-                                radius: [16,]
+                        # Central part: no background (transparent)
+                        md_bg_color: 0, 0, 0, 0
 
                         MDLabel:
                             id: view_label
@@ -236,13 +211,26 @@ MDScreen:
                             halign: "center"
                             theme_text_color: "Primary"
 
-                        # put your actual chart widget here later
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            spacing: "8dp"
+                            MDButton:
+                                style: "filled"
+                                on_release: app.render_radix()
+                                MDButtonText:
+                                    text: "Render Radix"
+                            MDBoxLayout:
+                                id: radix_container
+                                orientation: "vertical"
+                                size_hint_y: 1
+                                padding: "0dp"
+                                spacing: "0dp"
 
-            # -------- Right column (15%) : one expandable with table/list
+            # -------- Right column (20%) : one expandable with table/list
             MDBoxLayout:
                 id: right_col
                 orientation: "vertical"
-                size_hint_x: .15
+                size_hint_x: .20
                 padding: "8dp"
                 spacing: "8dp"
 
@@ -301,35 +289,44 @@ MDScreen:
             spacing: "8dp"
             md_bg_color: app.theme_cls.surfaceColor
 
-            # four "chip-like" buttons
-            MDButton:
-                id: person_btn_0
-                style: "filled"  # selected by default
-                on_release: app.set_person(0)
-                MDButtonText:
-                    id: person_text_0
-                    text: app.people[0] if len(app.people) > 0 else "—"
+            AnchorLayout:
+                anchor_x: "center"
+                anchor_y: "center"
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    spacing: "8dp"
+                    size_hint_x: None
+                    width: self.minimum_width
 
-            MDButton:
-                id: person_btn_1
-                style: "text"
-                on_release: app.set_person(1)
-                MDButtonText:
-                    id: person_text_1
-                    text: app.people[1] if len(app.people) > 1 else "—"
+                    # four "chip-like" buttons
+                    MDButton:
+                        id: person_btn_0
+                        style: "filled"  # selected by default
+                        on_release: app.set_person(0)
+                        MDButtonText:
+                            id: person_text_0
+                            text: app.people[0] if len(app.people) > 0 else "—"
 
-            MDButton:
-                id: person_btn_2
-                style: "text"
-                on_release: app.set_person(2)
-                MDButtonText:
-                    id: person_text_2
-                    text: app.people[2] if len(app.people) > 2 else "—"
+                    MDButton:
+                        id: person_btn_1
+                        style: "text"
+                        on_release: app.set_person(1)
+                        MDButtonText:
+                            id: person_text_1
+                            text: app.people[1] if len(app.people) > 1 else "—"
 
-            MDButton:
-                id: person_btn_3
-                style: "text"
-                on_release: app.set_person(3)
-                MDButtonText:
-                    id: person_text_3
-                    text: app.people[3] if len(app.people) > 3 else "—"
+                    MDButton:
+                        id: person_btn_2
+                        style: "text"
+                        on_release: app.set_person(2)
+                        MDButtonText:
+                            id: person_text_2
+                            text: app.people[2] if len(app.people) > 2 else "—"
+
+                    MDButton:
+                        id: person_btn_3
+                        style: "text"
+                        on_release: app.set_person(3)
+                        MDButtonText:
+                            id: person_text_3
+                            text: app.people[3] if len(app.people) > 3 else "—"

@@ -10,11 +10,12 @@ from enum import Enum
 
 class ChartMode(str, Enum):
     NATAL = "NATAL"
-    TRANSIT = "TRANSIT"
-    PROGRESSED = "PROGRESSED"
-    COMPOSITE = "COMPOSITE"
-    SYNASTRY = "SYNASTRY"
     EVENT = "EVENT"
+    HORARY = "HORARY"
+    COMPOSITE = "COMPOSITE"
+    #PROGRESSED = "PROGRESSED"
+    #SYNASTRY = "SYNASTRY"
+    #TRANSIT = "TRANSIT"
 
 
 class HouseSystem(str, Enum):
@@ -119,6 +120,7 @@ class ChartInstance:
     subject: ChartSubject
     config: ChartConfig
     computed_chart: Optional["Horoscope"] = None
+    tags: List[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -295,3 +297,10 @@ class Workspace:
     layouts: List[ViewLayout]
     annotations: List[Annotation]
     model_overrides: Optional[ModelOverrides] = None
+    # workspace-level defaults
+    preferred_language: Optional[str] = None
+    default_location: Optional[Location] = None
+    default_house_system: Optional[HouseSystem] = None
+    default_aspects: List[str] = field(default_factory=list)
+    color_theme: Optional[str] = None
+    default_engine: Optional[EngineType] = None

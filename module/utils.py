@@ -1,19 +1,38 @@
 # utils.py
 
-from datetime import datetime, date, time, timedelta, UTC
+from datetime import datetime, date, time, timedelta
 from dateutil.parser import parse
 from geopy.geocoders import Nominatim
 from geopy.location import Location as GeoLocation
 from geopy.exc import GeopyError
 import pytz
+from re import match
 from timezonefinder import TimezoneFinder
 from typing import Optional, Union
+import yaml
 
-import re
-from models import (
-    AspectDefinition, AstroModel, BodyDefinition, DateRange, HouseSystem, ChartConfig, ChartInstance, ChartSubject, 
-    Location, ModelSettings, Sign
-)
+try:
+    # For running as part of the package (e.g. from root or in tests)
+    from module.models import (
+        AspectDefinition, AstroModel, BodyDefinition, DateRange, HouseSystem, ChartConfig, ChartInstance, ChartSubject,
+        Location, ModelSettings, Sign, ChartMode, EngineType, ZodiacType, Ayanamsa
+    )
+except ImportError:
+    # For running directly (e.g. python3 module/utils.py)
+    from models import (
+        AspectDefinition, AstroModel, BodyDefinition, DateRange, HouseSystem, ChartConfig, ChartInstance, ChartSubject,
+        Location, ModelSettings, Sign, ChartMode, EngineType, ZodiacType, Ayanamsa
+    )
+
+# simple in-process cache to avoid repeated geocoding of same string
+_GEOCODE_CACHE: dict[str, Optional[GeoLocation]] = {}
+
+class _QuickLoc:
+    """Lightweight stand-in for geopy's Location with address/latitude/longitude."""
+    def __init__(self, addr: str, lat: float, lon: float):
+        self.address = addr
+        self.latitude = lat
+        self.longitude = lon
 
 class Actual:
     """
@@ -35,21 +54,121 @@ class Actual:
 
     def _init_time(self, *args) -> None:
         if not args:
-            self.value = datetime.now()
+            self.value = datetime.now(pytz.UTC)
         elif isinstance(args[0], (datetime, date, time)):
             self.value = args[0] if isinstance(args[0], datetime) else datetime.combine(date.today(), args[0])
-        elif isinstance(args[0], str):
-            self.value = parse(args[0])
-        elif isinstance(args[0], tuple):
-            self.value = parse(str(args[0][0]))
+        elif isinstance(args[0], (str, tuple)):
+            try:
+                # If it's a tuple, extract the first element and convert to string
+                value_to_parse = args[0] if isinstance(args[0], str) else str(args[0][0])
+                # Try dateutil.parser first (default, then dayfirst)
+                try:
+                    self.value = parse(value_to_parse)
+                    return
+                except ValueError as ve:
+                    # If error is about month > 12, try dayfirst
+                    if "month must be in 1..12" in str(ve) or "month out of range" in str(ve):
+                        try:
+                            self.value = parse(value_to_parse, dayfirst=True)
+                            return
+                        except Exception:
+                            pass
+                    else:
+                        pass
+                except Exception:
+                    pass
+                s = value_to_parse.strip()
+                # Ordinal date: YYYY-DDD (day-of-year)
+                m = match(r"^(\d{4})-(\d{3})$", s)
+                if m:
+                    year, day_of_year = int(m.group(1)), int(m.group(2))
+                    self.value = datetime(year, 1, 1) + timedelta(days=day_of_year - 1)
+                    return
+                # ISO week date: YYYY-Www-d
+                m = match(r"^(\d{4})-W(\d{2})-(\d)$", s)
+                if m:
+                    self.value = datetime.strptime(s, "%G-W%V-%u")
+                    return
+                # Compact date: YYYYMMDD
+                m = match(r"^(\d{4})(\d{2})(\d{2})$", s)
+                if m:
+                    self.value = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                    return
+                # Year and month only: YYYY-MM
+                m = match(r"^(\d{4})-(\d{2})$", s)
+                if m:
+                    self.value = datetime(int(m.group(1)), int(m.group(2)), 1)
+                    return
+                # Year only: YYYY
+                m = match(r"^(\d{4})$", s)
+                if m:
+                    self.value = datetime(int(m.group(1)), 1, 1)
+                    return
+                # Relative dates
+                if s.lower() == "today":
+                    self.value = datetime.now(pytz.UTC)
+                    return
+                if s.lower() == "yesterday":
+                    self.value = datetime.now(pytz.UTC) - timedelta(days=1)
+                    return
+                if s.lower() == "tomorrow":
+                    self.value = datetime.now(pytz.UTC) + timedelta(days=1)
+                    return
+                # Unix timestamp (>=10 digits)
+                if s.isdigit() and len(s) >= 10:
+                    self.value = datetime.fromtimestamp(int(s), tz=pytz.UTC)
+                    return
+                # Julian Day Number (JD2451545.0 or 2451545.0)
+                m = match(r"^(?:JD)?(\d{7}\.\d+|\d{7})$", s)
+                if m:
+                    # Julian Day to datetime conversion
+                    jd = float(m.group(1))
+                    jd += 0.5
+                    Z = int(jd)
+                    F = jd - Z
+                    if Z < 2299161:
+                        A = Z
+                    else:
+                        alpha = int((Z - 1867216.25) / 36524.25)
+                        A = Z + 1 + alpha - int(alpha / 4)
+                    B = A + 1524
+                    C = int((B - 122.1) / 365.25)
+                    D = int(365.25 * C)
+                    E = int((B - D) / 30.6001)
+                    day = B - D - int(30.6001 * E) + F
+                    month = E - 1 if E < 14 else E - 13
+                    year = C - 4716 if month > 2 else C - 4715
+                    day_int = int(day)
+                    frac_day = day - day_int
+                    hour = int(frac_day * 24)
+                    minute = int((frac_day * 24 - hour) * 60)
+                    second = int(round((((frac_day * 24 - hour) * 60) - minute) * 60))
+                    self.value = datetime(year, month, day_int, hour, minute, second)
+                    return
+                # Fallback: raise error
+                raise ValueError(f"Unrecognized date format: {value_to_parse}")
+            except Exception as e:
+                print(f"Failed to parse time: {args[0]} ({e}), fallback to current time")
+                self.value = datetime.now(pytz.UTC)
         else:
-            self.value = datetime.now()
+            self.value = datetime.now(pytz.UTC)
 
     def _init_place(self, *args) -> None:
-        self.service = Nominatim(user_agent="astro")
-        place_name = args[0] if args and isinstance(args[0], str) else "Prague"
-        self.value = self._geocode(place_name)
-        self.tz = self._resolve_timezone()
+        # Support direct coordinates "lat,lon" to avoid any network call
+        place_name = args[0] if args and isinstance(args[0], str) else None
+        if isinstance(place_name, str):
+            s = place_name.strip()
+            m = match(r"^\s*([-+]?\d+(?:\.\d+)?)\s*,\s*([-+]?\d+(?:\.\d+)?)\s*$", s)
+            if m:
+                lat = float(m.group(1))
+                lon = float(m.group(2))
+                self.value = _QuickLoc(addr=s, lat=lat, lon=lon)
+                self.tz = self._resolve_timezone()
+                return
+        # Otherwise, use Nominatim with short timeout and cache
+        self.service = Nominatim(user_agent="astro-smrk", timeout=1)
+        self.value = self._geocode(place_name) if place_name else None
+        self.tz = self._resolve_timezone() if self.value else None
 
     def __str__(self) -> str:
         if isinstance(self.value, GeoLocation):
@@ -65,10 +184,18 @@ class Actual:
             self.value += parse(delta)
 
     def _geocode(self, name: str) -> Optional[GeoLocation]:
+        if not name:
+            return None
+        key = name.strip().lower()
+        if key in _GEOCODE_CACHE:
+            return _GEOCODE_CACHE[key]
         try:
-            return self.service.geocode(name, language="en")
+            result = self.service.geocode(name, language="en")
+            _GEOCODE_CACHE[key] = result
+            return result
         except GeopyError:
-            return self.service.geocode("Prague", language="en")
+            _GEOCODE_CACHE[key] = None
+            return None
 
     def _resolve_timezone(self) -> str:
         if not self.value:
@@ -80,7 +207,7 @@ class Actual:
         self.value = self.value.replace(tzinfo=pytz.timezone(tz or "UTC"))
 
     def to_model_location(self) -> Optional[Location]:
-        if isinstance(self.value, GeoLocation):
+        if isinstance(self.value, (GeoLocation, _QuickLoc)):
             return Location(
                 name=self.value.address,
                 latitude=self.value.latitude,
@@ -90,16 +217,30 @@ class Actual:
         return None
 
 
-def prepare_horoscope(name: str='', dt: datetime=None, loc: Location=None) -> ChartInstance:
+def prepare_horoscope(
+    name: str = "",
+    dt: datetime = None,
+    loc: Location = None,
+    engine: Optional[EngineType] = None,
+    ephemeris_path: Optional[str] = None,
+    zodiac: ZodiacType = ZodiacType.TROPICAL,
+    house: HouseSystem = HouseSystem.PLACIDUS,
+) -> ChartInstance:
     return ChartInstance(
         id=name,
         subject=ChartSubject(
             id=name, name=name, event_time=dt, location=loc
         ),
         config=ChartConfig(
-            mode="NATAL", house_system="PLACIDUS", zodiac_type="Tropical",
-            included_points=[], aspect_orbs={'a':1.5}, display_style="",
-            color_theme=''
+            mode=ChartMode.NATAL,
+            house_system=house,
+            zodiac_type=zodiac,
+            included_points=[],
+            aspect_orbs={'a': 1.5},
+            display_style="",
+            color_theme="",
+            override_ephemeris=ephemeris_path,
+            engine=engine,
         )
     )
 
@@ -154,21 +295,21 @@ def parse_sfs_content(content):
         if not line or line.startswith('//'):
             continue
         # Section start
-        m = re.match(r'_settings\.(Body|Aspect|Sign)\.New\((\w+)\);', line)
+        m = match(r'_settings\.(Body|Aspect|Sign)\.New\((\w+)\);', line)
         if m:
             flush_obj()
             current_section, current_obj = m.group(1), m.group(2)
             obj_props = {}
             continue
         # Property assignment for object
-        m = re.match(r'_settings\.(Body|Aspect|Sign)\.(\w+)\.(\w+) = "?(.*?)"?;', line)
+        m = match(r'_settings\.(Body|Aspect|Sign)\.(\w+)\.(\w+) = "?(.*?)"?;', line)
         if m:
             section, obj, prop, value = m.groups()
             if section == current_section and obj == current_obj:
                 obj_props[prop] = value
             continue
         # Model/Display/Other assignment
-        m = re.match(r'_settings\.(Model|Display)\.(\w+) = "?(.*?)"?;', line)
+        m = match(r'_settings\.(Model|Display)\.(\w+) = "?(.*?)"?;', line)
         if m:
             section, key, value = m.groups()
             if section == 'Model':
@@ -198,7 +339,7 @@ def parse_sfs_content(content):
 # Additional Utility Functions
 
 def now_utc() -> datetime:
-    return datetime.now(UTC).replace(tzinfo=pytz.utc)
+    return datetime.utcnow().replace(tzinfo=pytz.utc)
 
 def to_timezone(dt: datetime, tz_name: str) -> datetime:
     return dt.astimezone(pytz.timezone(tz_name))
@@ -225,17 +366,148 @@ def location_equals(loc1: Location, loc2: Location) -> bool:
         loc1.timezone == loc2.timezone
     )
 
+def default_ephemeris_path() -> str:
+    """Return the default path to the local JPL ephemeris file (de421.bsp) under source/.
+    """
+    import os
+    base_dir = os.path.dirname(os.path.dirname(__file__))  # .../function-wrapper/module -> .../function-wrapper
+    return os.path.join(base_dir, 'source', 'de421.bsp')
+
+def ensure_aware(dt: datetime, tz_name: Optional[str] = None) -> datetime:
+    """Return a timezone-aware datetime.
+    - If dt is already aware, return it unchanged.
+    - If tz_name is provided, localize to that timezone (pytz style).
+    - Otherwise, assume UTC.
+    """
+    if getattr(dt, 'tzinfo', None) is not None and dt.tzinfo is not None:
+        return dt
+    try:
+        if tz_name:
+            return pytz.timezone(tz_name).localize(dt)
+    except Exception:
+        pass
+    return pytz.UTC.localize(dt)
+
+
+# ─────────────────────
+# YAML IMPORT/EXPORT HELPERS
+# ─────────────────────
+
+def _to_primitive_local(obj):
+    from dataclasses import asdict, is_dataclass
+    from enum import Enum
+    if is_dataclass(obj):
+        obj = asdict(obj)
+    if isinstance(obj, Enum):
+        return obj.value
+    if isinstance(obj, (datetime, date, time)):
+        return obj.isoformat()
+    if isinstance(obj, dict):
+        return {k: _to_primitive_local(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple, set)):
+        return [ _to_primitive_local(v) for v in obj ]
+    return obj
+
+def parse_chart_yaml(data: dict) -> ChartInstance:
+    """Construct a ChartInstance from a YAML-mapped dict with safe coercions."""
+    # Subject
+    subj_d = data.get('subject') or {}
+    if not isinstance(subj_d, dict):
+        raise ValueError('Invalid subject in chart YAML')
+    name = subj_d.get('name') or data.get('id') or 'chart'
+    # event_time
+    et = subj_d.get('event_time')
+    if isinstance(et, str):
+        try:
+            et = parse(et)
+        except Exception:
+            et = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    elif not isinstance(et, (datetime, date, time)):
+        et = datetime.utcnow().replace(tzinfo=pytz.UTC)
+    # location
+    loc_d = subj_d.get('location') or {}
+    if isinstance(loc_d, dict):
+        loc = Location(
+            name=loc_d.get('name') or '',
+            latitude=float(loc_d.get('latitude') or 0.0),
+            longitude=float(loc_d.get('longitude') or 0.0),
+            timezone=loc_d.get('timezone') or 'UTC',
+        )
+    else:
+        # allow free-text location; geocode to model
+        loc = Actual(str(loc_d or ''), t='loc').to_model_location()
+
+    subject = ChartSubject(
+        id=subj_d.get('id') or name,
+        name=name,
+        event_time=et if isinstance(et, datetime) else datetime.combine(et, time.min),
+        location=loc,
+    )
+
+    # Config
+    cfg_d = data.get('config') or {}
+    # enums with graceful fallback
+    def _enum_or(val, enum_cls, default):
+        if val is None:
+            return default
+        try:
+            # allow direct value (e.g., "jpl")
+            return enum_cls(val)
+        except Exception:
+            try:
+                # allow by name (e.g., "PLACIDUS")
+                return getattr(enum_cls, str(val).upper(), default)
+            except Exception:
+                return default
+
+    cfg = ChartConfig(
+        mode=_enum_or(cfg_d.get('mode', 'NATAL'), ChartMode, ChartMode.NATAL),
+        house_system=_enum_or(cfg_d.get('house_system', 'PLACIDUS'), HouseSystem, HouseSystem.PLACIDUS),
+        zodiac_type=_enum_or(cfg_d.get('zodiac_type', 'TROPICAL'), ZodiacType, ZodiacType.TROPICAL),
+        included_points=list(cfg_d.get('included_points', []) or []),
+        aspect_orbs=dict(cfg_d.get('aspect_orbs', {}) or {}),
+        display_style=str(cfg_d.get('display_style', '') or ''),
+        color_theme=str(cfg_d.get('color_theme', '') or ''),
+        override_ephemeris=cfg_d.get('override_ephemeris'),
+        model=cfg_d.get('model'),
+        engine=_enum_or(cfg_d.get('engine'), EngineType, None),
+        ayanamsa=_enum_or(cfg_d.get('ayanamsa'), Ayanamsa, None),
+    )
+
+    cid = data.get('id') or subject.id or name
+    tags = [t for t in (data.get('tags') or []) if t]
+    return ChartInstance(id=cid, subject=subject, config=cfg, tags=tags)
+
+def import_chart_yaml(path: str) -> ChartInstance:
+    with open(path, 'r', encoding='utf-8') as f:
+        data = yaml.safe_load(f) or {}
+    return parse_chart_yaml(data)
+
+def export_chart_yaml(chart: ChartInstance, dest_dir: str) -> str:
+    """Export a ChartInstance as YAML into dest_dir; return absolute file path."""
+    import os
+    base = os.path.abspath(dest_dir)
+    os.makedirs(base, exist_ok=True)
+    fname = f"{(getattr(chart, 'id', '') or 'chart').replace(' ', '-').lower()}.yml"
+    out = os.path.join(base, fname)
+    data = _to_primitive_local(chart)
+    with open(out, 'w', encoding='utf-8') as f:
+        yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
+    return out
+
 if __name__ == "__main__":
     # simple test
-    if 1 == 2:
+    if 1 == 1:
         # this module is responsible for displaying dates and places properly
-        print(Actual())  # default fallback - current date and time
+        #print(Actual())  # default fallback - current date and time
+        print(Actual("1700000000"))
         print(Actual("15.5.2020"))
         print(Actual("11/9/1982 11:59"))
+        print(Actual("2023-348"))  # Gregorian date
         print(Actual(t="place"))  # default fallback for location
         print(Actual("Prague", t="place"))
         print(Actual("Praha", t="place"))  # supports multiple languages
-        print(Actual("Kdesicosi", t="place"))  # also for unknown ones
+        print(Actual("Kdesicosi", t="place"))  # should be none
         print("*"*50)
     else:
         # Test parse_sfs_content with encoding detection

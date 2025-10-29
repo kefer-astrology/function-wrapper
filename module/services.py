@@ -1,31 +1,40 @@
-from models import (
-    Location, DateRange, CelestialBody, Aspect, AstroModel,
-    ChartConfig, ModelOverrides, BodyDefinition, AspectDefinition, Sign
-)
+try:
+    from module.models import (
+        Location, DateRange, CelestialBody, Aspect, AstroModel,
+        ChartConfig, ModelOverrides, BodyDefinition, AspectDefinition, Sign, EngineType, ChartInstance
+    )
+except ImportError:
+    from models import (
+        Location, DateRange, CelestialBody, Aspect, AstroModel,
+        ChartConfig, ModelOverrides, BodyDefinition, AspectDefinition, Sign, EngineType, ChartInstance
+    )
 from kerykeion import AstrologicalSubject, KerykeionChartSVG, Report, KerykeionPointModel
 from pandas import DataFrame
 from typing import Dict, List, Optional
-from utils import Actual
+from utils import Actual, default_ephemeris_path, ensure_aware, prepare_horoscope
+from z_visual import build_radix_figure
 try:
-    from skyfield.api import load, Topos
+    from skyfield.api import load, load_file, Topos
     JPL = True
 except ImportError:
     JPL = False
     print("NASA JPL Ephemeris deactivated")
 
-
 # ─────────────────────
 # 🪐 POSITION CALCULATIONS (Skyfield-based for JPL)
 # ─────────────────────
 
-def compute_jpl_positions(name: str, dt_str: str, loc_str: str) -> Dict[str, float]:
+def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: Optional[str] = None) -> Dict[str, float]:
     if JPL:
         ts = load.timescale()
         time = Actual(dt_str, t="date")
         place = Actual(loc_str, t="loc")
 
-        t = ts.from_datetime(time.value)
-        eph = load("de421.bsp")
+        # Ensure timezone-aware datetime using centralized utils
+        t = ts.from_datetime(ensure_aware(time.value, getattr(place, 'tz', None)))
+        eph_file = ephemeris_path or default_ephemeris_path()
+        # Use load_file for explicit local path support
+        eph = load_file(eph_file)
         observer = Topos(latitude_degrees=place.value.latitude, longitude_degrees=place.value.longitude)
 
         planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
@@ -139,7 +148,161 @@ def merge_model_with_overrides(model: AstroModel, overrides: Optional[ModelOverr
     return model
 
 
-# Example usage:
-# subject = compute_subject("John", "1990-05-01 14:30", "New York")
-# svg = create_relation_svg(subject1, subject2)
-# jpl_positions = compute_jpl_positions("John", "1990-05-01 14:30", "New York")
+def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_str: str,
+                      ephemeris_path: Optional[str] = None) -> Dict[str, float]:
+    """Dispatch position computation based on engine.
+    - For EngineType.JPL, returns a dict of ecliptic longitudes using Skyfield and a local ephemeris file.
+    - For other or None, returns Kerykeion planet ecliptic longitudes (degrees) as a dict.
+    """
+    if engine == EngineType.JPL:
+        return compute_jpl_positions(name, dt_str, loc_str, ephemeris_path=ephemeris_path)
+    # Fallback to Kerykeion: robust extraction from KerykeionPointModel attributes
+    subj = compute_subject(name, dt_str, loc_str)
+    positions: Dict[str, float] = {}
+    # Preferred keys for longitude on KerykeionPointModel
+    lon_keys = ("ecliptic_longitude", "longitude", "lon", "degree", "deg")
+    try:
+        for attr_name in dir(subj):
+            attr = getattr(subj, attr_name)
+            if isinstance(attr, KerykeionPointModel):
+                # Determine name label
+                pname = (getattr(attr, "name", None) or attr_name or "").strip().lower()
+                # Find a longitude-like value
+                lon_val = None
+                for k in lon_keys:
+                    if hasattr(attr, k):
+                        lon_val = getattr(attr, k)
+                        break
+                if lon_val is None and hasattr(attr, "__dict__"):
+                    for k in lon_keys:
+                        if k in attr.__dict__:
+                            lon_val = attr.__dict__[k]
+                            break
+                if lon_val is not None:
+                    try:
+                        positions[pname] = float(lon_val) % 360.0
+                    except Exception:
+                        continue
+    except Exception:
+        pass
+    # If we found many points, prefer canonical planetary subset when possible
+    canonical = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
+    subset = {k: positions[k] for k in canonical if k in positions}
+    return subset or positions
+
+
+def compute_positions_for_chart(chart: ChartInstance) -> Dict[str, float]:
+    """Compute positions using a ChartInstance's engine and ephemeris settings.
+    Uses chart.subject.event_time and chart.subject.location.name for location lookup.
+    """
+    engine = getattr(chart.config, 'engine', None)
+    eph = getattr(chart.config, 'override_ephemeris', None)
+    name = chart.subject.name
+    dt_str = str(chart.subject.event_time)
+    loc_str = chart.subject.location.name
+    return compute_positions(engine, name, dt_str, loc_str, ephemeris_path=eph)
+
+
+# ─────────────────────
+# 📦 HIGHER-LEVEL APP SERVICES (UI-agnostic)
+# ─────────────────────
+
+def build_chart_instance(name: str, dt_str: str, loc_text: str,
+                         mode, ws=None, ephemeris_path: Optional[str] = None) -> ChartInstance:
+    """Build a ChartInstance using workspace defaults when provided.
+    - Resolves engine and house system from ws if available.
+    - Uses utils.prepare_horoscope to produce a fully-typed ChartInstance.
+    """
+    # Resolve engine and house defaults
+    engine = getattr(ws, 'default_engine', None) if ws is not None else None
+    house = getattr(ws, 'default_house_system', None) if ws is not None else None
+    # Normalize inputs via utils.Actual and to_model_location
+    t = Actual(dt_str, t="date").value
+    loc_model = Actual(loc_text, t="loc").to_model_location()
+    # Delegate to prepare_horoscope (ensures ChartSubject/ChartConfig types)
+    chart = prepare_horoscope(name=name, dt=t, loc=loc_model, engine=engine,
+                              ephemeris_path=ephemeris_path, house=house)
+    try:
+        chart.config.mode = mode
+    except Exception:
+        pass
+    return chart
+
+
+def find_chart_by_name_or_id(ws, name_or_id: str) -> Optional[ChartInstance]:
+    """Find a chart in the workspace by subject.name or chart.id."""
+    if not ws or not getattr(ws, 'charts', None):
+        return None
+    key = (name_or_id or '').strip()
+    for c in ws.charts:
+        subj = getattr(c, 'subject', None)
+        cid = getattr(c, 'id', None)
+        nm = getattr(subj, 'name', None) if subj else None
+        if key and (key == nm or key == cid):
+            return c
+    return None
+
+
+def search_charts(ws, query: str) -> List[ChartInstance]:
+    """Simple case-insensitive search across name, event_time, location name, and tags."""
+    if not ws or not getattr(ws, 'charts', None):
+        return []
+    q = (query or '').strip().lower()
+    if not q:
+        return list(ws.charts)
+    out: List[ChartInstance] = []
+    for ch in ws.charts:
+        try:
+            subj = getattr(ch, 'subject', None)
+            loc = getattr(subj, 'location', None) if subj else None
+            tags = getattr(ch, 'tags', []) or []
+            hay = " ".join([
+                str(getattr(subj, 'name', '') or ''),
+                str(getattr(subj, 'event_time', '') or ''),
+                str(getattr(loc, 'name', '') or ''),
+                ",".join([str(t) for t in tags])
+            ]).lower()
+            if q in hay:
+                out.append(ch)
+        except Exception:
+            continue
+    return out
+
+
+def list_open_view_rows(ws) -> List[Dict[str, str]]:
+    """Produce table rows for Open view: name, event_time, location, tags, search_text."""
+    rows: List[Dict[str, str]] = []
+    if not ws or not getattr(ws, 'charts', None):
+        return rows
+    for ch in ws.charts:
+        try:
+            subj = getattr(ch, 'subject', None)
+            loc = getattr(subj, 'location', None) if subj else None
+            name = getattr(subj, 'name', '') if subj else ''
+            event_time = str(getattr(subj, 'event_time', '') or '')
+            location_name = getattr(loc, 'name', '') if loc else ''
+            tags = ", ".join(getattr(ch, 'tags', []) or [])
+            search_text = f"{name} {event_time} {location_name} {tags}".lower()
+            rows.append({
+                'name': name,
+                'event_time': event_time,
+                'location': location_name,
+                'tags': tags,
+                'search_text': search_text,
+            })
+        except Exception:
+            continue
+    return rows
+
+
+def build_radix_figure_for_chart(chart: ChartInstance):
+    """Compute positions for a ChartInstance and return a Plotly Figure ready to render."""
+    positions = compute_positions_for_chart(chart)
+    return build_radix_figure(positions)
+
+
+def compute_positions_for_inputs(engine: Optional[EngineType], name: str,
+                                 dt_str: str, loc_text: str,
+                                 ephemeris_path: Optional[str] = None) -> Dict[str, float]:
+    """Thin wrapper over compute_positions to normalize/forward parameters from UI layers."""
+    return compute_positions(engine, name, dt_str, loc_text, ephemeris_path=ephemeris_path)
