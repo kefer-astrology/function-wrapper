@@ -3,6 +3,8 @@ from mpl_toolkits.mplot3d import Axes3D  # Import the 3D plotting toolkit
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import plotly.graph_objs as go
+import tempfile
+import os
 
 
 def display_radial(categories: list, values_degrees: list, labels: list) -> None:
@@ -31,93 +33,93 @@ def figure_3d(objects: object):
         "planets": {
             "sun": {
                 "pos": 120,  # Example: Sun in Taurus (30 degrees into Taurus),
-                "symbol": "☉",
+                "symbol": "\u2609",
             },
             "moon": {
                 "pos": 45,  # Example: Moon in Leo (15 degrees into Leo)
-                "symbol": "☽",
+                "symbol": "\u263D",
             },
             "mercury": {
                 "pos": 100,  # Example: Mercury in Aries (100 degrees into Aries)
-                "symbol": "☿",
+                "symbol": "\u263F",
             },
             "venus": {
                 "pos": 200,  # Example: Venus in Gemini (20 degrees into Gemini)
-                "symbol": "♀",
+                "symbol": "\u2640",
             },
             "mars": {
                 "pos": 300,  # Example: Mars in Scorpio (60 degrees into Scorpio)
-                "symbol": "♂",
+                "symbol": "\u2642",
             },
             "jupiter": {
                 "pos": 40,  # Example: Jupiter in Virgo (40 degrees into Virgo)
-                "symbol": "♃",
+                "symbol": "\u2643",
             },
             "saturn": {
                 "pos": 190,  # Example: Saturn in Libra (10 degrees into Libra)
-                "symbol": "♄",
+                "symbol": "\u2644",
             },
             "uran": {
                 "pos": 260,  # Example: Uranus in Sagittarius (20 degrees into Sagittarius)
-                "symbol": "♅",
+                "symbol": "\u2645",
             },
             "neptun": {
                 "pos": 310,  # Example: Neptune in Pisces (40 degrees into Pisces)
-                "symbol": "♆",
+                "symbol": "\u2646",
             },
             "pluto": {
                 "pos": 25,  # Example: Pluto in Capricorn (25 degrees into Capricorn)
-                "symbol": "♇",
+                "symbol": "\u2647",
             },
         },
         "zodiac": {
             "Aries": {
                 "pos": 15,  # align to the middle
-                "symbol": "♈",
+                "symbol": "\u2648",
             },
             "Taurus": {
                 "pos": 45,  # align to the middle
-                "symbol": "♉",
+                "symbol": "\u2649",
             },
             "Gemini": {
                 "pos": 75,  # align to the middle
-                "symbol": "♊",
+                "symbol": "\u264A",
             },
             "Cancer": {
                 "pos": 105,  # align to the middle
-                "symbol": "♋",
+                "symbol": "\u264B",
             },
             "Leo": {
                 "pos": 135,  # align to the middle
-                "symbol": "♌",
+                "symbol": "\u264C",
             },
             "Virgo": {
                 "pos": 165,  # align to the middle
-                "symbol": "♍",
+                "symbol": "\u264D",
             },
             "Libra": {
                 "pos": 195,  # align to the middle
-                "symbol": "♎",
+                "symbol": "\u264E",
             },
             "Scorpio": {
                 "pos": 225,  # align to the middle
-                "symbol": "♏",
+                "symbol": "\u264F",
             },
             "Sagittarius": {
                 "pos": 255,  # align to the middle
-                "symbol": "♐",
+                "symbol": "\u2650",
             },
             "Capricorn": {
                 "pos": 285,  # align to the middle
-                "symbol": "♑",
+                "symbol": "\u2651",
             },
             "Aquarius": {
                 "pos": 315,  # align to the middle
-                "symbol": "♒",
+                "symbol": "\u2652",
             },
             "Pisces": {
                 "pos": 345,  # align to the middle
-                "symbol": "♓",
+                "symbol": "\u2653",
             },
         },
     }
@@ -286,3 +288,92 @@ def generate_skyfield_data(sky_set: object):
 
     # Show the plot
     plt.show()
+
+
+# ─────────────────────
+# RADIX DISPLAY (Plotly)
+# ─────────────────────
+
+PLANET_SYMBOLS = {
+    "sun": "\u2609",
+    "moon": "\u263D",
+    "mercury": "\u263F",
+    "venus": "\u2640",
+    "mars": "\u2642",
+    "jupiter": "\u2643",
+    "saturn": "\u2644",
+    "uranus": "\u2645",
+    "neptune": "\u2646",
+    "pluto": "\u2647",
+}
+
+ZODIAC_ORDER = [
+    ("Aries", "\u2648"), ("Taurus", "\u2649"), ("Gemini", "\u264A"), ("Cancer", "\u264B"),
+    ("Leo", "\u264C"), ("Virgo", "\u264D"), ("Libra", "\u264E"), ("Scorpio", "\u264F"),
+    ("Sagittarius", "\u2650"), ("Capricorn", "\u2651"), ("Aquarius", "\u2652"), ("Pisces", "\u2653"),
+]
+
+
+def build_radix_figure(positions: dict) -> go.Figure:
+    """Build a standardized polar (radix) chart figure from planet positions in degrees [0,360).
+    positions: mapping of planet name (lowercase or mixed) -> ecliptic longitude in degrees
+    """
+    fig = go.Figure()
+    # Base axes and ticks
+    house_degrees = list(range(0, 361, 1))
+    major_degrees = [str(i + 1) if i % 30 == 0 else "" for i in house_degrees]
+
+    fig.update_layout(
+        template=None,
+        polar=dict(
+            radialaxis=dict(showticklabels=False),
+            angularaxis=dict(
+                showticklabels=True,
+                tickvals=house_degrees,
+                ticktext=major_degrees,
+                tickwidth=2,
+                tickcolor="lightgrey",
+            ),
+            sector=[0, 360],
+        ),
+        showlegend=False,
+        margin=dict(l=20, r=20, t=20, b=20),
+    )
+
+    # Outer ring
+    fig.add_trace(go.Scatterpolar(r=[0.9], theta=house_degrees, mode="lines", line=dict(color="gray", width=0.5)))
+    # Inner ring
+    fig.add_trace(go.Scatterpolar(r=[0.7], theta=house_degrees, mode="lines", line=dict(color="blue", width=0.3)))
+
+    # Zodiac labels at mid-sign (15 + 30k)
+    for idx, (name, symbol) in enumerate(ZODIAC_ORDER):
+        theta = 15 + idx * 30
+        fig.add_trace(go.Scatterpolar(r=[0.85], theta=[theta], text=symbol, mode="text", textfont=dict(size=30)))
+
+    # Planets
+    for key, deg in positions.items():
+        pname = str(key).lower()
+        symbol = PLANET_SYMBOLS.get(pname, pname.capitalize())
+        fig.add_trace(
+            go.Scatterpolar(
+                r=[0.6],
+                theta=[deg % 360],
+                text=symbol,
+                mode="text",
+                textfont=dict(size=40),
+                hovertext=pname.capitalize(),
+                hoverinfo="text",
+            )
+        )
+
+    return fig
+
+
+def write_plotly_html(fig: go.Figure, tmpname: str = "radix_chart.html") -> str:
+    """Write the Plotly figure to a temporary HTML file and return its absolute path."""
+    html = fig.to_html(full_html=True, include_plotlyjs="cdn")
+    tmpdir = tempfile.gettempdir()
+    out_path = os.path.join(tmpdir, tmpname)
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(html)
+    return out_path
