@@ -9,6 +9,7 @@ import pytz
 from re import match
 from timezonefinder import TimezoneFinder
 from typing import Optional, Union
+from pathlib import Path
 import yaml
 
 try:
@@ -339,27 +340,34 @@ def parse_sfs_content(content):
 # Additional Utility Functions
 
 def now_utc() -> datetime:
+    """Return current time as a timezone-aware UTC datetime."""
     return datetime.utcnow().replace(tzinfo=pytz.utc)
 
 def to_timezone(dt: datetime, tz_name: str) -> datetime:
+    """Convert a timezone-aware datetime to the target timezone by name."""
     return dt.astimezone(pytz.timezone(tz_name))
 
 def in_range(dt: datetime, dr: DateRange) -> bool:
+    """Return True if dt lies within the inclusive DateRange [start, end]."""
     return dr.start <= dt <= dr.end
 
 def expand_range(center: datetime, days: int) -> DateRange:
+    """Create a DateRange centered on `center` extending `days` on both sides."""
     delta = timedelta(days=days)
     return DateRange(start=center - delta, end=center + delta)
 
 def combine_date_time(input_date, input_time) -> datetime:
+    """Combine a date and time into a naive datetime (no timezone)."""
     return datetime.combine(input_date, input_time)
 
 def location_from_coords(lat: float, lon: float, name: str = "") -> Location:
+    """Build a Location from raw coordinates, inferring timezone via TimezoneFinder."""
     tf = TimezoneFinder()
     tz = tf.timezone_at(lat=lat, lng=lon) or "UTC"
     return Location(name=name or f"{lat},{lon}", latitude=lat, longitude=lon, timezone=tz)
 
 def location_equals(loc1: Location, loc2: Location) -> bool:
+    """Approximate equality check for two Location objects (coords ~1e-4, same tz)."""
     return (
         abs(loc1.latitude - loc2.latitude) < 0.0001 and
         abs(loc1.longitude - loc2.longitude) < 0.0001 and
@@ -367,11 +375,9 @@ def location_equals(loc1: Location, loc2: Location) -> bool:
     )
 
 def default_ephemeris_path() -> str:
-    """Return the default path to the local JPL ephemeris file (de421.bsp) under source/.
-    """
-    import os
-    base_dir = os.path.dirname(os.path.dirname(__file__))  # .../function-wrapper/module -> .../function-wrapper
-    return os.path.join(base_dir, 'source', 'de421.bsp')
+    """Return the default path to the local JPL ephemeris file (de421.bsp) under source/."""
+    base_dir = Path(__file__).resolve().parent.parent  # .../function-wrapper/module -> .../function-wrapper
+    return str(base_dir / 'source' / 'de421.bsp')
 
 def ensure_aware(dt: datetime, tz_name: Optional[str] = None) -> datetime:
     """Return a timezone-aware datetime.
@@ -393,7 +399,44 @@ def ensure_aware(dt: datetime, tz_name: Optional[str] = None) -> datetime:
 # YAML IMPORT/EXPORT HELPERS
 # ─────────────────────
 
+def resolve_under_base(base: Union[str, Path], rel_path: Union[str, Path]) -> Path:
+    """Resolve rel_path against base and ensure the result stays within base.
+
+    Disallows absolute paths and prevents directory traversal outside of base.
+    Returns the resolved Path on success.
+    """
+    base_p = Path(base).resolve()
+    rel_p = Path(rel_path)
+    if rel_p.is_absolute():
+        raise ValueError(f"Absolute paths are not allowed: {rel_path}")
+    full = (base_p / rel_p).resolve()
+    try:
+        full.relative_to(base_p)
+    except Exception:
+        raise ValueError(f"Path traversal detected: {rel_path}")
+    return full
+
+def read_yaml_file(path: Union[str, Path]) -> dict:
+    """Read a YAML file and return a dict (or empty dict if file is empty).
+
+    This is a thin wrapper around yaml.safe_load that always returns a dict.
+    """
+    with open(path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+def write_yaml_file(path: Union[str, Path], data: dict, *, sort_keys: bool = False, allow_unicode: bool = True) -> None:
+    """Write a dict to a YAML file using yaml.safe_dump. Ensures parent directory exists.
+
+    Callers should pass already-serialized primitives (e.g., via a to_primitive function)
+    if the input data contains dataclasses, enums, or datetime objects.
+    """
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(p, "w", encoding="utf-8") as f:
+        yaml.safe_dump(data, f, sort_keys=sort_keys, allow_unicode=allow_unicode)
+
 def _to_primitive_local(obj):
+    """Recursively convert dataclasses, Enums, and datetimes to YAML-serializable primitives."""
     from dataclasses import asdict, is_dataclass
     from enum import Enum
     if is_dataclass(obj):
@@ -479,21 +522,51 @@ def parse_chart_yaml(data: dict) -> ChartInstance:
     return ChartInstance(id=cid, subject=subject, config=cfg, tags=tags)
 
 def import_chart_yaml(path: str) -> ChartInstance:
+    """Read a chart YAML file from disk and parse into a ChartInstance."""
     with open(path, 'r', encoding='utf-8') as f:
         data = yaml.safe_load(f) or {}
     return parse_chart_yaml(data)
 
 def export_chart_yaml(chart: ChartInstance, dest_dir: str) -> str:
     """Export a ChartInstance as YAML into dest_dir; return absolute file path."""
-    import os
-    base = os.path.abspath(dest_dir)
-    os.makedirs(base, exist_ok=True)
+    base = Path(dest_dir).resolve()
+    base.mkdir(parents=True, exist_ok=True)
     fname = f"{(getattr(chart, 'id', '') or 'chart').replace(' ', '-').lower()}.yml"
-    out = os.path.join(base, fname)
+    out = base / fname
     data = _to_primitive_local(chart)
     with open(out, 'w', encoding='utf-8') as f:
         yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
-    return out
+    return str(out)
+
+def write_json_file(path: Union[str, Path], data: dict, *, indent: int = 2) -> None:
+    """Write a dict to a JSON file. Ensures parent directory exists.
+
+    Parameters:
+    - path: destination file path
+    - data: JSON-serializable data
+    - indent: indentation level (default 2)
+    """
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=indent)
+
+def parse_yaml_content(data: Union[str, bytes]) -> dict:
+    """Parse YAML from a string or bytes and return a dict (empty dict if empty).
+
+    Useful for handling uploaded files or in-memory YAML content uniformly.
+    """
+    if isinstance(data, bytes):
+        try:
+            text = data.decode("utf-8")
+        except Exception:
+            text = data.decode("utf-8", errors="ignore")
+    else:
+        text = data
+    try:
+        return yaml.safe_load(text) or {}
+    except Exception:
+        return {}
 
 if __name__ == "__main__":
     # simple test

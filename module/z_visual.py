@@ -4,10 +4,17 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import plotly.graph_objs as go
 import tempfile
-import os
+from pathlib import Path
 
 
 def display_radial(categories: list, values_degrees: list, labels: list) -> None:
+    """Quick Matplotlib radial scatter demo for given categories and degrees.
+
+    Parameters:
+    - categories: labels for angular ticks
+    - values_degrees: list of angles in degrees
+    - labels: point labels to show as markers
+    """
     # categories = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E']
     # values_degrees = [45, 90, 135, 180, 225]
     # labels = ["A", "B", "C", "D", "E"]
@@ -28,6 +35,11 @@ def display_radial(categories: list, values_degrees: list, labels: list) -> None
 
 
 def figure_3d(objects: object):
+    """Build a Plotly polar figure for planetary positions and zodiac labels.
+
+    `objects` is expected to be a mapping-like structure where each key is a
+    planet name and value contains angular information (degrees).
+    """
     fig = go.Figure()
     dictionary = {
         "planets": {
@@ -205,6 +217,7 @@ def figure_3d(objects: object):
 
 
 def display_3d(categories: list, values_degrees: list, labels: list) -> None:
+    """Render a simple Matplotlib 3D scatter plot for objects at given angles."""
     # categories = ['Category A', 'Category B', 'Category C', 'Category D', 'Category E']
     # values_degrees = [45, 90, 135, 180, 225]
     # labels = ["A", "B", "C", "D", "E"]
@@ -243,6 +256,7 @@ def display_3d(categories: list, values_degrees: list, labels: list) -> None:
 
 
 def generate_planets_dec(o: object) -> None:
+    """Plot declination time series for all non-moon bodies in the DataFrame-like `o`."""
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d %H:%M"))
     plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval=1))
     plt.title("Planets declination")
@@ -258,6 +272,7 @@ def generate_planets_dec(o: object) -> None:
 
 
 def generate_moon_dec(o: object) -> None:
+    """Plot moon declination time series from DataFrame-like `o`."""
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
     plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=1))
     plt.title("Moon declination")
@@ -268,6 +283,7 @@ def generate_moon_dec(o: object) -> None:
 
 
 def generate_skyfield_data(sky_set: object):
+    """Render a polar plot from a mapping of right ascension/declination tuples."""
     ra_values, dec_values, au_values = zip(*sky_set.values())
 
     # Create a scatter plot
@@ -370,10 +386,15 @@ def build_radix_figure(positions: dict) -> go.Figure:
 
 
 def write_plotly_html(fig: go.Figure, tmpname: str = "radix_chart.html") -> str:
-    """Write the Plotly figure to a temporary HTML file and return its absolute path."""
+    """Write a Plotly figure to a temporary HTML file and return its absolute path.
+
+    Parameters:
+    - fig: Plotly Figure to serialize to HTML
+    - tmpname: filename to use within the system temporary directory
+    """
     html = fig.to_html(full_html=True, include_plotlyjs="cdn")
-    tmpdir = tempfile.gettempdir()
-    out_path = os.path.join(tmpdir, tmpname)
+    tmpdir = Path(tempfile.gettempdir())
+    out_path = tmpname if isinstance(tmpname, Path) else tmpdir / tmpname
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
-    return out_path
+    return str(out_path)

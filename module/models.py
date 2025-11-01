@@ -287,6 +287,22 @@ class ChartPreset:
 
 
 @dataclass
+class WorkspaceDefaults:
+    """Aggregated default settings for a workspace (preferred YAML shape).
+
+    This mirrors the desired manifest structure under the top-level key 'default'.
+    """
+    ephemeris_engine: Optional[EngineType] = None
+    ephemeris_backend: Optional[str] = None
+    location_name: Optional[str] = None
+    location_latitude: Optional[float] = None
+    location_longitude: Optional[float] = None
+    timezone: Optional[str] = None
+    language: Optional[str] = None
+    theme: Optional[str] = None
+
+
+@dataclass
 class Workspace:
     owner: str
     default_ephemeris: EphemerisSource
@@ -297,10 +313,5 @@ class Workspace:
     layouts: List[ViewLayout]
     annotations: List[Annotation]
     model_overrides: Optional[ModelOverrides] = None
-    # workspace-level defaults
-    preferred_language: Optional[str] = None
-    default_location: Optional[Location] = None
-    default_house_system: Optional[HouseSystem] = None
-    default_aspects: List[str] = field(default_factory=list)
-    color_theme: Optional[str] = None
-    default_engine: Optional[EngineType] = None
+    aspects: List[str] = field(default_factory=list)
+    default: Optional[WorkspaceDefaults] = None

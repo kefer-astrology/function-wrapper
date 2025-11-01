@@ -25,6 +25,16 @@ except ImportError:
 # ─────────────────────
 
 def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: Optional[str] = None) -> Dict[str, float]:
+    """Compute planetary ecliptic longitudes (degrees) using Skyfield JPL ephemerides.
+
+    Parameters:
+    - name: subject name (human-readable; not used in computation)
+    - dt_str: datetime string (parsed by utils.Actual)
+    - loc_str: location string (parsed by utils.Actual)
+    - ephemeris_path: optional path to a local BSP file; falls back to default
+
+    Returns a mapping: planet -> ecliptic longitude in degrees [0, 360).
+    """
     if JPL:
         ts = load.timescale()
         time = Actual(dt_str, t="date")
@@ -57,6 +67,12 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
 # TO-DO: decide between class and a method
 
 class Subject:
+    """Lightweight wrapper around Kerykeion's AstrologicalSubject builder.
+
+    Usage:
+    - Call at_place() then at_time() to prepare `self.computed`.
+    - Use data() to extract names, degrees, and labels for plotting.
+    """
     def __init__(self, s_name: str, s_type: str = "Tropic") -> None:
         self.computed = None
         self.name = s_name
@@ -65,9 +81,11 @@ class Subject:
         self.type = s_type
 
     def at_place(self, location: object) -> None:
+        """Set place from a free-text location or coordinates string."""
         self.place = Actual(location, t="loc")
 
     def at_time(self, time: str) -> None:
+        """Set event time from a free-text datetime string and build computed subject."""
         self.time = Actual(time, t="date")
         self.computed = AstrologicalSubject(
             self.name,
@@ -85,15 +103,18 @@ class Subject:
         )
 
     def data(self):
+        """Return (object_names, degrees, labels) extracted from computed planets list."""
         object_list = [x["name"] for x in self.computed.planets_list]
         label_list = [x["emoji"] for x in self.computed.planets_list]
         return object_list, self.computed.planets_degrees_ut, label_list
 
     def report(self):
+        """Build a Kerykeion textual Report for the computed subject."""
         return Report(self.computed)
 
 
 def compute_subject(name: str, dt_str: str, loc_str: str, zodiac: str = "Tropic") -> AstrologicalSubject:
+    """Construct a Kerykeion AstrologicalSubject from strings (date/place/zodiac)."""
     time = Actual(dt_str, t="date")
     place = Actual(loc_str, t="loc")
     return AstrologicalSubject(
@@ -112,6 +133,7 @@ def compute_subject(name: str, dt_str: str, loc_str: str, zodiac: str = "Tropic"
     )
 
 def extract_kerykeion_points(obj) -> DataFrame:
+    """Extract KerykeionPointModel attributes from an object into a DataFrame."""
     data = []
     for attr_name in dir(obj):
         attr = getattr(obj, attr_name)
@@ -125,6 +147,7 @@ def extract_kerykeion_points(obj) -> DataFrame:
 # ─────────────────────
 
 def create_relation_svg(subject1: AstrologicalSubject, subject2: AstrologicalSubject, chart_type: str = "Synastry") -> KerykeionChartSVG:
+    """Create a Kerykeion SVG chart for relation/composite types and return it."""
     chart = KerykeionChartSVG(subject1, chart_type=chart_type, second_obj=subject2)
     chart.makeSVG()
     return chart
@@ -135,6 +158,7 @@ def create_relation_svg(subject1: AstrologicalSubject, subject2: AstrologicalSub
 # ─────────────────────
 
 def compute_aspects(bodies: List[CelestialBody], aspect_defs: List[AspectDefinition]) -> List[Aspect]:
+    """Placeholder for aspect detection between bodies using provided definitions."""
     return []  # To be implemented
 
 
@@ -143,6 +167,7 @@ def compute_aspects(bodies: List[CelestialBody], aspect_defs: List[AspectDefinit
 # ─────────────────────
 
 def merge_model_with_overrides(model: AstroModel, overrides: Optional[ModelOverrides]) -> AstroModel:
+    """Return a new AstroModel with selective overrides applied (no-op for now)."""
     if not overrides:
         return model
     return model
@@ -214,8 +239,17 @@ def build_chart_instance(name: str, dt_str: str, loc_text: str,
     - Uses utils.prepare_horoscope to produce a fully-typed ChartInstance.
     """
     # Resolve engine and house defaults
-    engine = getattr(ws, 'default_engine', None) if ws is not None else None
-    house = getattr(ws, 'default_house_system', None) if ws is not None else None
+    if ws is not None:
+        try:
+            d = getattr(ws, 'default', None)
+            engine = getattr(d, 'ephemeris_engine', None)
+        except Exception:
+            engine = None
+        # House system not part of new default block; leave as None for now
+        house = None
+    else:
+        engine = None
+        house = None
     # Normalize inputs via utils.Actual and to_model_location
     t = Actual(dt_str, t="date").value
     loc_model = Actual(loc_text, t="loc").to_model_location()
