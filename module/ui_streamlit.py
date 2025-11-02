@@ -1,10 +1,18 @@
 import datetime
 import streamlit as st
-import os
-import yaml
+from pathlib import Path
 
 from models import ChartInstance, Location, ChartSubject, ChartConfig, EngineType, ChartMode
-from utils import Actual, parse_sfs_content, combine_date_time, prepare_horoscope, default_ephemeris_path, import_chart_yaml
+from utils import (
+    Actual,
+    parse_sfs_content,
+    combine_date_time,
+    prepare_horoscope,
+    default_ephemeris_path,
+    import_chart_yaml,
+    read_yaml_file,
+    parse_yaml_content,
+)
 from services import Subject, extract_kerykeion_points, compute_positions, list_open_view_rows
 from z_visual import build_radix_figure
 from workspace import (
@@ -273,7 +281,7 @@ def _run_compute(name, dt, place, engine_choice, eph_path):
     except Exception as e:
         # Handle common Skyfield kernel limitations (e.g., de421 lacks JUPITER/SATURN centers)
         msg = str(e)
-        if engine == EngineType.JPL and eph_override and "de421" in os.path.basename(eph_override).lower():
+        if engine == EngineType.JPL and eph_override and "de421" in Path(eph_override).name.lower():
             st.warning("Zvolený soubor efemerid de421.bsp neobsahuje všechna tělesa (např. JUPITER, SATURN, …).\n"
                        "Doporučeno: použijte de440s.bsp nebo přepněte engine na Kerykeion ve 'Nastavení > Advanced'.\n"
                        "Pokračuji s výchozím enginem (Kerykeion).")
@@ -297,7 +305,7 @@ def _open_view_center():
 
     if uploaded_yaml is not None:
         try:
-            data = yaml.safe_load(uploaded_yaml.read()) or {}
+            data = parse_yaml_content(uploaded_yaml.read()) or {}
             subj = data.get('subject') or {}
             subject = ChartSubject(**subj) if isinstance(subj, dict) else None
             cfg = data.get('config') or {}
@@ -311,7 +319,7 @@ def _open_view_center():
             if st.session_state.get('workspace') is None:
                 st.warning('Nejprve načtěte workspace, aby bylo kam importovat.')
             else:
-                base_dir = os.path.dirname(st.session_state.workspace_manifest)
+                base_dir = str(Path(st.session_state.workspace_manifest).parent)
                 add_or_update_chart(st.session_state.workspace, ch, base_dir=base_dir)
                 st.success('Chart importován do workspace.')
         except Exception as e:
@@ -357,8 +365,8 @@ def _open_workspace_center():
             if not base_dir:
                 st.warning("Zadejte cestu ke složce")
             else:
-                manifest = os.path.join(base_dir, "workspace.yaml")
-                if not os.path.isfile(manifest):
+                manifest = str(Path(base_dir) / "workspace.yaml")
+                if not Path(manifest).is_file():
                     st.error("Soubor workspace.yaml ve složce nenalezen")
                 else:
                     # Full folder available: do full scan/import
@@ -371,7 +379,7 @@ def _open_workspace_center():
 
 def _load_workspace_and_sync(manifest_path: str, scan_and_import: bool = True) -> dict:
     """Load workspace.yaml, optionally scan/import new charts/subjects from disk, save, and populate session lists. Returns a report dict."""
-    base_dir = os.path.dirname(manifest_path)
+    base_dir = str(Path(manifest_path).parent)
     ws = load_workspace(manifest_path)
     changes = {'charts': {'new_on_disk': [], 'missing_on_disk': []}, 'subjects': {'new_on_disk': [], 'missing_on_disk': []}}
     imported = 0
@@ -383,7 +391,7 @@ def _load_workspace_and_sync(manifest_path: str, scan_and_import: bool = True) -
         # Import new charts
         try:
             for fname in (changes.get('charts', {}).get('new_on_disk', []) or []):
-                path = os.path.join(base_dir, 'charts', fname)
+                path = str(Path(base_dir) / 'charts' / fname)
                 try:
                     chart = import_chart_yaml(path)
                     add_or_update_chart(ws, chart, base_dir=base_dir)
@@ -395,10 +403,9 @@ def _load_workspace_and_sync(manifest_path: str, scan_and_import: bool = True) -
         # Import new subjects
         try:
             for fname in (changes.get('subjects', {}).get('new_on_disk', []) or []):
-                path = os.path.join(base_dir, 'subjects', fname)
+                path = str(Path(base_dir) / 'subjects' / fname)
                 try:
-                    with open(path, 'r', encoding='utf-8') as f:
-                        data = yaml.safe_load(f) or {}
+                    data = read_yaml_file(path)
                     subj = ChartSubject(**data) if isinstance(data, dict) else None
                     if subj is not None:
                         add_subject(ws, subj, base_dir=base_dir)
@@ -660,7 +667,7 @@ def main():
                     )
                     # Warn users when de421 is selected due to limited body coverage
                     eph_sel = st.session_state.get('settings_eph', '') or ''
-                    if isinstance(eph_sel, str) and 'de421' in os.path.basename(eph_sel).lower():
+                    if isinstance(eph_sel, str) and 'de421' in Path(eph_sel).name.lower():
                         st.info("Poznámka: de421.bsp neobsahuje centra vnějších planet (JUPITER, SATURN, …).\n"
                                 "Pro plnou podporu použijte de440s.bsp nebo přepněte engine na Kerykeion.")
                 st.success("Nastavení připraveno.")
