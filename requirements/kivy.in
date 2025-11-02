@@ -1,0 +1,11 @@
+# exporting PNG from Plotly
+kaleido>=0.2.1
+
+# Kivy (needed explicitly; 2.3.x supports Python 3.8–3.13)
+kivy>=2.3.1
+
+# KivyMD v2 from the master branch (moving target)
+kivymd @ git+https://github.com/kivymd/KivyMD.git@master
+
+pywebview>=4.4
+kivy-garden>=0.1.5

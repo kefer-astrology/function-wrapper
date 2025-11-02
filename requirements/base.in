@@ -1,9 +1,10 @@
 geopy>=2.4.1
+kaleido>=0.2.1
 kerykeion>=4.26.0
 matplotlib>=3.10.0
 pandas>=2.3.1
 pip-tools>=7.4.1
 plotly>=6.2.0
 PyYAML>=6.0.2
-streamlit>=1.47.0
+skyfield>=1.48
 timezonefinder>=6.6.2

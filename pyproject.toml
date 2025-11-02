@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kefer-sidecar"
+version = "0.1.0"
+description = "Kefer Astrology sidecar"
+requires-python = ">=3.10"
+# Note: Runtime dependencies are managed via requirements/*.in and compiled requirements files.
+
+[tool.setuptools]
+package-dir = {"" = "module"}     # <— tells setuptools that 'module' is the root
+packages = ["module"]             # or use finders if you have subpackages
+
+[project.scripts]
+# Optional: gives you a `kefer` command too (keeps -m working)
+kefer = "module.__main__:main"
