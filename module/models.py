@@ -84,6 +84,33 @@ class LayoutStyle(str, Enum):
     COMPARISON = "comparison"
 
 
+class AspectContext(str, Enum):
+    """Contexts where an aspect can be used."""
+    CHART = "chart"  # Radix/natal charts
+    TRANSIT = "transit"  # Transits
+    DIRECTION = "direction"  # Directions/progressions
+    # Aspects can be used in multiple contexts (e.g., conjunction works in all)
+
+
+class Element(str, Enum):
+    """The four classical elements."""
+    FIRE = "Fire"
+    EARTH = "Earth"
+    AIR = "Air"
+    WATER = "Water"
+
+
+class TimeSystem(str, Enum):
+    """Time representation systems."""
+    GREGORIAN = "gregorian"  # Standard calendar (default)
+    JULIAN_DAY = "julian_day"  # Julian Day Number (JD)
+    JULIAN_CALENDAR = "julian_calendar"  # Julian calendar (pre-1582)
+    UNIX_TIMESTAMP = "unix_timestamp"  # Unix epoch seconds
+    ORDINAL_DATE = "ordinal_date"  # Year-day format (YYYY-DDD)
+    ISO_WEEK_DATE = "iso_week_date"  # ISO week format (YYYY-Www-d)
+    COMPACT_DATE = "compact_date"  # Compact format (YYYYMMDD)
+
+
 # ─── VALUE OBJECTS ───
 
 @dataclass(frozen=True)
@@ -125,6 +152,8 @@ class ChartConfig:
     ayanamsa: Optional[Ayanamsa] = None
     # Override observable objects for this chart (extends/overrides workspace defaults)
     observable_objects: Optional[List[str]] = None
+    # Time system for input/output (if different from workspace default)
+    time_system: Optional[TimeSystem] = None
 
 
 @dataclass
@@ -178,7 +207,7 @@ class BodyDefinition:
     id: str
     glyph: str
     formula: str
-    element: Optional[str]
+    element: Optional[Element]  # Use Element enum instead of string
     avg_speed: float
     max_orb: float
     i18n: Dict[str, str]
@@ -207,6 +236,9 @@ class AspectDefinition:
     line_style: Optional[str] = None  # "solid", "dashed", "dotted", etc.
     line_width: Optional[float] = None  # Line thickness for display
     show_label: Optional[bool] = None  # Whether to show aspect label in charts
+    # Context where this aspect is applicable
+    # If None or empty, aspect is valid for all contexts
+    valid_contexts: Optional[List[AspectContext]] = None
 
 
 @dataclass(frozen=True)
@@ -214,16 +246,22 @@ class Sign:
     name: str
     glyph: str
     abbreviation: str
-    element: str
+    element: Element  # Use Element enum instead of string
     i18n: Dict[str, str]
 
 
 @dataclass
 class ModelSettings:
     default_house_system: HouseSystem
-    default_aspects: List[str]
+    default_aspects: List[str]  # Default aspects for charts/radix
     default_bodies: List[str]
     standard_orb: float
+    # Context-specific aspect lists (optional, overrides default_aspects for specific contexts)
+    default_transit_aspects: Optional[List[str]] = None
+    default_direction_aspects: Optional[List[str]] = None
+    # Context-specific body lists (optional, for transits/directions)
+    default_transit_bodies: Optional[List[str]] = None
+    default_direction_bodies: Optional[List[str]] = None
 
 
 @dataclass
@@ -329,6 +367,28 @@ class AspectSettings:
 
 
 @dataclass
+class ElementColorSettings:
+    """Color settings for the four elements."""
+    fire: str = "#C00000"  # Default red
+    earth: str = "#909030"  # Default brown/olive
+    air: str = "#8000FF"  # Default blue/purple
+    water: str = "#0000A0"  # Default dark blue
+
+
+@dataclass
+class RadixPointColorSettings:
+    """Color settings for radix (natal chart) points/planets.
+    
+    Maps object IDs to color hex codes. Common objects:
+    - sun, moon, mercury, venus, mars, jupiter, saturn, uranus, neptune, pluto
+    - asc, mc, ic, desc (angles)
+    - north_node, south_node
+    - lilith, chiron, etc.
+    """
+    colors: Dict[str, str] = field(default_factory=dict)  # object_id -> hex_color
+
+
+@dataclass
 class WorkspaceDefaults:
     """Aggregated default settings for a workspace (preferred YAML shape).
 
@@ -351,6 +411,11 @@ class WorkspaceDefaults:
     observable_objects: Optional[List[str]] = None
     # Aspect settings with full configuration (overrides default_aspects if present)
     aspect_settings: Optional[List[AspectSettings]] = None
+    # Color settings
+    element_colors: Optional[ElementColorSettings] = None
+    radix_point_colors: Optional[RadixPointColorSettings] = None
+    # Time system preference
+    time_system: Optional[TimeSystem] = None
 
 
 @dataclass

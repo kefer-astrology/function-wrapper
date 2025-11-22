@@ -1013,8 +1013,16 @@ def _ensure_dir(p: Path) -> None:
     
     Args:
         p: Path to directory to ensure exists
+        
+    Raises:
+        ValueError: If path contains traversal attempts or is invalid
     """
-    p.mkdir(parents=True, exist_ok=True)
+    # Resolve path to normalize and prevent path traversal
+    resolved = p.resolve()
+    # Check for path traversal attempts in resolved path
+    if ".." in resolved.parts:
+        raise ValueError(f"Invalid path: path traversal detected in {p}")
+    resolved.mkdir(parents=True, exist_ok=True)
 
 
 def _safe_filename(name: str) -> str:
@@ -1081,7 +1089,10 @@ def init_workspace(base_dir: Union[str, Path], owner: str, active_model: str, de
     Returns:
     - Absolute path to the created `workspace.yaml` file.
     """
-    base = Path(base_dir)
+    # Validate and resolve base directory to prevent path traversal
+    base = Path(base_dir).resolve()
+    if ".." in base.parts:
+        raise ValueError(f"Invalid base directory: path traversal detected in {base_dir}")
     _ensure_dir(base)
     # subdirs
     subjects_dir = base / "subjects"

@@ -247,24 +247,31 @@ def _compute_single_planet_position(planet: str, eph, observer, t, is_de421: boo
         eph: Skyfield ephemeris
         observer: Skyfield Topos observer
         t: Skyfield time object
-        is_de421: Whether using de421 ephemeris (requires barycenters for Jupiter/Saturn)
+        is_de421: Whether using de421 ephemeris (requires barycenters for outer planets)
         vernal_equinox_offset: Offset to adjust for vernal equinox
         
     Returns:
         Ecliptic longitude in degrees [0, 360), or None on error
     """
+    outer_planets = ["jupiter", "saturn", "uranus", "neptune", "pluto"]
+    
+    # For de421, always try barycenter first for outer planets to avoid Skyfield errors
+    if is_de421 and planet in outer_planets:
+        body_name = f"{planet} barycenter"
+        try:
+            body = eph[body_name]
+            return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset)
+        except (KeyError, ValueError, AttributeError) as e:
+            print(f"Warning: Could not compute {planet} barycenter position: {e}", file=sys.stderr)
+            return None
+    
+    # For non-de421 or inner planets, try direct name first
     try:
-        # For de421, use barycenters for Jupiter and Saturn
-        if is_de421 and planet in ["jupiter", "saturn"]:
-            body_name = f"{planet} barycenter"
-        else:
-            body_name = planet
-        
-        body = eph[body_name]
+        body = eph[planet]
         return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset)
     except KeyError:
-        # If direct access fails, try barycenter for outer planets
-        if planet in ["jupiter", "saturn"]:
+        # If direct access fails, try barycenter for outer planets (for other ephemeris files)
+        if planet in outer_planets:
             try:
                 body_name = f"{planet} barycenter"
                 body = eph[body_name]
@@ -310,7 +317,7 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
         #     print(f"DEBUG JPL: t={t}", file=sys.stderr)
         # print(f"DEBUG JPL: location={loc_str}, lat={place.value.latitude}, lon={place.value.longitude}", file=sys.stderr)
 
-        # Check if we're using de421 (which requires barycenters for Jupiter/Saturn)
+        # Check if we're using de421 (which requires barycenters for outer planets: Jupiter, Saturn, Uranus, Neptune, Pluto)
         is_de421 = eph_file and "de421" in Path(eph_file).name.lower()
         
         # Determine which planets to compute
@@ -329,15 +336,11 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
         # Compute the vernal equinox offset using utils function
         year = dt_aware.year
         vernal_equinox_offset = compute_vernal_equinox_offset(year, eph, observer, ts)
-        print(f"DEBUG JPL: Vernal equinox offset (J2000.0 coords) = {vernal_equinox_offset:.4f}°", file=sys.stderr)
 
         for planet in planets:
             lon_deg_tropical = _compute_single_planet_position(planet, eph, observer, t, is_de421, vernal_equinox_offset)
             if lon_deg_tropical is not None:
                 positions[planet] = lon_deg_tropical
-                # Debug output for major planets
-                if planet in ["sun", "mercury", "venus", "mars", "jupiter", "saturn"]:
-                    print(f"DEBUG JPL {planet}: ecliptic_lon={lon_deg_tropical:.4f}°", file=sys.stderr)
 
         return positions
     else:
