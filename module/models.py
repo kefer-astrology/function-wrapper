@@ -51,6 +51,17 @@ class Ayanamsa(str, Enum):
     USER_DEFINED = "UserDefined"
 
 
+class ObjectType(str, Enum):
+    """Type of observable object in the chart."""
+    PLANET = "planet"
+    ASTEROID = "asteroid"
+    ANGLE = "angle"  # MC, IC, Asc, Desc
+    HOUSE_CUSP = "house_cusp"  # House cusps 1-12
+    CALCULATED_POINT = "calculated_point"  # Lilith, Chiron, etc.
+    LUNAR_NODE = "lunar_node"  # North/South Node
+    PART = "part"  # Arabic Parts, etc.
+
+
 class ViewModuleType(str, Enum):
     WHEEL = "WheelView"
     TIMELINE = "TransitTimeline"
@@ -112,6 +123,8 @@ class ChartConfig:
     model: Optional[str] = None
     engine: Optional[EngineType] = None
     ayanamsa: Optional[Ayanamsa] = None
+    # Override observable objects for this chart (extends/overrides workspace defaults)
+    observable_objects: Optional[List[str]] = None
 
 
 @dataclass
@@ -169,6 +182,16 @@ class BodyDefinition:
     avg_speed: float
     max_orb: float
     i18n: Dict[str, str]
+    # Observable object metadata
+    object_type: Optional[ObjectType] = None
+    # Mapping of engine type to computation method/attribute name
+    # e.g., {"jpl": "uranus", "swisseph": "uranus", "kerykeion": "uranus"}
+    # or {"kerykeion": "asc", "jpl": null} for angles
+    computation_map: Dict[str, Optional[str]] = field(default_factory=dict)
+    # Whether this object requires location (for angles, houses)
+    requires_location: bool = False
+    # Whether this object requires house system (for houses, some angles)
+    requires_house_system: bool = False
 
 
 @dataclass(frozen=True)
@@ -178,6 +201,12 @@ class AspectDefinition:
     angle: float
     default_orb: float
     i18n: Dict[str, str]
+    # Display and importance settings
+    color: Optional[str] = None  # Hex color code (e.g., "#FF0000")
+    importance: Optional[int] = None  # 1-10 scale, higher = more important
+    line_style: Optional[str] = None  # "solid", "dashed", "dotted", etc.
+    line_width: Optional[float] = None  # Line thickness for display
+    show_label: Optional[bool] = None  # Whether to show aspect label in charts
 
 
 @dataclass(frozen=True)
@@ -287,6 +316,19 @@ class ChartPreset:
 
 
 @dataclass
+class AspectSettings:
+    """Settings for a single aspect definition, including display properties."""
+    id: str
+    enabled: bool = True
+    orb: Optional[float] = None  # Override default_orb if set
+    color: Optional[str] = None
+    importance: Optional[int] = None
+    line_style: Optional[str] = None
+    line_width: Optional[float] = None
+    show_label: Optional[bool] = None
+
+
+@dataclass
 class WorkspaceDefaults:
     """Aggregated default settings for a workspace (preferred YAML shape).
 
@@ -300,6 +342,15 @@ class WorkspaceDefaults:
     timezone: Optional[str] = None
     language: Optional[str] = None
     theme: Optional[str] = None
+    # Optional overrides to model defaults (when present these take precedence)
+    default_house_system: Optional[HouseSystem] = None
+    default_bodies: Optional[List[str]] = None
+    default_aspects: Optional[List[str]] = None  # Legacy: simple list of aspect IDs
+    # Observable objects to include in charts (list of object IDs from BodyDefinition)
+    # This extends/overrides model.default_bodies with additional objects like angles, houses, etc.
+    observable_objects: Optional[List[str]] = None
+    # Aspect settings with full configuration (overrides default_aspects if present)
+    aspect_settings: Optional[List[AspectSettings]] = None
 
 
 @dataclass
@@ -315,3 +366,7 @@ class Workspace:
     model_overrides: Optional[ModelOverrides] = None
     aspects: List[str] = field(default_factory=list)
     default: Optional[WorkspaceDefaults] = None
+    # Loaded model catalogs available in this workspace, keyed by name
+    models: Dict[str, AstroModel] = field(default_factory=dict)
+    # Optional explicit name for active model (preferred over active_model if set)
+    active_model_name: Optional[str] = None

@@ -8,55 +8,21 @@ from pathlib import Path
 
 # ---- your domain bits (import-only, keep these light) ----
 try:
-    from module.domain import Subject, Relation  # optional: your refactored domain
+    from module.services import Subject
     from module.utils import Actual
     from module.workspace import change_language
     from module.z_visual import display_radial, display_3d
-except Exception:
-    from kerykeion import AstrologicalSubject, KerykeionChartSVG, Report, Literal  # this should not be here
-    class Relation:
-        def __init__(self, person1: object, person2: object) -> None:
-            # Set the type, it can be Natal, Synastry or Transit
-            type = "Synastry"
-            complex = KerykeionChartSVG(person1, chart_type=type, second_obj=person2)
-            complex.makeSVG()
-
-
-    class Subject:
-        def __init__(self, s_name: str, s_type: str = "Tropic") -> None:
-            self.computed = None
-            self.name = s_name
-            self.place = None
-            self.time = None
-            self.type = s_type
-
-        def at_place(self, location: object) -> None:
-            self.place = Actual(location, t="loc")
-
-        def at_time(self, time: str) -> None:
-            self.time = Actual(time, t="date")
-            self.computed = AstrologicalSubject(
-                self.name,
-                self.time.value.year,
-                self.time.value.month,
-                self.time.value.day,
-                self.time.value.hour,
-                self.time.value.minute,
-                lng=self.place.value.longitude if self.place.value else "",
-                lat=self.place.value.latitude if self.place.value else "",
-                tz_str=self.place.tz if self.place.value else "",
-                city=self.place.value.address if self.place.value else "",
-                zodiac_type=Literal[self.type],
-                nation="GB",
-            )
-
-        def data(self):
-            object_list = [x["name"] for x in self.computed.planets_list]
-            label_list = [x["emoji"] for x in self.computed.planets_list]
-            return object_list, self.computed.planets_degrees_ut, label_list
-
-        def report(self):
-            return Report(self.computed)
+    from module.services import create_relation_svg
+except ImportError:
+    # Fallback for direct execution
+    try:
+        from services import Subject, create_relation_svg
+        from utils import Actual
+        from workspace import change_language
+        from z_visual import display_radial, display_3d
+    except ImportError as e:
+        print(f"Failed to import required modules: {e}")
+        raise
 
 
 def run_tui():
@@ -70,26 +36,26 @@ def run_tui():
         name = input("Name: ")
         place = input("Place: ")
         date = input("Date (YYYY-MM-DD HH:MM): ")
-        if Subject is None:
-            print("Domain not available. Ensure module/domain.py defines Subject.")
-            return 1
-        s = Subject(name, place, date)
-        # quick smoke: print summary + degrees
-        objs, degrees, labels = s.data()
-        print("\nObjects:", objs)
-        print("Degrees:", degrees)
         try:
-            rep = s.report()
-            print("\n--- Report ---")
-            print(rep.print_report())
+            s = Subject(name)
+            s.at_place(place)
+            s.at_time(date)
+            # quick smoke: print summary + degrees
+            objs, degrees, labels = s.data()
+            print("\nObjects:", objs)
+            print("Degrees:", degrees)
+            try:
+                rep = s.report()
+                print("\n--- Report ---")
+                print(rep.print_report())
+            except Exception as e:
+                print(f"(report unavailable) {e}")
         except Exception as e:
-            print(f"(report unavailable) {e}")
+            print(f"Error creating subject: {e}")
+            return 1
         return 0
 
     if choice == "2":
-        if Subject is None or Relation is None:
-            print("Domain not available. Ensure module/domain.py defines Subject & Relation.")
-            return 1
         print("First person:")
         n1 = input("  Name: ")
         p1 = input("  Place: ")
@@ -98,14 +64,20 @@ def run_tui():
         n2 = input("  Name: ")
         p2 = input("  Place: ")
         d2 = input("  Date (YYYY-MM-DD HH:MM): ")
-        s1 = Subject(n1, p1, d1)
-        s2 = Subject(n2, p2, d2)
-        rel = Relation(s1, s2, chart_type="Synastry")
         try:
-            rel.make_svg()
+            s1 = Subject(n1)
+            s1.at_place(p1)
+            s1.at_time(d1)
+            s2 = Subject(n2)
+            s2.at_place(p2)
+            s2.at_time(d2)
+            # Use create_relation_svg from services
+            from kerykeion import AstrologicalSubject
+            chart = create_relation_svg(s1.computed, s2.computed, chart_type="Synastry")
             print("Synastry SVG generated.")
         except Exception as e:
             print(f"Could not render SVG: {e}")
+            return 1
         return 0
 
     return 0 if choice in ("q", "") else 0

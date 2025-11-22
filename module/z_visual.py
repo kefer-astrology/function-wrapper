@@ -334,6 +334,14 @@ def build_radix_figure(positions: dict) -> go.Figure:
     """Build a standardized polar (radix) chart figure from planet positions in degrees [0,360).
     positions: mapping of planet name (lowercase or mixed) -> ecliptic longitude in degrees
     """
+    # Debug: Check if positions are all zeros or suspiciously clustered
+    if positions:
+        values = list(positions.values())
+        all_zero = all(abs(v) < 0.0001 for v in values)
+        if all_zero:
+            import warnings
+            warnings.warn(f"All position values are near zero: {positions}")
+    
     fig = go.Figure()
     # Base axes and ticks
     house_degrees = list(range(0, 361, 1))
@@ -370,14 +378,28 @@ def build_radix_figure(positions: dict) -> go.Figure:
     for key, deg in positions.items():
         pname = str(key).lower()
         symbol = PLANET_SYMBOLS.get(pname, pname.capitalize())
+        
+        # Ensure deg is a float and handle None/NaN values
+        try:
+            deg_float = float(deg)
+        except (ValueError, TypeError):
+            continue  # Skip invalid values
+        
+        # Normalize angle to [0, 360) range
+        # Python's % operator handles negatives correctly: -2.9 % 360 = 357.1
+        normalized_deg = deg_float % 360
+        # Ensure it's in [0, 360) range (handle edge case where deg % 360 could be negative)
+        if normalized_deg < 0:
+            normalized_deg += 360
+        
         fig.add_trace(
             go.Scatterpolar(
                 r=[0.6],
-                theta=[deg % 360],
+                theta=[normalized_deg],  # Plotly expects degrees for theta in polar plots
                 text=symbol,
                 mode="text",
                 textfont=dict(size=40),
-                hovertext=pname.capitalize(),
+                hovertext=f"{pname.capitalize()} ({normalized_deg:.4f}°)",
                 hoverinfo="text",
             )
         )
