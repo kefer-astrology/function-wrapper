@@ -29,6 +29,7 @@ class AspectDefinition {
   str line_style
   float line_width
   bool show_label
+  List~AspectContext(Enum)~ valid_contexts
 }
 
 
@@ -67,7 +68,7 @@ class BodyDefinition {
   str id
   str glyph
   str formula
-  str element
+  Element(Enum) element
   float avg_speed
   float max_orb
   Dict~str,str~ i18n
@@ -101,6 +102,7 @@ class ChartConfig {
   EngineType(Enum) engine
   Ayanamsa(Enum) ayanamsa
   List~str~ observable_objects
+  TimeSystem(Enum) time_system
 }
 
 
@@ -139,6 +141,14 @@ class ChartSubject {
 class DateRange {
   datetime start
   datetime end
+}
+
+
+class ElementColorSettings {
+  str fire
+  str earth
+  str air
+  str water
 }
 
 
@@ -184,6 +194,10 @@ class ModelSettings {
   List~str~ default_aspects
   List~str~ default_bodies
   float standard_orb
+  List~str~ default_transit_aspects
+  List~str~ default_direction_aspects
+  List~str~ default_transit_bodies
+  List~str~ default_direction_bodies
 }
 
 
@@ -198,11 +212,16 @@ class OverrideEntry {
 }
 
 
+class RadixPointColorSettings {
+  Dict~str,str~ colors
+}
+
+
 class Sign {
   str name
   str glyph
   str abbreviation
-  str element
+  Element(Enum) element
   Dict~str,str~ i18n
 }
 
@@ -253,6 +272,9 @@ class WorkspaceDefaults {
   List~str~ default_aspects
   List~str~ observable_objects
   List~AspectSettings~ aspect_settings
+  ElementColorSettings element_colors
+  RadixPointColorSettings radix_point_colors
+  TimeSystem(Enum) time_system
 }
 
 AstroModel --> AspectDefinition
@@ -282,3 +304,5 @@ Workspace --> ModelOverrides
 Workspace --> ViewLayout
 Workspace --> WorkspaceDefaults
 WorkspaceDefaults --> AspectSettings
+WorkspaceDefaults --> ElementColorSettings
+WorkspaceDefaults --> RadixPointColorSettings
