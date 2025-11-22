@@ -28,7 +28,17 @@ try:
 except ImportError:
     from z_visual import build_radix_figure
 
-from kerykeion import AstrologicalSubject, KerykeionChartSVG, KerykeionPointModel
+from kerykeion import AstrologicalSubject, KerykeionChartSVG
+# KerykeionPointModel and Report may have different import paths in different versions
+try:
+    from kerykeion import KerykeionPointModel
+except ImportError:
+    try:
+        from kerykeion.kr_types.kr_models import KerykeionPointModel
+    except ImportError:
+        # KerykeionPointModel not available in this version
+        KerykeionPointModel = None
+
 # Report may be in kerykeion.report in some versions
 try:
     from kerykeion import Report
@@ -118,6 +128,10 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
     lon_keys = ("ecliptic_longitude", "longitude", "lon", "degree", "deg")
     
     # Extract from KerykeionPointModel attributes
+    if KerykeionPointModel is None:
+        # KerykeionPointModel not available in this version, skip point extraction
+        return positions
+    
     for attr_name in dir(subj):
         if attr_name.startswith('_'):
             continue
@@ -449,6 +463,10 @@ def extract_kerykeion_points(obj: Any) -> DataFrame:
     Returns:
         DataFrame with one row per KerykeionPointModel attribute found
     """
+    if KerykeionPointModel is None:
+        # KerykeionPointModel not available in this version
+        return DataFrame()
+    
     data = []
     for attr_name in dir(obj):
         attr = getattr(obj, attr_name)
