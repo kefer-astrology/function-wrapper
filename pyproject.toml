@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "kefer-sidecar"
 version = "0.1.0"
 description = "Kefer Astrology sidecar"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<4"
 # Note: Runtime dependencies are managed via requirements/*.in and compiled requirements files.
 # Dependencies listed here for Streamlit Cloud (which uses Poetry)
 dependencies = [
@@ -36,7 +36,7 @@ kefer = "module.__main__:main"
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.10"
+python = ">=3.10,<4"
 # Core dependencies (from base.in)
 geopy = ">=2.4.1"
 kaleido = ">=0.2.1"
