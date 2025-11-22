@@ -73,6 +73,7 @@ MDScreen:
                     anchor_x: "left"
                     anchor_y: "top"
                     MDBoxLayout:
+                        id: chart_cards
                         orientation: "vertical"
                         spacing: "8dp"
                         size_hint_y: None
@@ -100,8 +101,8 @@ MDScreen:
                                     spacing: "6dp"
                                     padding: "4dp"
                                     size_hint_y: None
-                                    height: "0dp"
-                                    opacity: 0
+                                    height: "120dp"
+                                    opacity: 1
 
                                     MDTextField:
                                         id: subject_name
@@ -134,8 +135,8 @@ MDScreen:
                                     spacing: "6dp"
                                     padding: "4dp"
                                     size_hint_y: None
-                                    height: "0dp"
-                                    opacity: 0
+                                    height: "120dp"
+                                    opacity: 1
 
                                     MDTextField:
                                         id: date_input
@@ -149,6 +150,7 @@ MDScreen:
 
                         # Transits options panel
                         MDCard:
+                            id: transits_card
                             radius: "12dp"
                             MDBoxLayout:
                                 orientation: "vertical"
@@ -292,41 +294,16 @@ MDScreen:
             AnchorLayout:
                 anchor_x: "center"
                 anchor_y: "center"
-                MDBoxLayout:
-                    orientation: "horizontal"
-                    spacing: "8dp"
+                ScrollView:
+                    id: people_scroller
+                    do_scroll_x: True
+                    do_scroll_y: False
+                    bar_width: 0
                     size_hint_x: None
-                    width: self.minimum_width
-
-                    # four "chip-like" buttons
-                    MDButton:
-                        id: person_btn_0
-                        style: "filled"  # selected by default
-                        on_release: app.set_person(0)
-                        MDButtonText:
-                            id: person_text_0
-                            text: app.people[0] if len(app.people) > 0 else "—"
-
-                    MDButton:
-                        id: person_btn_1
-                        style: "text"
-                        on_release: app.set_person(1)
-                        MDButtonText:
-                            id: person_text_1
-                            text: app.people[1] if len(app.people) > 1 else "—"
-
-                    MDButton:
-                        id: person_btn_2
-                        style: "text"
-                        on_release: app.set_person(2)
-                        MDButtonText:
-                            id: person_text_2
-                            text: app.people[2] if len(app.people) > 2 else "—"
-
-                    MDButton:
-                        id: person_btn_3
-                        style: "text"
-                        on_release: app.set_person(3)
-                        MDButtonText:
-                            id: person_text_3
-                            text: app.people[3] if len(app.people) > 3 else "—"
+                    width: min(self.parent.width, people_row.width)
+                    MDBoxLayout:
+                        id: people_row
+                        orientation: "horizontal"
+                        spacing: "8dp"
+                        size_hint_x: None
+                        width: self.minimum_width

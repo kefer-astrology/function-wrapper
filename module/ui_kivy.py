@@ -19,7 +19,6 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.uix.togglebutton import ToggleButton
 
-import os
 from services import (
     compute_positions,
     list_open_view_rows,
@@ -31,7 +30,7 @@ from services import (
 from utils import (
     Actual, combine_date_time, now_utc, 
     prepare_horoscope, default_ephemeris_path, 
-    import_chart_yaml
+    import_chart_yaml, read_yaml_file, write_yaml_file
 )
 from workspace import (
     change_language, load_workspace, init_workspace,
@@ -51,12 +50,14 @@ try:
 except Exception:
     WEBVIEW_OK = False
 
+from pathlib import Path
+
 class MyApp(MDApp):
     # top-level view: "aspects", "transits", "progressions", "synastry"
     current_view = StringProperty("general")
     current_view_title = StringProperty("General")
-    # people
-    people = ListProperty([])
+    # charts
+    charts = ListProperty([])
     current_person_index = NumericProperty(0)
     current_person_name = StringProperty("")
     # engine settings (optional)
@@ -95,23 +96,29 @@ class MyApp(MDApp):
         except Exception:
             self._left_defaults = []
         # First-run: try open hardcoded dir; else wizard
-        default_path = "/home/jav/Documents/Space/aaaaaaaaaaaaa/"
-        if os.path.isdir(default_path) and os.path.exists(os.path.join(default_path, "workspace.yaml")):
+        default_path = Path("/home/jav/Documents/Space/aaaaaaaaaaaaa/")
+        if default_path.is_dir() and (default_path / "workspace.yaml").exists():
             try:
-                self.workspace_dir = default_path
-                self.workspace = load_workspace(os.path.join(default_path, "workspace.yaml"))
-                # populate people
-                self.people = [getattr(getattr(c, 'subject', None), 'name', '') for c in (self.workspace.charts or []) if getattr(getattr(c, 'subject', None), 'name', '')]
-                if self.people:
-                    self.current_person_name = self.people[0]
+                self.workspace_dir = str(default_path)
+                self.workspace = load_workspace(str(default_path / "workspace.yaml"))
+                # populate charts
+                self.charts = [getattr(getattr(c, 'subject', None), 'name', '') for c in (self.workspace.charts or []) if getattr(getattr(c, 'subject', None), 'name', '')]
+                if self.charts:
+                    self.current_person_name = self.charts[0]
                 self._update_person_buttons()
+                # Focus first chart so actions like Export work immediately
+                try:
+                    if self.charts:
+                        self._focus_chart_by_name(self.charts[0])
+                except Exception:
+                    pass
                 # initial view: chart icon (create)
                 self.on_toolbar("chart_settings")
             except Exception as e:
                 self.show_message(f"Failed to open default workspace: {e}")
-                self._wizard_create_workspace()
+                self._prompt_workspace_selection()
         else:
-            self._wizard_create_workspace()
+            self._prompt_workspace_selection()
 
     # ---------- domain init ----------
     def prepare_content(self, date: str="", place: str=""):
@@ -176,10 +183,10 @@ class MyApp(MDApp):
 
     # ---------- person switching ----------
     def set_person(self, index: int):
-        if not (0 <= index < len(self.people)):
+        if not (0 <= index < len(self.charts)):
             return
         self.current_person_index = index
-        self.current_person_name = self.people[index]
+        self.current_person_name = self.charts[index]
         # reflect in inputs
         ids = self.root.ids
         if "subject_name" in ids:
@@ -203,21 +210,23 @@ class MyApp(MDApp):
 
     def _update_person_buttons(self):
         ids = self.root.ids
-        # styles: filled for selected, text for others
-        btn_ids = ["person_btn_0", "person_btn_1", "person_btn_2", "person_btn_3"]
-        # update labels based on current people list (up to 4)
-        for i, bid in enumerate(btn_ids):
-            btn = ids.get(bid)
-            if not btn:
-                continue
-            # Set text if we have a name, else show placeholder and disable
-            label = self.people[i] if i < len(self.people) else "-"
+        row = ids.get('people_row')
+        if row is None:
+            return
+        # rebuild dynamic chip buttons
+        try:
+            row.clear_widgets()
+        except Exception:
+            pass
+        from kivymd.uix.button import MDButton, MDButtonText
+        for i, name in enumerate(self.charts or []):
             try:
-                btn.text = label
+                btn = MDButton(style=('filled' if i == self.current_person_index else 'text'), size_hint_y=None, height=36)
+                btn.add_widget(MDButtonText(text=name or '-'))
+                btn.bind(on_release=lambda _b, idx=i: self.set_person(idx))
+                row.add_widget(btn)
             except Exception:
-                pass
-            btn.disabled = i >= len(self.people)
-            btn.style = "filled" if i == self.current_person_index and i < len(self.people) else "text"
+                continue
 
     # ---------- expand/collapse sections ----------
     def toggle_section(self, which: str):
@@ -250,9 +259,11 @@ class MyApp(MDApp):
     # ---------- engine helper ----------
     def _effective_engine(self):
         try:
-            ws_engine = getattr(getattr(self, 'workspace', None), 'default_engine', None)
-            if ws_engine:
-                return ws_engine
+            ws = getattr(self, 'workspace', None)
+            d = getattr(ws, 'default', None) if ws is not None else None
+            eng = getattr(d, 'ephemeris_engine', None) if d is not None else None
+            if eng:
+                return eng
         except Exception:
             pass
         return EngineType.JPL
@@ -278,7 +289,6 @@ class MyApp(MDApp):
         loc_text = ids.get("subject_place").text if ids.get("subject_place") else "Prague"
         loc_text = (loc_text or "Prague").strip() or "Prague"
         # Build datetime string from fields if available, else use now
-        from datetime import datetime
         dt_str = None
         if ids.get("date_input") and ids.get("time_input"):
             ds = (ids["date_input"].text or "").strip()
@@ -330,9 +340,9 @@ class MyApp(MDApp):
         box.add_widget(Label(text="Select a workspace folder", size_hint_y=None, height=30))
         # Start in current workspace dir if available; allow selecting directories
         try:
-            start_path = self.workspace_dir if getattr(self, 'workspace_dir', None) else os.getcwd()
+            start_path = self.workspace_dir if getattr(self, 'workspace_dir', None) else str(Path.cwd())
         except Exception:
-            start_path = os.getcwd()
+            start_path = str(Path.cwd())
         chooser = FileChooserIconView(path=start_path, dirselect=True)
         box.add_widget(chooser)
         btns = BoxLayout(size_hint_y=None, height=48, spacing=8)
@@ -349,12 +359,12 @@ class MyApp(MDApp):
 
         def on_select(*_):
             sel = chooser.selection[0] if chooser.selection else chooser.path
-            base = sel if os.path.isdir(sel) else os.path.dirname(sel)
+            base = sel if Path(sel).is_dir() else str(Path(sel).parent)
             if not base:
                 return
             # Initialize if no manifest exists (but do not touch current workspace on failure)
-            manifest = os.path.join(base, "workspace.yaml")
-            if not os.path.exists(manifest):
+            manifest = str(Path(base) / "workspace.yaml")
+            if not Path(manifest).exists():
                 try:
                     init_workspace(
                         base_dir=base,
@@ -365,7 +375,7 @@ class MyApp(MDApp):
                 except Exception as e:
                     self.show_message(f"Failed to init workspace: {e}")
                     return
-                manifest = os.path.join(base, "workspace.yaml")
+                manifest = str(Path(base) / "workspace.yaml")
             # Try load into temp vars, then commit to app state on success
             try:
                 ws = load_workspace(manifest)
@@ -379,7 +389,7 @@ class MyApp(MDApp):
                 # Auto-import new charts found on disk
                 try:
                     for fname in (changes.get('charts', {}).get('new_on_disk', []) or []):
-                        path = os.path.join(base, 'charts', fname)
+                        path = str(Path(base) / 'charts' / fname)
                         try:
                             chart = import_chart_yaml(path)
                             add_or_update_chart(ws, chart, base_dir=base)
@@ -391,10 +401,9 @@ class MyApp(MDApp):
                 # Auto-import new subjects found on disk
                 try:
                     for fname in (changes.get('subjects', {}).get('new_on_disk', []) or []):
-                        path = os.path.join(base, 'subjects', fname)
+                        path = str(Path(base) / 'subjects' / fname)
                         try:
-                            with open(path, 'r', encoding='utf-8') as f:
-                                data = yaml.safe_load(f) or {}
+                            data = read_yaml_file(path)
                             subj = ChartSubject(**data) if isinstance(data, dict) else None
                             if subj is not None:
                                 add_subject(ws, subj, base_dir=base)
@@ -424,20 +433,37 @@ class MyApp(MDApp):
                 # Commit state only after success
                 self.workspace_dir = base
                 self.workspace = ws
-                self.people = names
-                if self.people:
+                self.charts = names
+                if self.charts:
                     self.current_person_index = 0
-                    self.current_person_name = self.people[0]
+                    self.current_person_name = self.charts[0]
                 else:
                     self.current_person_index = 0
                     self.current_person_name = ""
                 self._update_person_buttons()
+                # Focus first chart if any, so Export etc. work immediately
+                try:
+                    if self.charts:
+                        self._focus_chart_by_name(self.charts[0])
+                except Exception:
+                    pass
                 # render overview immediately
                 self._render_workspace_overview(show_open_button=True)
             except Exception as e:
                 self.show_message(f"Failed to load workspace: {e}")
             finally:
                 popup.dismiss()
+
+        # Wire buttons and open popup
+        try:
+            btn_cancel.bind(on_release=on_cancel)
+            btn_select.bind(on_release=on_select)
+        except Exception:
+            pass
+        try:
+            popup.open()
+        except Exception:
+            pass
 
     def _popup_open_workspace(self):
         # Reuse the selection popup
@@ -467,7 +493,7 @@ class MyApp(MDApp):
             return
         box = BoxLayout(orientation='vertical', spacing=8, padding=8)
         box.add_widget(Label(text="Export current chart to folder", size_hint_y=None, height=28))
-        chooser = FileChooserIconView(path=os.getcwd(), dirselect=True)
+        chooser = FileChooserIconView(path=str(Path.cwd()), dirselect=True)
         box.add_widget(chooser)
         btns = BoxLayout(size_hint_y=None, height=48, spacing=8)
         btn_cancel = self._md_button("Cancel", style="text", height=40)
@@ -482,19 +508,29 @@ class MyApp(MDApp):
 
         def on_export(*_):
             dest = chooser.selection[0] if chooser.selection else chooser.path
-            if not os.path.isdir(dest):
-                dest = os.path.dirname(dest)
+            dest_p = Path(dest)
+            if not dest_p.is_dir():
+                dest_p = dest_p.parent
             try:
-                import yaml
-                data = yaml.safe_dump(self._chart_to_dict(self.chart), sort_keys=False, allow_unicode=True)
+                data = self._chart_to_dict(self.chart)
                 fname = f"{(getattr(self.chart, 'id', '') or 'chart').replace(' ', '-').lower()}.yml"
-                out = os.path.join(dest, fname)
-                with open(out, 'w', encoding='utf-8') as f:
-                    f.write(data)
+                out = dest_p / fname
+                write_yaml_file(out, data, sort_keys=False, allow_unicode=True)
                 self.show_message(f"Exported to {out}")
             except Exception as e:
                 self.show_message(f"Failed to export: {e}")
             popup.dismiss()
+
+        # Wire buttons and open popup
+        try:
+            btn_cancel.bind(on_release=on_cancel)
+            btn_export.bind(on_release=on_export)
+        except Exception:
+            pass
+        try:
+            popup.open()
+        except Exception:
+            pass
 
     def _chart_to_dict(self, chart: ChartInstance) -> dict:
         # lightweight serialization for export
@@ -567,9 +603,9 @@ class MyApp(MDApp):
         self.chart = found
         self.current_person_name = getattr(getattr(found, 'subject', None), 'name', name) or name
         try:
-            if self.current_person_name not in (self.people or []):
-                self.people = (self.people or []) + [self.current_person_name]
-            self.current_person_index = max(0, self.people.index(self.current_person_name))
+            if self.current_person_name not in (self.charts or []):
+                self.charts = (self.charts or []) + [self.current_person_name]
+            self.current_person_index = max(0, self.charts.index(self.current_person_name))
         except Exception:
             pass
         self._update_person_buttons()
@@ -580,6 +616,7 @@ class MyApp(MDApp):
             pass
         self.show_message(f"Focused: {self.current_person_name}")
 
+    # ---------- chart settings ----------
     def _render_chart_settings(self):
         """Render settings for the currently selected chart in the center area (top-aligned)."""
         ids = self.root.ids
@@ -591,6 +628,108 @@ class MyApp(MDApp):
         self._set_side_panes(left=True, right=True)
         # Ensure left pane shows the default two cards from KV (subject/time)
         self._show_left_defaults()
+        # Add a small segmented selector in the left pane (mirrors Create Chart UX)
+        try:
+            left = ids.get('left_col')
+            if left:
+                selector = BoxLayout(orientation='vertical', size_hint_y=None, spacing=6)
+                selector.bind(minimum_height=selector.setter('height'))
+                items = [
+                    ("Chart options", "chart"),
+                    ("Transit options", "transits"),
+                ]
+                buttons = []
+
+                def _show_container(widget, show: bool):
+                    try:
+                        if widget is None:
+                            return
+                        widget.disabled = not show
+                        widget.opacity = 1 if show else 0
+                        # enforce vertical sizing visibility
+                        if show:
+                            # prefer natural minimum height if available
+                            h = getattr(widget, 'minimum_height', None)
+                            if h is None or not h:
+                                h = getattr(widget, 'height', 0) or 1
+                            widget.size_hint_y = None
+                            widget.height = max(1, h)
+                        else:
+                            widget.size_hint_y = None
+                            widget.height = 0
+                    except Exception:
+                        pass
+
+                def _ensure_open(section_key: str):
+                    # section_key in {'subject','time','transits'}
+                    try:
+                        if section_key == 'subject':
+                            content = ids.get('subject_content')
+                        elif section_key == 'time':
+                            content = ids.get('time_content')
+                        else:
+                            content = ids.get('transits_content')
+                        if content is not None and (getattr(content, 'height', 0) or 0) <= 1:
+                            self.toggle_section(section_key)
+                    except Exception:
+                        pass
+
+                def _ensure_closed(section_key: str):
+                    try:
+                        if section_key == 'subject':
+                            content = ids.get('subject_content')
+                        elif section_key == 'time':
+                            content = ids.get('time_content')
+                        else:
+                            content = ids.get('transits_content')
+                        if content is not None and (getattr(content, 'height', 0) or 0) > 1:
+                            self.toggle_section(section_key)
+                    except Exception:
+                        pass
+
+                def set_mode(which):
+                    # Update visual state of buttons
+                    for btn, key in buttons:
+                        try:
+                            btn.style = 'filled' if key == which else 'text'
+                        except Exception:
+                            pass
+                    # Toggle whole-card visibility to avoid residuals
+                    chart_cards = ids.get('chart_cards')
+                    transits_card = ids.get('transits_card')
+                    if which == 'chart':
+                        _show_container(chart_cards, True)
+                        _show_container(transits_card, False)
+                        # ensure inner sections are open/closed accordingly
+                        _ensure_open('subject')
+                        _ensure_open('time')
+                        _ensure_closed('transits')
+                    else:
+                        _show_container(chart_cards, False)
+                        _show_container(transits_card, True)
+                        _ensure_closed('subject')
+                        _ensure_closed('time')
+                        _ensure_open('transits')
+
+                # Build selector buttons
+                from kivymd.uix.button import MDButton, MDButtonText
+                for label, key in items:
+                    btn = MDButton(style=('filled' if key == 'chart' else 'text'), size_hint_y=None, height=36)
+                    btn.add_widget(MDButtonText(text=label))
+                    btn.bind(on_release=lambda _inst, k=key: set_mode(k))
+                    buttons.append((btn, key))
+                    selector.add_widget(btn)
+
+                # Place selector at the top of the left pane
+                try:
+                    left.add_widget(selector)
+                except Exception:
+                    pass
+
+                # Initialize default mode to 'chart'
+                set_mode('chart')
+        except Exception:
+            pass
         root = AnchorLayout(anchor_y='top')
         vbox = BoxLayout(orientation='vertical', size_hint_y=None)
         vbox.bind(minimum_height=vbox.setter('height'))
@@ -737,13 +876,18 @@ class MyApp(MDApp):
             try:
                 add_or_update_chart(self.workspace, self.chart, base_dir=self.workspace_dir)
                 self._save_workspace()
-                # update people chips
-                names = self.people or []
-                if nm not in names:
-                    names.append(nm)
-                self.people = names
+                # update charts chips from workspace to keep in sync
+                try:
+                    ws = getattr(self, 'workspace', None)
+                    self.charts = [getattr(getattr(c, 'subject', None), 'name', '') for c in (ws.charts or []) if getattr(getattr(c, 'subject', None), 'name', '')]
+                except Exception:
+                    # fallback append-only
+                    names = self.charts or []
+                    if nm not in names:
+                        names.append(nm)
+                    self.charts = names
                 self.current_person_name = nm
-                self.current_person_index = max(0, self.people.index(nm))
+                self.current_person_index = max(0, self.charts.index(nm))
                 self._update_person_buttons()
                 self.show_message('Chart created')
             except Exception as e:
@@ -800,7 +944,13 @@ class MyApp(MDApp):
             for info in rows:
                 name = info.get('name', '')
                 event_time = info.get('event_time', '')
-                location_name = info.get('location', '')
+                # Fallback to workspace default location if per-chart missing
+                try:
+                    ws = getattr(self, 'workspace', None)
+                    dl = getattr(getattr(ws, 'default_location', None), 'name', '') if ws else ''
+                except Exception:
+                    dl = ''
+                location_name = info.get('location', '') or dl
                 tags = info.get('tags', '')
                 row = GridLayout(cols=4, size_hint_y=None, height=32, spacing=6)
                 btn_name = self._md_button(name or '-', style='text', height=32)
@@ -832,7 +982,7 @@ class MyApp(MDApp):
             return
         box = BoxLayout(orientation='vertical', spacing=8, padding=8)
         box.add_widget(MDLabel(text="Select a chart YAML file to import", size_hint_y=None, height=28, theme_text_color="Primary"))
-        chooser = FileChooserIconView(path=self.workspace_dir or os.getcwd())
+        chooser = FileChooserIconView(path=self.workspace_dir or str(Path.cwd()))
         box.add_widget(chooser)
         btns = BoxLayout(size_hint_y=None, height=48, spacing=8)
         btn_cancel = self._md_button("Cancel", style="text", height=40)
@@ -848,20 +998,26 @@ class MyApp(MDApp):
         def on_import(*_):
             try:
                 sel = chooser.selection[0] if chooser.selection else chooser.path
-                if not sel or not os.path.isfile(sel):
+                if not sel or not Path(sel).is_file():
                     self.show_message('Please select a YAML file')
                     return
                 chart = import_chart_yaml(sel)
                 add_or_update_chart(self.workspace, chart, base_dir=self.workspace_dir)
                 # update UI chips and focus
                 nm = getattr(getattr(chart, 'subject', None), 'name', getattr(chart, 'id', 'chart')) or getattr(chart, 'id', 'chart')
-                names = self.people or []
-                if nm not in names:
-                    names.append(nm)
-                self.people = names
+                # rebuild charts list from workspace to ensure sync
+                try:
+                    ws = getattr(self, 'workspace', None)
+                    self.charts = [getattr(getattr(c, 'subject', None), 'name', '') for c in (ws.charts or []) if getattr(getattr(c, 'subject', None), 'name', '')]
+                except Exception:
+                    # fallback append-only
+                    names = self.charts or []
+                    if nm not in names:
+                        names.append(nm)
+                    self.charts = names
                 self.current_person_name = nm
                 try:
-                    self.current_person_index = max(0, self.people.index(nm))
+                    self.current_person_index = max(0, self.charts.index(nm))
                 except Exception:
                     pass
                 self._update_person_buttons()
@@ -872,6 +1028,17 @@ class MyApp(MDApp):
                 self.show_message(f"Failed to import chart: {e}")
             finally:
                 popup.dismiss()
+
+        # Wire buttons and open popup
+        try:
+            btn_cancel.bind(on_release=on_cancel)
+            btn_import.bind(on_release=on_import)
+        except Exception:
+            pass
+        try:
+            popup.open()
+        except Exception:
+            pass
 
     # ---------- helper for side panes ----------
     def _set_side_panes(self, left: bool, right: bool):
@@ -915,9 +1082,7 @@ class MyApp(MDApp):
                 return
             left.clear_widgets()
             if getattr(self, '_left_defaults', None):
-                # children order is reversed in Kivy; we only want the first two default cards (Subject, Time)
-                defaults_in_order = list(reversed(self._left_defaults))
-                for w in defaults_in_order[:2]:
+                for w in reversed(self._left_defaults):
                     left.add_widget(w)
         except Exception:
             pass
@@ -966,7 +1131,7 @@ class MyApp(MDApp):
         theme_options = ['default','dark','light']
 
         house_val = str(getattr(ws,'default_house_system','PLACIDUS') or 'PLACIDUS')
-        engine_val = str(getattr(getattr(ws,'default_engine',None),'name','JPL'))
+        engine_val = str(getattr(getattr(ws,'default',None),'ephemeris_engine','JPL') or 'JPL')
         theme_val = str(getattr(ws,'color_theme','default') or 'default')
 
         house_btn = self._md_button(house_val, style='tonal', height=36)
@@ -1066,7 +1231,7 @@ class MyApp(MDApp):
                 ws.color_theme = theme_val or 'default'
                 try:
                     eng_key = (engine_val or 'JPL').upper()
-                    ws.default_engine = getattr(EngineType, eng_key, EngineType.JPL)
+                    ws.default.ephemeris_engine = getattr(EngineType, eng_key, EngineType.JPL)
                 except Exception:
                     pass
                 save_workspace_modular(ws, self.workspace_dir)
