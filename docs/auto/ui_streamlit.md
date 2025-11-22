@@ -11,20 +11,8 @@ weight: 10
 
 # `ui_streamlit` module
 
-## Functions
-
-### `main`
-
-```python
-main()
-```
-
-### `render_toolbar`
-
-```python
-render_toolbar()
-```
+Failed to import module.ui_streamlit: Missing dependency: streamlit
 
 ## How the UI is invoked
 
-Entry point: `main()`
+Entry point: not detected

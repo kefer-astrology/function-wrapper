@@ -36,9 +36,13 @@ Aspect(type: str, source_id: str, target_id: str, angle: float, orb: float)
 - `angle: float`
 - `orb: float`
 
+### class `AspectContext` (str, Enum)
+
+Contexts where an aspect can be used.
+
 ### class `AspectDefinition` 
 
-AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], color: Optional[str] = None, importance: Optional[int] = None, line_style: Optional[str] = None, line_width: Optional[float] = None, show_label: Optional[bool] = None)
+AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], color: Optional[str] = None, importance: Optional[int] = None, line_style: Optional[str] = None, line_width: Optional[float] = None, show_label: Optional[bool] = None, valid_contexts: Optional[List[module.models.AspectContext]] = None)
 
 #### Dataclass fields
 
@@ -52,6 +56,7 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 - `line_style: Optional`
 - `line_width: Optional`
 - `show_label: Optional`
+- `valid_contexts: Optional`
 
 ### class `AspectSettings` 
 
@@ -97,7 +102,7 @@ Attachment(filename: str, url: str, type: str)
 
 ### class `BodyDefinition` 
 
-BodyDefinition(id: str, glyph: str, formula: str, element: Optional[str], avg_speed: float, max_orb: float, i18n: Dict[str, str], object_type: Optional[module.models.ObjectType] = None, computation_map: Dict[str, Optional[str]] = &lt;factory&gt;, requires_location: bool = False, requires_house_system: bool = False)
+BodyDefinition(id: str, glyph: str, formula: str, element: Optional[module.models.Element], avg_speed: float, max_orb: float, i18n: Dict[str, str], object_type: Optional[module.models.ObjectType] = None, computation_map: Dict[str, Optional[str]] = &lt;factory&gt;, requires_location: bool = False, requires_house_system: bool = False)
 
 #### Dataclass fields
 
@@ -128,7 +133,7 @@ CelestialBody(id: str, definition_id: str, degree: float, sign: str, retrograde:
 
 ### class `ChartConfig` 
 
-ChartConfig(mode: module.models.ChartMode, house_system: module.models.HouseSystem, zodiac_type: module.models.ZodiacType, included_points: List[str], aspect_orbs: Dict[str, float], display_style: str, color_theme: str, override_ephemeris: Optional[str] = None, model: Optional[str] = None, engine: Optional[module.models.EngineType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, observable_objects: Optional[List[str]] = None)
+ChartConfig(mode: module.models.ChartMode, house_system: module.models.HouseSystem, zodiac_type: module.models.ZodiacType, included_points: List[str], aspect_orbs: Dict[str, float], display_style: str, color_theme: str, override_ephemeris: Optional[str] = None, model: Optional[str] = None, engine: Optional[module.models.EngineType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, observable_objects: Optional[List[str]] = None, time_system: Optional[module.models.TimeSystem] = None)
 
 #### Dataclass fields
 
@@ -144,6 +149,7 @@ ChartConfig(mode: module.models.ChartMode, house_system: module.models.HouseSyst
 - `engine: Optional`
 - `ayanamsa: Optional`
 - `observable_objects: Optional`
+- `time_system: Optional`
 
 ### class `ChartInstance` 
 
@@ -199,6 +205,21 @@ DateRange(start: datetime.datetime, end: datetime.datetime)
 
 - `start: datetime`
 - `end: datetime`
+
+### class `Element` (str, Enum)
+
+The four classical elements.
+
+### class `ElementColorSettings` 
+
+Color settings for the four elements.
+
+#### Dataclass fields
+
+- `fire: str`
+- `earth: str`
+- `air: str`
+- `water: str`
 
 ### class `EngineType` (str, Enum)
 
@@ -260,7 +281,7 @@ ModelOverrides(points: List[module.models.OverrideEntry] = &lt;factory&gt;, aspe
 
 ### class `ModelSettings` 
 
-ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: List[str], default_bodies: List[str], standard_orb: float)
+ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: List[str], default_bodies: List[str], standard_orb: float, default_transit_aspects: Optional[List[str]] = None, default_direction_aspects: Optional[List[str]] = None, default_transit_bodies: Optional[List[str]] = None, default_direction_bodies: Optional[List[str]] = None)
 
 #### Dataclass fields
 
@@ -268,6 +289,10 @@ ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: 
 - `default_aspects: List`
 - `default_bodies: List`
 - `standard_orb: float`
+- `default_transit_aspects: Optional`
+- `default_direction_aspects: Optional`
+- `default_transit_bodies: Optional`
+- `default_direction_bodies: Optional`
 
 ### class `ObjectType` (str, Enum)
 
@@ -287,19 +312,37 @@ OverrideEntry(id: str, glyph: Optional[str] = None, angle: Optional[float] = Non
 - `i18n: Optional`
 - `computed: Optional`
 
+### class `RadixPointColorSettings` 
+
+Color settings for radix (natal chart) points/planets.
+
+Maps object IDs to color hex codes. Common objects:
+- sun, moon, mercury, venus, mars, jupiter, saturn, uranus, neptune, pluto
+- asc, mc, ic, desc (angles)
+- north_node, south_node
+- lilith, chiron, etc.
+
+#### Dataclass fields
+
+- `colors: Dict`
+
 ### class `RelationType` (str, Enum)
 
 ### class `Sign` 
 
-Sign(name: str, glyph: str, abbreviation: str, element: str, i18n: Dict[str, str])
+Sign(name: str, glyph: str, abbreviation: str, element: module.models.Element, i18n: Dict[str, str])
 
 #### Dataclass fields
 
 - `name: str`
 - `glyph: str`
 - `abbreviation: str`
-- `element: str`
+- `element: Element`
 - `i18n: Dict`
+
+### class `TimeSystem` (str, Enum)
+
+Time representation systems.
 
 ### class `ViewLayout` 
 
@@ -365,5 +408,8 @@ This mirrors the desired manifest structure under the top-level key 'default'.
 - `default_aspects: Optional`
 - `observable_objects: Optional`
 - `aspect_settings: Optional`
+- `element_colors: Optional`
+- `radix_point_colors: Optional`
+- `time_system: Optional`
 
 ### class `ZodiacType` (str, Enum)
