@@ -732,12 +732,25 @@ def _open_workspace_center():
             if not base_dir:
                 st.warning("Zadejte cestu ke složce")
             else:
-                manifest = str(Path(base_dir) / "workspace.yaml")
-                if not Path(manifest).is_file():
+                # Validate and resolve path to prevent path traversal attacks
+                try:
+                    base_path = Path(base_dir).resolve()
+                    # Ensure path is absolute and properly resolved (resolve() normalizes and removes ..)
+                    if not base_path.is_absolute():
+                        raise ValueError("Invalid path: must be an absolute path")
+                    # Additional check: ensure resolved path doesn't contain parent directory references
+                    if ".." in base_path.parts:
+                        raise ValueError("Invalid path: path traversal detected")
+                    manifest = base_path / "workspace.yaml"
+                except (ValueError, OSError) as e:
+                    st.error(f"Neplatná cesta: {e}")
+                    return
+                
+                if not manifest.is_file():
                     st.error("Soubor workspace.yaml ve složce nenalezen")
                 else:
                     # Full folder available: do full scan/import
-                    report = _load_workspace_and_sync(manifest, scan_and_import=True)
+                    report = _load_workspace_and_sync(str(manifest), scan_and_import=True)
                     st.success("Workspace načten a synchronizován.")
                     _render_ws_report(report)
         except Exception as e:
@@ -1070,12 +1083,22 @@ def _render_initial_dialog():
                 if not base_dir:
                     st.warning("Zadejte cestu ke složce")
                 else:
-                    manifest = str(Path(base_dir) / "workspace.yaml")
-                    if not Path(manifest).is_file():
+                    # Validate and resolve path to prevent path traversal attacks
+                    try:
+                        base_path = Path(base_dir).resolve()
+                        # Check for path traversal attempts (should not contain .. after resolution)
+                        if ".." in str(base_path) or not base_path.is_absolute():
+                            raise ValueError("Invalid path: path traversal detected")
+                        manifest = base_path / "workspace.yaml"
+                    except (ValueError, OSError) as e:
+                        st.error(f"Neplatná cesta: {e}")
+                        return
+                    
+                    if not manifest.is_file():
                         st.error("Soubor workspace.yaml ve složce nenalezen")
                     else:
                         # Full folder available: do full scan/import
-                        report = _load_workspace_and_sync(manifest, scan_and_import=True)
+                        report = _load_workspace_and_sync(str(manifest), scan_and_import=True)
                         st.success("Workspace načten a synchronizován.")
                         _render_ws_report(report)
             except Exception as e:
