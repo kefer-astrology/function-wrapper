@@ -1,0 +1,284 @@
+classDiagram
+
+
+class Annotation {
+  str title
+  str content
+  datetime created
+  str author
+}
+
+
+class Aspect {
+  str type
+  str source_id
+  str target_id
+  float angle
+  float orb
+}
+
+
+class AspectDefinition {
+  str id
+  str glyph
+  float angle
+  float default_orb
+  Dict~str,str~ i18n
+  str color
+  int importance
+  str line_style
+  float line_width
+  bool show_label
+}
+
+
+class AspectSettings {
+  str id
+  bool enabled
+  float orb
+  str color
+  int importance
+  str line_style
+  float line_width
+  bool show_label
+}
+
+
+class AstroModel {
+  str name
+  List~BodyDefinition~ body_definitions
+  List~AspectDefinition~ aspect_definitions
+  List~Sign~ signs
+  ModelSettings settings
+  EngineType(Enum) engine
+  ZodiacType(Enum) zodiac_type
+  Ayanamsa(Enum) ayanamsa
+}
+
+
+class Attachment {
+  str filename
+  str url
+  str type
+}
+
+
+class BodyDefinition {
+  str id
+  str glyph
+  str formula
+  str element
+  float avg_speed
+  float max_orb
+  Dict~str,str~ i18n
+  ObjectType(Enum) object_type
+  Dict~str,str~ computation_map
+  bool requires_location
+  bool requires_house_system
+}
+
+
+class CelestialBody {
+  str id
+  str definition_id
+  float degree
+  str sign
+  bool retrograde
+  float speed
+}
+
+
+class ChartConfig {
+  ChartMode(Enum) mode
+  HouseSystem(Enum) house_system
+  ZodiacType(Enum) zodiac_type
+  List~str~ included_points
+  Dict~str,float~ aspect_orbs
+  str display_style
+  str color_theme
+  str override_ephemeris
+  str model
+  EngineType(Enum) engine
+  Ayanamsa(Enum) ayanamsa
+  List~str~ observable_objects
+}
+
+
+class ChartInstance {
+  str id
+  ChartSubject subject
+  ChartConfig config
+  Horoscope computed_chart
+  List~str~ tags
+}
+
+
+class ChartPreset {
+  str name
+  ChartConfig config
+}
+
+
+class ChartRelation {
+  RelationType(Enum) type
+  str source
+  str target
+  str method
+  DateRange time_span
+}
+
+
+class ChartSubject {
+  str id
+  str name
+  datetime event_time
+  Location location
+}
+
+
+class DateRange {
+  datetime start
+  datetime end
+}
+
+
+class EphemerisSource {
+  str name
+  str backend
+}
+
+
+class Horoscope {
+  datetime for_time
+  Location location
+  List~CelestialBody~ bodies
+  List~House~ houses
+  List~Aspect~ aspects
+}
+
+
+class House {
+  int number
+  float cusp_degree
+  str sign
+}
+
+
+class Location {
+  str name
+  float latitude
+  float longitude
+  str timezone
+}
+
+
+class ModelOverrides {
+  List~OverrideEntry~ points
+  List~OverrideEntry~ aspects
+  Dict~str,float~ override_orbs
+}
+
+
+class ModelSettings {
+  HouseSystem(Enum) default_house_system
+  List~str~ default_aspects
+  List~str~ default_bodies
+  float standard_orb
+}
+
+
+class OverrideEntry {
+  str id
+  str glyph
+  float angle
+  float default_orb
+  List~str~ only_for
+  Dict~str,str~ i18n
+  bool computed
+}
+
+
+class Sign {
+  str name
+  str glyph
+  str abbreviation
+  str element
+  Dict~str,str~ i18n
+}
+
+
+class ViewLayout {
+  str name
+  LayoutStyle(Enum) layout_style
+  List~str~ chart_instances
+  List~ChartRelation~ relations
+  List~ViewModule~ modules
+}
+
+
+class ViewModule {
+  ViewModuleType(Enum) type
+  Dict~any,any~ config
+}
+
+
+class Workspace {
+  str owner
+  EphemerisSource default_ephemeris
+  str active_model
+  List~ChartPreset~ chart_presets
+  List~ChartSubject~ subjects
+  List~ChartInstance~ charts
+  List~ViewLayout~ layouts
+  List~Annotation~ annotations
+  ModelOverrides model_overrides
+  List~str~ aspects
+  WorkspaceDefaults default
+  Dict~str,AstroModel~ models
+  str active_model_name
+}
+
+
+class WorkspaceDefaults {
+  EngineType(Enum) ephemeris_engine
+  str ephemeris_backend
+  str location_name
+  float location_latitude
+  float location_longitude
+  str timezone
+  str language
+  str theme
+  HouseSystem(Enum) default_house_system
+  List~str~ default_bodies
+  List~str~ default_aspects
+  List~str~ observable_objects
+  List~AspectSettings~ aspect_settings
+}
+
+AstroModel --> AspectDefinition
+AstroModel --> BodyDefinition
+AstroModel --> ModelSettings
+AstroModel --> Sign
+ChartInstance --> ChartConfig
+ChartInstance --> ChartSubject
+ChartInstance --> Horoscope
+ChartPreset --> ChartConfig
+ChartRelation --> DateRange
+ChartSubject --> Location
+Horoscope --> Aspect
+Horoscope --> CelestialBody
+Horoscope --> House
+Horoscope --> Location
+ModelOverrides --> OverrideEntry
+ViewLayout --> ChartRelation
+ViewLayout --> ViewModule
+Workspace --> Annotation
+Workspace --> AstroModel
+Workspace --> ChartInstance
+Workspace --> ChartPreset
+Workspace --> ChartSubject
+Workspace --> EphemerisSource
+Workspace --> ModelOverrides
+Workspace --> ViewLayout
+Workspace --> WorkspaceDefaults
+WorkspaceDefaults --> AspectSettings
