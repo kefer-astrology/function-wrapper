@@ -28,7 +28,16 @@ try:
 except ImportError:
     from z_visual import build_radix_figure
 
-from kerykeion import AstrologicalSubject, KerykeionChartSVG, Report, KerykeionPointModel
+from kerykeion import AstrologicalSubject, KerykeionChartSVG, KerykeionPointModel
+# Report may be in kerykeion.report in some versions
+try:
+    from kerykeion import Report
+except ImportError:
+    try:
+        from kerykeion.report import Report
+    except ImportError:
+        # Report not available in this version of kerykeion
+        Report = None
 from pandas import DataFrame
 
 try:
@@ -397,6 +406,8 @@ class Subject:
 
     def report(self):
         """Build a Kerykeion textual Report for the computed subject."""
+        if Report is None:
+            raise ImportError("Report class is not available in this version of kerykeion")
         return Report(self.computed)
 
 
