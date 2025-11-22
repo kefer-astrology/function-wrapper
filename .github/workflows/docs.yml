@@ -43,16 +43,9 @@ jobs:
           python -m pip install --upgrade pip
           # Install base requirements (must succeed)
           pip install -r requirements/base.txt
-          # Install optional dependencies for full module imports
-          pip install -r requirements/streamlit.txt || true
-          # Skip kivy installation - it requires X server and system libraries not available in CI
-          # Kivy imports will be handled gracefully by docs_export.py
-          # Verify critical dependencies are installed
-          python -c "import geopy; print(f'geopy version: {geopy.__version__}')"
       
       - name: Generate module documentation
         env:
-          KIVY_NO_ARGS: 1
           PYTHONPATH: ${{ github.workspace }}
         working-directory: ${{ github.workspace }}
         run: |
