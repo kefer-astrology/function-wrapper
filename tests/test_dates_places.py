@@ -1,11 +1,15 @@
 import unittest
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone, UTC
 from module.utils import Actual
 
 
 class Context(unittest.TestCase):
     def test_current_timestamp(self):
-        self.assertEqual(Actual().value.replace(microsecond=0), datetime.now().replace(microsecond=0))
+        # Actual() returns UTC time, so compare with UTC
+        actual_utc = Actual().value.replace(microsecond=0)
+        expected_utc = datetime.now(timezone.utc).replace(microsecond=0)
+        # Allow 1 second difference for test execution time
+        self.assertAlmostEqual(actual_utc.timestamp(), expected_utc.timestamp(), delta=1)
 
     def test_custom_timestamp(self):
         # this is a timestamp specific to czech region (switched day and month)
