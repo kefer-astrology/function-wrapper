@@ -45,9 +45,8 @@ jobs:
           pip install -r requirements/base.txt
           # Install optional dependencies for full module imports
           pip install -r requirements/streamlit.txt || true
-          # Try to install kivy requirements (optional, may fail if system deps missing)
-          # KIVY_NO_ARGS=1 will skip kivy imports in docs generation anyway
-          pip install -r requirements/kivy.txt || echo "Kivy installation failed, continuing without it"
+          # Skip kivy installation - it requires X server and system libraries not available in CI
+          # Kivy imports will be handled gracefully by docs_export.py
           # Verify critical dependencies are installed
           python -c "import geopy; print(f'geopy version: {geopy.__version__}')"
       

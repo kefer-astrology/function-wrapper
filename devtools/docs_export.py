@@ -36,7 +36,9 @@ def _load_target_modules() -> List[ModuleSpec]:
     # Import in dependency order: models -> utils -> z_visual -> services -> workspace -> others
     # This ensures dependencies are available when needed
     # Note: services depends on z_visual, so z_visual must come before services
-    dependency_order = ["models", "utils", "z_visual", "services", "workspace", "ui_kivy", "ui_streamlit"]
+    # Skip ui_kivy in CI environments where X server is not available
+    # It will be handled gracefully by the import error handling below
+    dependency_order = ["models", "utils", "z_visual", "services", "workspace", "ui_streamlit", "ui_kivy"]
     
     # Helper to create a stub module
     def _create_stub_module(module_name):
@@ -76,8 +78,9 @@ def _load_target_modules() -> List[ModuleSpec]:
             mod = importlib.import_module(f"module.{name}")
             # Immediately set up alias so 'from X import ...' works in other modules
             sys.modules[name] = mod
-        except Exception as e1:
+        except (ImportError, ModuleNotFoundError, OSError) as e1:
             # Store the first error - this is more likely to have the real dependency issue
+            # OSError catches kivy initialization failures (X server, libmtdev, etc.)
             first_error = e1
             error = first_error  # Set error in case both imports fail
             
