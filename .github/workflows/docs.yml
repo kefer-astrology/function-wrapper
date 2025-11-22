@@ -10,8 +10,7 @@ on:
       - 'requirements/**'
       - 'pyproject.toml'
       - '.github/workflows/docs.yml'
-    paths-ignore:
-      - 'docs/**'  # Don't trigger on doc changes (prevents infinite loop)
+      # Note: 'docs/**' is intentionally excluded to prevent infinite loop
   workflow_dispatch:  # Allow manual triggering
 
 jobs:

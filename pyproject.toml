@@ -10,9 +10,14 @@ requires-python = ">=3.10"
 # Note: Runtime dependencies are managed via requirements/*.in and compiled requirements files.
 
 [tool.setuptools]
-package-dir = {"" = "module"}     # <— tells setuptools that 'module' is the root
-packages = ["module"]             # or use finders if you have subpackages
+# Explicitly specify that the 'module' directory is the package
+packages = ["module"]
 
 [project.scripts]
 # Optional: gives you a `kefer` command too (keeps -m working)
 kefer = "module.__main__:main"
+
+# Disable Poetry package mode for Streamlit Cloud
+# This tells Poetry to only manage dependencies, not package the project
+[tool.poetry]
+package-mode = false
