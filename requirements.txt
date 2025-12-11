@@ -1,0 +1,5 @@
+# Root requirements.txt for Streamlit Cloud deployment
+# References the compiled lockfile from requirements/streamlit.txt
+# This follows the project's dependency management pattern (see README.md)
+-r requirements/streamlit.txt
+

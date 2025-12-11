@@ -2,26 +2,61 @@ import datetime
 import streamlit as st
 from pathlib import Path
 
-from models import Annotation, ChartInstance, Location, ChartSubject, ChartConfig, EngineType, ChartMode
-from utils import (
-    Actual,
-    parse_sfs_content,
-    combine_date_time,
-    prepare_horoscope,
-    default_ephemeris_path,
-    import_chart_yaml,
-    read_yaml_file,
-    parse_yaml_content,
-    parse_chart_yaml,
-    ensure_aware,
-    now_utc,
-)
-from services import Subject, extract_kerykeion_points, compute_positions, list_open_view_rows
-from z_visual import build_radix_figure
-from workspace import (
-    change_language, load_workspace, add_or_update_chart,
-    scan_workspace_changes, save_workspace_modular, summarize_chart, add_subject,
-)
+# Standardized imports with fallback for direct execution (Streamlit Cloud compatibility)
+try:
+    from module.models import Annotation, ChartInstance, Location, ChartSubject, ChartConfig, EngineType, ChartMode
+except ImportError:
+    from models import Annotation, ChartInstance, Location, ChartSubject, ChartConfig, EngineType, ChartMode
+
+try:
+    from module.utils import (
+        Actual,
+        parse_sfs_content,
+        combine_date_time,
+        prepare_horoscope,
+        default_ephemeris_path,
+        import_chart_yaml,
+        read_yaml_file,
+        parse_yaml_content,
+        parse_chart_yaml,
+        ensure_aware,
+        now_utc,
+    )
+except ImportError:
+    from utils import (
+        Actual,
+        parse_sfs_content,
+        combine_date_time,
+        prepare_horoscope,
+        default_ephemeris_path,
+        import_chart_yaml,
+        read_yaml_file,
+        parse_yaml_content,
+        parse_chart_yaml,
+        ensure_aware,
+        now_utc,
+    )
+
+try:
+    from module.services import Subject, extract_kerykeion_points, compute_positions, list_open_view_rows
+except ImportError:
+    from services import Subject, extract_kerykeion_points, compute_positions, list_open_view_rows
+
+try:
+    from module.z_visual import build_radix_figure
+except ImportError:
+    from z_visual import build_radix_figure
+
+try:
+    from module.workspace import (
+        change_language, load_workspace, add_or_update_chart,
+        scan_workspace_changes, save_workspace_modular, summarize_chart, add_subject,
+    )
+except ImportError:
+    from workspace import (
+        change_language, load_workspace, add_or_update_chart,
+        scan_workspace_changes, save_workspace_modular, summarize_chart, add_subject,
+    )
 
 # -----------------------------
 # Toolbar / layout configuration
