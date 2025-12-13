@@ -1426,9 +1426,10 @@ def main():
                 dt_combined = combine_date_time(input_date, input_time)
                 horoscope, fig = _run_compute(horoscope_name, dt_combined, input_location, engine_choice, eph_path)
                 
-                # Display results in create view
-                st.plotly_chart(fig, use_container_width=True)
-                st.table(extract_kerykeion_points(horoscope.computed))
+                # Show table with all kerykeion point data (not just positions)
+                kerykeion_df = extract_kerykeion_points(horoscope.computed)
+                if not kerykeion_df.empty:
+                    st.table(kerykeion_df)
                 
                 # Add chart to workspace if workspace is loaded
                 ws = st.session_state.get('workspace')
@@ -1468,9 +1469,9 @@ def main():
                         st.session_state.current_person_name = horoscope_name
                         _focus_chart_by_name(horoscope_name)
                         
-                        st.success(f"Horoskop '{horoscope_name}' přidán do workspace.")
+                        st.success(f"Horoskop '{horoscope_name}' přidán do workspace. Přepněte na sekci 'Horoskop' pro zobrazení grafu.")
                         
-                        # Switch to chart view
+                        # Switch to chart view automatically
                         st.session_state.mode = "chart"
                         st.rerun()
                     except Exception as e:
@@ -1484,7 +1485,8 @@ def main():
                     # But create a temporary workspace-like object with defaults from initial dialog
                     try:
                         from services import build_chart_instance
-                        from models import Workspace, EphemerisSource, WorkspaceDefaults, HouseSystem, EngineType
+                        # EngineType is already imported at module level, don't re-import
+                        from models import Workspace, EphemerisSource, WorkspaceDefaults, HouseSystem
                         
                         # Get chart type and tags
                         chart_type = st.session_state.get('chart_type', ChartMode.NATAL.value)
@@ -1592,53 +1594,31 @@ def main():
             focused_chart = _get_focused_chart()
             if focused_chart:
                 # Check if Astrolab shift is active
-                if st.session_state.get("astrolab_active"):
-                    shifted_date = st.session_state.get("astrolab_shifted_date")
-                    shifted_time = st.session_state.get("astrolab_shifted_time")
-                    if shifted_date and shifted_time:
-                        # Compute with shifted datetime
-                        try:
-                            name = _safe_subject_name(focused_chart) or 'Radix'
-                            place_obj = _safe_subject_location(focused_chart) or {}
-                            place = place_obj.get('name') or 'Prague'
-                            dtc = combine_date_time(shifted_date, shifted_time)
-                            engine_choice = st.session_state.get('settings_engine', engine_choice)
-                            eph_path = st.session_state.get('settings_eph', eph_path)
-                            horoscope, fig = _run_compute(name, dtc, place, engine_choice, eph_path)
-                            st.plotly_chart(fig, use_container_width=True)
-                        except Exception as e:
-                            import traceback
-                            error_details = traceback.format_exc()
-                            st.error(f"Chyba při výpočtu pozic: {e}")
-                            with st.expander("Detaily chyby", expanded=False):
-                                st.code(error_details)
-                    else:
-                        # Fallback to normal chart display
-                        try:
-                            from services import build_radix_figure_for_chart
-                            # Use session state engine if available, otherwise use chart's stored engine
-                            engine_override = None
-                            eph_override = None
-                            # Check both settings_engine and ws_default_engine
-                            engine_choice_val = st.session_state.get('settings_engine') or st.session_state.get('ws_default_engine')
-                            if engine_choice_val:
-                                if isinstance(engine_choice_val, EngineType):
-                                    engine_override = engine_choice_val
-                                elif str(engine_choice_val).startswith("JPL"):
-                                    engine_override = EngineType.JPL
-                                else:
-                                    engine_override = EngineType.SWISSEPH
-                                eph_override = st.session_state.get('settings_eph', eph_path) if engine_override == EngineType.JPL else None
-                            ws = st.session_state.get('workspace')
-                            fig = build_radix_figure_for_chart(focused_chart, engine_override=engine_override, ephemeris_path_override=eph_override, ws=ws)
-                            st.plotly_chart(fig, use_container_width=True)
-                        except Exception as e:
-                            import traceback
-                            error_details = traceback.format_exc()
-                            st.error(f"Chyba při výpočtu pozic: {e}")
-                            with st.expander("Detaily chyby", expanded=False):
-                                st.code(error_details)
+                astrolab_active = st.session_state.get("astrolab_active", False)
+                shifted_date = st.session_state.get("astrolab_shifted_date")
+                shifted_time = st.session_state.get("astrolab_shifted_time")
+                
+                if astrolab_active and shifted_date and shifted_time:
+                    # Compute with shifted datetime
+                    try:
+                        name = _safe_subject_name(focused_chart) or 'Radix'
+                        place_obj = _safe_subject_location(focused_chart) or {}
+                        place = place_obj.get('name') or 'Prague'
+                        dtc = combine_date_time(shifted_date, shifted_time)
+                        engine_choice = st.session_state.get('settings_engine', engine_choice)
+                        eph_path = st.session_state.get('settings_eph', eph_path)
+                        horoscope, fig = _run_compute(name, dtc, place, engine_choice, eph_path)
+                        # Use a unique key to prevent caching issues
+                        chart_key = f"chart_shifted_{name}_{engine_choice}_{dtc}"
+                        st.plotly_chart(fig, use_container_width=True, key=chart_key)
+                    except Exception as e:
+                        import traceback
+                        error_details = traceback.format_exc()
+                        st.error(f"Chyba při výpočtu pozic: {e}")
+                        with st.expander("Detaily chyby", expanded=False):
+                            st.code(error_details)
                 else:
+                    # Normal chart display without shift
                     # Normal chart display without shift
                     try:
                         from services import build_radix_figure_for_chart
@@ -1655,8 +1635,33 @@ def main():
                             else:
                                 engine_override = EngineType.SWISSEPH
                             eph_override = st.session_state.get('settings_eph', eph_path) if engine_override == EngineType.JPL else None
-                        fig = build_radix_figure_for_chart(focused_chart, engine_override=engine_override, ephemeris_path_override=eph_override)
-                        st.plotly_chart(fig, use_container_width=True)
+                        else:
+                            # If no override, use chart's stored engine
+                            cfg = _safe_get(focused_chart, 'config')
+                            if cfg:
+                                stored_engine = _safe_get(cfg, 'engine')
+                                if stored_engine:
+                                    engine_override = stored_engine
+                        
+                        ws = st.session_state.get('workspace')
+                        # Recompute positions to ensure we have fresh data
+                        from services import compute_positions_for_chart
+                        positions = compute_positions_for_chart(focused_chart, ws=ws)
+                        if not positions:
+                            st.warning("⚠️ Nepodařilo se vypočítat pozice pro vybraný horoskop. Zkontrolujte nastavení engine a data horoskopu.")
+                            with st.expander("Debug informace", expanded=False):
+                                st.write(f"Chart: {focused_chart}")
+                                st.write(f"Subject: {_safe_get(focused_chart, 'subject')}")
+                                st.write(f"Location: {_safe_subject_location(focused_chart)}")
+                                st.write(f"Event time: {_safe_event_dt(focused_chart)}")
+                                st.write(f"Engine override: {engine_override}")
+                                st.write(f"Ephemeris override: {eph_override}")
+                        else:
+                            fig = build_radix_figure_for_chart(focused_chart, engine_override=engine_override, ephemeris_path_override=eph_override, ws=ws)
+                            # Use a unique key based on chart and engine to prevent caching issues
+                            chart_name = _safe_subject_name(focused_chart) or 'unknown'
+                            chart_key = f"chart_{chart_name}_{engine_override}_{st.session_state.get('astrolab_active', False)}_{id(focused_chart)}"
+                            st.plotly_chart(fig, use_container_width=True, key=chart_key)
                     except Exception as e:
                         import traceback
                         error_details = traceback.format_exc()
@@ -1684,7 +1689,8 @@ def main():
                     eph_path = st.session_state.get('settings_eph', eph_path)
                     dtc = combine_date_time(date, time)
                     horoscope, fig = _run_compute(name, dtc, place, engine_choice, eph_path)
-                    st.plotly_chart(fig, use_container_width=True)
+                    chart_key = f"chart_no_workspace_{name}_{dtc}_{place}_{engine_choice}"
+                    st.plotly_chart(fig, use_container_width=True, key=chart_key)
                 except Exception as e:
                     import traceback
                     error_details = traceback.format_exc()
@@ -1711,7 +1717,18 @@ def main():
                             engine_choice_val = st.session_state.get('settings_engine', engine_choice)
                             eph_path_val = st.session_state.get('settings_eph', eph_path)
                             horoscope, fig = _run_compute(name, dtc, place, engine_choice_val, eph_path_val)
-                            st.table(extract_kerykeion_points(horoscope.computed))
+                            # Use compute_positions to get consistent data with the chart
+                            from services import compute_positions
+                            engine = EngineType.JPL if str(engine_choice_val).startswith("JPL") else (EngineType.SWISSEPH if str(engine_choice_val).startswith("SWISSEPH") else None)
+                            positions = compute_positions(engine, name, str(dtc), place, ephemeris_path=eph_path_val if engine == EngineType.JPL else None)
+                            if positions:
+                                from pandas import DataFrame
+                                positions_df = DataFrame([positions]).T
+                                positions_df.columns = ['Longitude (°)']
+                                st.table(positions_df)
+                            else:
+                                # Fallback to kerykeion points if compute_positions fails
+                                st.table(extract_kerykeion_points(horoscope.computed))
                         except Exception as e:
                             import traceback
                             error_details = traceback.format_exc()
@@ -1809,7 +1826,18 @@ def main():
                     eph_path_val = st.session_state.get('settings_eph', eph_path)
                     dtc = combine_date_time(date, time)
                     horoscope, fig = _run_compute(name, dtc, place, engine_choice_val, eph_path_val)
-                    st.table(extract_kerykeion_points(horoscope.computed))
+                    # Use compute_positions to get consistent data with the chart
+                    from services import compute_positions
+                    engine = EngineType.JPL if str(engine_choice_val).startswith("JPL") else (EngineType.SWISSEPH if str(engine_choice_val).startswith("SWISSEPH") else None)
+                    positions = compute_positions(engine, name, str(dtc), place, ephemeris_path=eph_path_val if engine == EngineType.JPL else None)
+                    if positions:
+                        from pandas import DataFrame
+                        positions_df = DataFrame([positions]).T
+                        positions_df.columns = ['Longitude (°)']
+                        st.table(positions_df)
+                    else:
+                        # Fallback to kerykeion points if compute_positions fails
+                        st.table(extract_kerykeion_points(horoscope.computed))
                 except Exception as e:
                     import traceback
                     error_details = traceback.format_exc()
@@ -1872,8 +1900,20 @@ def main():
                 dtc = combine_date_time(date, time)
                 horoscope, fig = _run_compute(name, dtc, place, engine_choice, eph_path)
                 st.subheader("Zobrazení horoskopu")
-                st.plotly_chart(fig, use_container_width=True)
-                st.table(extract_kerykeion_points(horoscope.computed))
+                chart_key = f"chart_transzit_{name}_{dtc}_{place}_{engine_choice}"
+                st.plotly_chart(fig, use_container_width=True, key=chart_key)
+                # Use compute_positions to get consistent data with the chart
+                from services import compute_positions
+                engine = EngineType.JPL if str(engine_choice).startswith("JPL") else (EngineType.SWISSEPH if str(engine_choice).startswith("SWISSEPH") else None)
+                positions = compute_positions(engine, name, str(dtc), place, ephemeris_path=eph_path if engine == EngineType.JPL else None)
+                if positions:
+                    from pandas import DataFrame
+                    positions_df = DataFrame([positions]).T
+                    positions_df.columns = ['Longitude (°)']
+                    st.table(positions_df)
+                else:
+                    # Fallback to kerykeion points if compute_positions fails
+                    st.table(extract_kerykeion_points(horoscope.computed))
             else:
                 st.warning(lang["run"])
 

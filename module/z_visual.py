@@ -352,7 +352,7 @@ def build_radix_figure(positions: dict) -> go.Figure:
         polar=dict(
             radialaxis=dict(showticklabels=False),
             angularaxis=dict(
-                showticklabels=True,
+                showticklabels=False,  # Hide degree labels, show only on hover
                 tickvals=house_degrees,
                 ticktext=major_degrees,
                 tickwidth=2,
@@ -369,10 +369,19 @@ def build_radix_figure(positions: dict) -> go.Figure:
     # Inner ring
     fig.add_trace(go.Scatterpolar(r=[0.7], theta=house_degrees, mode="lines", line=dict(color="blue", width=0.3)))
 
-    # Zodiac labels at mid-sign (15 + 30k)
+    # Zodiac labels at mid-sign (15 + 30k) - hidden, only show on hover
     for idx, (name, symbol) in enumerate(ZODIAC_ORDER):
         theta = 15 + idx * 30
-        fig.add_trace(go.Scatterpolar(r=[0.85], theta=[theta], text=symbol, mode="text", textfont=dict(size=30)))
+        fig.add_trace(go.Scatterpolar(
+            r=[0.85], 
+            theta=[theta], 
+            text="",  # Hide visible text
+            mode="markers",
+            marker=dict(size=8, color="rgba(0,0,0,0)", line=dict(width=0)),  # Invisible marker for hover
+            hovertext=f"{symbol} {name}",
+            hoverinfo="text",
+            showlegend=False
+        ))
 
     # Planets
     for key, deg in positions.items():
@@ -392,17 +401,20 @@ def build_radix_figure(positions: dict) -> go.Figure:
         if normalized_deg < 0:
             normalized_deg += 360
         
-        fig.add_trace(
-            go.Scatterpolar(
-                r=[0.6],
-                theta=[normalized_deg],  # Plotly expects degrees for theta in polar plots
-                text=symbol,
-                mode="text",
-                textfont=dict(size=40),
-                hovertext=f"{pname.capitalize()} ({normalized_deg:.4f}°)",
-                hoverinfo="text",
+        # Only add trace if symbol is valid (not empty)
+        if symbol:
+            fig.add_trace(
+                go.Scatterpolar(
+                    r=[0.6],
+                    theta=[normalized_deg],  # Plotly expects degrees for theta in polar plots
+                    text=symbol,  # Show glyph symbol
+                    mode="text",  # Text mode to display glyphs
+                    textfont=dict(size=40, color="black"),  # Visible glyph
+                    hovertext=f"{symbol} {pname.capitalize()} ({normalized_deg:.4f}°)",
+                    hoverinfo="text",
+                    showlegend=False,
+                )
             )
-        )
 
     return fig
 
