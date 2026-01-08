@@ -47,7 +47,7 @@ fonttools==4.60.1
 geographiclib==2.1
     # via geopy
 geopy==2.4.1
-    # via -r requirements/base.in
+    # via -r base.in
 gitdb==4.0.12
     # via gitpython
 gitpython==3.1.45
@@ -72,10 +72,10 @@ jsonschema-specifications==2025.9.1
     # via jsonschema
 kaleido==1.1.0
     # via
-    #   -r requirements/base.in
-    #   -r requirements/streamlit.in
+    #   -r base.in
+    #   -r streamlit.in
 kerykeion==5.1.12
-    # via -r requirements/base.in
+    # via -r base.in
 kiwisolver==1.4.9
     # via matplotlib
 logistro==2.0.0
@@ -85,7 +85,7 @@ logistro==2.0.0
 markupsafe==3.0.3
     # via jinja2
 matplotlib==3.10.7
-    # via -r requirements/base.in
+    # via -r base.in
 narwhals==2.10.0
     # via
     #   altair
@@ -113,18 +113,18 @@ packaging==25.0
     #   streamlit
 pandas==2.3.3
     # via
-    #   -r requirements/base.in
+    #   -r base.in
     #   streamlit
 pillow==12.0.0
     # via
     #   matplotlib
     #   streamlit
 pip-tools==7.5.2
-    # via -r requirements/base.in
+    # via -r base.in
 platformdirs==4.5.0
     # via requests-cache
 plotly==6.5.0
-    # via -r requirements/base.in
+    # via -r base.in
 pluggy==1.6.0
     # via pytest
 protobuf==6.33.0
@@ -162,7 +162,7 @@ pytz==2025.2
     #   kerykeion
     #   pandas
 pyyaml==6.0.3
-    # via -r requirements/base.in
+    # via -r base.in
 referencing==0.37.0
     # via
     #   jsonschema
@@ -191,15 +191,15 @@ six==1.17.0
     #   python-dateutil
     #   scour
 skyfield==1.53
-    # via -r requirements/base.in
+    # via -r base.in
 smmap==5.0.2
     # via gitdb
 streamlit==1.51.0
-    # via -r requirements/streamlit.in
+    # via -r streamlit.in
 tenacity==9.1.2
     # via streamlit
 timezonefinder==8.1.0
-    # via -r requirements/base.in
+    # via -r base.in
 toml==0.10.2
     # via streamlit
 tornado==6.5.2
@@ -219,7 +219,7 @@ tzdata==2025.2
     # via pandas
 url-normalize==2.2.1
     # via requests-cache
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   requests
     #   requests-cache
