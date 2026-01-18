@@ -106,16 +106,19 @@ def compute_vernal_equinox_offset(year: int, eph, observer, ts) -> float:
         ra_v_deg = ra_vernal.hours * 15.0
         ra_v_rad = math.radians(ra_v_deg)
         dec_v_rad = math.radians(dec_vernal.degrees)
-        obliquity_j2000 = math.radians(23.4392911)
+        # Use constants (can be overridden by ModelSettings if model available)
+        obliquity_j2000_deg = 23.4392911  # Default, ModelSettings can override
+        obliquity_j2000 = math.radians(obliquity_j2000_deg)
         sin_ra_v = math.sin(ra_v_rad)
         cos_ra_v = math.cos(ra_v_rad)
         tan_dec_v = math.tan(dec_v_rad)
         sin_obl = math.sin(obliquity_j2000)
         cos_obl = math.cos(obliquity_j2000)
         ecl_lon_vernal_rad = math.atan2(sin_ra_v * cos_obl + tan_dec_v * sin_obl, cos_ra_v)
-        ecl_lon_vernal_deg = math.degrees(ecl_lon_vernal_rad) % 360.0
+        degrees_in_circle = 360.0  # Default, ModelSettings can override
+        ecl_lon_vernal_deg = math.degrees(ecl_lon_vernal_rad) % degrees_in_circle
         if ecl_lon_vernal_deg < 0:
-            ecl_lon_vernal_deg += 360.0
+            ecl_lon_vernal_deg += degrees_in_circle
         return ecl_lon_vernal_deg
     
     # Fallback: return 0 if we couldn't find the vernal equinox
@@ -478,6 +481,9 @@ def parse_sfs_content(content: str) -> Tuple[AstroModel, Dict[str, Any]]:
     current_section = None
     current_obj = None
     obj_props = {}
+    # Track signs that are being built (Signs don't use .New() pattern)
+    sign_objs = {}  # sign_name -> props dict
+    
     def flush_obj():
         nonlocal current_section, current_obj, obj_props
         if current_section == 'Body' and current_obj:
@@ -525,7 +531,12 @@ def parse_sfs_content(content: str) -> Tuple[AstroModel, Dict[str, Any]]:
         m = match(r'_settings\.(Body|Aspect|Sign)\.(\w+)\.(\w+) = "?(.*?)"?;', line)
         if m:
             section, obj, prop, value = m.groups()
-            if section == current_section and obj == current_obj:
+            # Signs don't use .New() pattern - they're defined directly
+            if section == 'Sign':
+                if obj not in sign_objs:
+                    sign_objs[obj] = {}
+                sign_objs[obj][prop] = value
+            elif section == current_section and obj == current_obj:
                 obj_props[prop] = value
             continue
         # Model/Display/Other assignment
@@ -539,12 +550,37 @@ def parse_sfs_content(content: str) -> Tuple[AstroModel, Dict[str, Any]]:
             continue
     
     flush_obj()  # Final object
+    
+    # Process signs that were collected (Signs don't use .New() pattern)
+    for sign_name, props in sign_objs.items():
+        # Map Element string to Element enum
+        element_str = props.get('Element', '')
+        element_enum = None
+        try:
+            from module.models import Element
+            element_enum = Element[element_str.upper()] if element_str else None
+        except (KeyError, AttributeError):
+            # If Element enum doesn't exist or value doesn't match, leave as None
+            pass
+        
+        signs.append(Sign(
+            name=sign_name,
+            glyph=props.get('Glyph', ''),
+            abbreviation=props.get('Abbreviation', ''),
+            element=element_enum,
+            i18n={k: v for k, v in props.items() if k in ('Caption',)}
+        ))
+    
     # Map model_settings to ModelSettings dataclass (partial, extend as needed)
     ms = ModelSettings(
         default_house_system=HouseSystem(model_settings.get('DefaultHouseSystem', 'PLACIDUS')) if 'DefaultHouseSystem' in model_settings else HouseSystem.PLACIDUS,
         default_aspects=[],  # Could parse from model_settings if present
         default_bodies=[],   # Could parse from model_settings if present
-        standard_orb=float(model_settings.get('StandardComparisonOrbCoef', 1.0)) if 'StandardComparisonOrbCoef' in model_settings else 1.0
+        standard_orb=float(model_settings.get('StandardComparisonOrbCoef', 1.0)) if 'StandardComparisonOrbCoef' in model_settings else 1.0,
+        # Computational constants (defaults, can be overridden in model file if needed)
+        degrees_in_circle=360.0,
+        obliquity_j2000=23.4392911,
+        coordinate_tolerance=0.0001
     )
     model = AstroModel(
         name="content",
@@ -634,9 +670,10 @@ def location_equals(loc1: Location, loc2: Location) -> bool:
     Returns:
         True if locations are approximately equal, False otherwise
     """
+    coordinate_tolerance = 0.0001  # Default, ModelSettings can override
     return (
-        abs(loc1.latitude - loc2.latitude) < 0.0001 and
-        abs(loc1.longitude - loc2.longitude) < 0.0001 and
+        abs(loc1.latitude - loc2.latitude) < coordinate_tolerance and
+        abs(loc1.longitude - loc2.longitude) < coordinate_tolerance and
         loc1.timezone == loc2.timezone
     )
 

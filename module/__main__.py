@@ -6,26 +6,26 @@ import sys
 from pathlib import Path
 
 
-# ---- your domain bits (import-only, keep these light) ----
-try:
-    from module.services import Subject
-    from module.utils import Actual
-    from module.workspace import change_language
-    from module.z_visual import display_radial, display_3d
-    from module.services import create_relation_svg
-except ImportError:
-    # Fallback for direct execution
-    try:
-        from services import Subject, create_relation_svg
-        from utils import Actual
-        from workspace import change_language
-        from z_visual import display_radial, display_3d
-    except ImportError as e:
-        print(f"Failed to import required modules: {e}")
-        raise
-
-
 def run_tui():
+    # Lazy import - only needed for TUI
+    try:
+        from module.services import Subject
+        from module.utils import Actual
+        from module.ui_translations import change_language
+        from module.z_visual import display_radial, display_3d
+        from module.services import create_relation_svg
+    except ImportError:
+        # Fallback for direct execution
+        try:
+            from services import Subject, create_relation_svg
+            from utils import Actual
+            from ui_translations import change_language
+            from z_visual import display_radial, display_3d
+        except ImportError as e:
+            print(f"Failed to import required modules: {e}")
+            print("\nMake sure you have installed the required dependencies:")
+            print("  pip install -r requirements/base.txt")
+            return 1
     print("Kefer Astrology sidecar (TUI)\n")
     print("1) Single Subject quick test")
     print("2) Synastry quick test")
@@ -90,8 +90,8 @@ def run_kivy():
     try:
         from module.ui_kivy import run as kivy_run
     except Exception as e:
-        print("Kivy UI not available. Install extras and ensure module/ui_kivy.py exists.")
-        print("Try: pip install .[kivy]")
+        print("Kivy UI not available. Install dependencies:")
+        print("  pip install -r requirements/kivy.txt")
         print(f"Details: {e}")
         return 1
     
@@ -103,8 +103,8 @@ def run_streamlit(file: str | None):
     try:
         from streamlit.web import cli as stcli
     except Exception as e:
-        print("Streamlit not available. Install extras.")
-        print("Try: pip install .[streamlit]")
+        print("Streamlit not available. Install dependencies:")
+        print("  pip install -r requirements/streamlit.txt")
         print(f"Details: {e}")
         return 1
     ui = file or "module/ui_streamlit.py"

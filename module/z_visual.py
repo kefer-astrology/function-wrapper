@@ -337,7 +337,8 @@ def build_radix_figure(positions: dict) -> go.Figure:
     # Debug: Check if positions are all zeros or suspiciously clustered
     if positions:
         values = list(positions.values())
-        all_zero = all(abs(v) < 0.0001 for v in values)
+        coordinate_tolerance = 0.0001  # Default, ModelSettings can override
+        all_zero = all(abs(v) < coordinate_tolerance for v in values)
         if all_zero:
             import warnings
             warnings.warn(f"All position values are near zero: {positions}")

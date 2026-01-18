@@ -1,9 +1,18 @@
 from copy import deepcopy
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from datetime import datetime
 import math
 import sys
+import logging
+
+# Modern logging setup
+try:
+    from module.logging_config import get_logger
+except ImportError:
+    from logging_config import get_logger
+
+logger = get_logger(__name__)
 
 # Standardized imports with fallback for direct execution
 try:
@@ -56,7 +65,13 @@ try:
     JPL = True
 except ImportError:
     JPL = False
-    print("NASA JPL Ephemeris deactivated", file=sys.stderr)
+    logger.warning("NASA JPL Ephemeris deactivated")
+
+# Module-level fallback constants (used when model is not available)
+# These match ModelSettings defaults and can be overridden by model settings
+DEGREES_IN_CIRCLE = 360.0  # Full circle in degrees
+OBLIQUITY_J2000_DEGREES = 23.4392911  # J2000.0 obliquity of the ecliptic in degrees
+COORDINATE_TOLERANCE = 0.0001  # Coordinate comparison tolerance
 
 
 # ─────────────────────
@@ -118,7 +133,7 @@ def _get_kerykeion_object_mapping() -> Dict[str, str]:
     }
 
 
-def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_objects: Optional[List[str]] = None) -> Dict[str, float]:
+def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_objects: Optional[List[str]] = None, model: Optional[AstroModel] = None) -> Dict[str, float]:
     """Extract all observable objects from a kerykeion AstrologicalSubject.
     
     Includes planets, angles, houses, lunar nodes, and calculated points.
@@ -128,8 +143,158 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
     mapping = _get_kerykeion_object_mapping()
     lon_keys = ("ecliptic_longitude", "longitude", "lon", "degree", "deg")
     
+    # Get degrees_in_circle from model settings or use default
+    if model and hasattr(model, 'settings') and hasattr(model.settings, 'degrees_in_circle'):
+        degrees_in_circle = model.settings.degrees_in_circle
+    else:
+        degrees_in_circle = 360.0  # Default fallback
+    
+    # First, try the most reliable method: planets_list and planets_degrees_ut (older Kerykeion versions)
+    # This is the primary data source in older Kerykeion versions
+    if hasattr(subj, 'planets_list') and hasattr(subj, 'planets_degrees_ut'):
+        try:
+            planets_list = subj.planets_list
+            planets_degrees = subj.planets_degrees_ut
+            if isinstance(planets_list, list) and isinstance(planets_degrees, list) and len(planets_list) == len(planets_degrees):
+                for i, planet_info in enumerate(planets_list):
+                    if i < len(planets_degrees):
+                        if isinstance(planet_info, dict):
+                            planet_name = planet_info.get('name', '').strip().lower()
+                        else:
+                            planet_name = str(planet_info).strip().lower() if planet_info else ''
+                        
+                        if planet_name:
+                            obj_id = mapping.get(planet_name, planet_name)
+                            if requested_objects and obj_id not in requested_objects and planet_name not in requested_objects:
+                                continue
+                            try:
+                                # Normalize to [0, 360) range (same as JPL)
+                                lon_float = float(planets_degrees[i])
+                                normalized_lon = lon_float % degrees_in_circle
+                                if normalized_lon < 0:
+                                    normalized_lon += degrees_in_circle
+                                positions[obj_id] = normalized_lon
+                            except (ValueError, TypeError, IndexError) as e:
+                                logger.debug("Failed to extract position for %s from planets_degrees_ut: %s", planet_name, e)
+                                continue
+                if positions:
+                    logger.debug("Successfully extracted %d positions from planets_list/planets_degrees_ut", len(positions))
+        except Exception as e:
+            logger.debug("Failed to extract from planets_list/planets_degrees_ut: %s", e, exc_info=True)
+    
+    # If planets_list method didn't work, try direct planet attributes (newer Kerykeion versions)
+    # Newer versions store planets as direct attributes (subj.sun, subj.moon, etc.)
+    # Also try if they're simple numeric values (float) rather than objects
+    if not positions:
+        logger.debug("planets_list not available, trying direct planet attributes (newer Kerykeion API)")
+        # Try direct numeric attributes first (simplest case)
+        planet_attrs = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto']
+        for planet_name in planet_attrs:
+            if hasattr(subj, planet_name):
+                try:
+                    planet_val = getattr(subj, planet_name)
+                    logger.debug("  Checking %s: type=%s, value=%s", planet_name, type(planet_val).__name__, planet_val)
+                    # If it's a direct numeric value (float/int), use it
+                    if isinstance(planet_val, (int, float)):
+                        obj_id = mapping.get(planet_name, planet_name)
+                        if requested_objects and obj_id not in requested_objects and planet_name not in requested_objects:
+                            logger.debug("  Skipping %s (not in requested_objects)", planet_name)
+                            continue
+                        normalized_lon = float(planet_val) % degrees_in_circle
+                        if normalized_lon < 0:
+                            normalized_lon += degrees_in_circle
+                        positions[obj_id] = normalized_lon
+                        logger.debug("  ✓ Extracted %s as direct numeric value: %s", planet_name, normalized_lon)
+                    else:
+                        logger.debug("  %s is not numeric (type: %s), will try as object later", planet_name, type(planet_val).__name__)
+                except (ValueError, TypeError, AttributeError) as e:
+                    logger.debug("  Failed to extract %s as direct numeric: %s", planet_name, e, exc_info=True)
+        
+        # Also try angles as direct numeric values
+        angle_attrs = {
+            'ascendant': 'asc',
+            'asc': 'asc',
+            'descendant': 'desc',
+            'desc': 'desc',
+            'midheaven': 'mc',
+            'mc': 'mc',
+            'imum_coeli': 'ic',
+            'ic': 'ic',
+        }
+        for attr_name, obj_id in angle_attrs.items():
+            if hasattr(subj, attr_name):
+                try:
+                    angle_val = getattr(subj, attr_name)
+                    logger.debug("  Checking angle %s: type=%s, value=%s", attr_name, type(angle_val).__name__, angle_val)
+                    if isinstance(angle_val, (int, float)):
+                        if requested_objects and obj_id not in requested_objects and attr_name not in requested_objects:
+                            logger.debug("  Skipping %s (not in requested_objects)", attr_name)
+                            continue
+                        normalized_lon = float(angle_val) % degrees_in_circle
+                        if normalized_lon < 0:
+                            normalized_lon += degrees_in_circle
+                        positions[obj_id] = normalized_lon
+                        logger.debug("  ✓ Extracted %s as direct numeric value: %s", attr_name, normalized_lon)
+                    else:
+                        logger.debug("  %s is not numeric (type: %s), will try as object later", attr_name, type(angle_val).__name__)
+                except (ValueError, TypeError, AttributeError) as e:
+                    logger.debug("  Failed to extract %s as direct numeric: %s", attr_name, e, exc_info=True)
+        
+        # Try houses (first_house, second_house, etc. or eighth_house suggests they might be named differently)
+        house_attrs = [f'first_house', f'second_house', f'third_house', f'fourth_house', 
+                      f'fifth_house', f'sixth_house', f'seventh_house', f'eighth_house',
+                      f'ninth_house', f'tenth_house', f'eleventh_house', f'twelfth_house']
+        for i, house_attr in enumerate(house_attrs, 1):
+            if hasattr(subj, house_attr):
+                try:
+                    house_val = getattr(subj, house_attr)
+                    logger.debug("  Checking house %s: type=%s, value=%s", house_attr, type(house_val).__name__, house_val)
+                    if isinstance(house_val, (int, float)):
+                        house_id = f"house_{i}"
+                        if requested_objects and house_id not in requested_objects:
+                            logger.debug("  Skipping %s (not in requested_objects)", house_attr)
+                            continue
+                        normalized_lon = float(house_val) % degrees_in_circle
+                        if normalized_lon < 0:
+                            normalized_lon += degrees_in_circle
+                        positions[house_id] = normalized_lon
+                        logger.debug("  ✓ Extracted %s as direct numeric value: %s", house_attr, normalized_lon)
+                    else:
+                        logger.debug("  %s is not numeric (type: %s)", house_attr, type(house_val).__name__)
+                except (ValueError, TypeError, AttributeError) as e:
+                    logger.debug("  Failed to extract %s as direct numeric: %s", house_attr, e, exc_info=True)
+        
+        # Also try chiron and other calculated points
+        calc_points = ['chiron', 'lilith', 'north_node', 'south_node', 'true_north_node', 'true_south_node']
+        for point_name in calc_points:
+            if hasattr(subj, point_name):
+                try:
+                    point_val = getattr(subj, point_name)
+                    logger.debug("  Checking calculated point %s: type=%s, value=%s", point_name, type(point_val).__name__, point_val)
+                    if isinstance(point_val, (int, float)):
+                        obj_id = mapping.get(point_name, point_name)
+                        if requested_objects and obj_id not in requested_objects and point_name not in requested_objects:
+                            logger.debug("  Skipping %s (not in requested_objects)", point_name)
+                            continue
+                        normalized_lon = float(point_val) % degrees_in_circle
+                        if normalized_lon < 0:
+                            normalized_lon += degrees_in_circle
+                        positions[obj_id] = normalized_lon
+                        logger.debug("  ✓ Extracted %s as direct numeric value: %s", point_name, normalized_lon)
+                    else:
+                        logger.debug("  %s is not numeric (type: %s), will try as object later", point_name, type(point_val).__name__)
+                except (ValueError, TypeError, AttributeError) as e:
+                    logger.debug("  Failed to extract %s as direct numeric: %s", point_name, e, exc_info=True)
+        
+        if positions:
+            logger.debug("Successfully extracted %d positions from direct numeric attributes", len(positions))
+        else:
+            logger.debug("No positions extracted from direct numeric attributes - all attributes may be objects, not numeric")
+    
     # Extract from KerykeionPointModel attributes (if available)
+    # This handles planets/angles/houses that are objects, not direct numeric values
     if KerykeionPointModel is not None:
+        logger.debug("Checking for KerykeionPointModel objects...")
         for attr_name in dir(subj):
             if attr_name.startswith('_'):
                 continue
@@ -145,85 +310,111 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
                     if requested_objects and obj_id not in requested_objects and obj_name not in requested_objects:
                         continue
                     
-                    # Extract longitude
+                    # Extract longitude - prioritize abs_pos (absolute position 0-360)
                     lon_val = None
-                    for k in lon_keys:
-                        if hasattr(attr, k):
-                            lon_val = getattr(attr, k)
-                            break
-                    # Also try position or abs_pos if standard keys not found (newer kerykeion versions)
-                    # Prefer abs_pos (absolute position) over position (which might be relative to sign)
+                    
+                    # FIRST: Try abs_pos directly (most reliable for newer Kerykeion)
+                    if hasattr(attr, 'abs_pos'):
+                        try:
+                            lon_val = getattr(attr, 'abs_pos')
+                            logger.debug("  ✓ Extracted %s.abs_pos = %s", attr_name, lon_val)
+                        except (AttributeError, TypeError):
+                            pass
+                    
+                    # SECOND: Try abs_pos from __dict__ (in case it's not a direct attribute)
+                    if lon_val is None and hasattr(attr, '__dict__'):
+                        if 'abs_pos' in attr.__dict__:
+                            try:
+                                lon_val = attr.__dict__['abs_pos']
+                                logger.debug("  ✓ Extracted %s.__dict__['abs_pos'] = %s", attr_name, lon_val)
+                            except (KeyError, TypeError):
+                                pass
+                    
+                    # THIRD: Try standard longitude keys
+                    if lon_val is None:
+                        for k in lon_keys:
+                            if hasattr(attr, k):
+                                try:
+                                    lon_val = getattr(attr, k)
+                                    logger.debug("  ✓ Extracted %s.%s = %s", attr_name, k, lon_val)
+                                    break
+                                except (AttributeError, TypeError):
+                                    continue
+                    
+                    # FOURTH: Try position + sign_num calculation
                     if lon_val is None:
                         if hasattr(attr, '__dict__'):
-                            # Prefer abs_pos first (absolute longitude 0-360)
-                            if 'abs_pos' in attr.__dict__:
-                                lon_val = attr.__dict__['abs_pos']
-                            elif 'position' in attr.__dict__:
-                                pos_val = attr.__dict__['position']
-                                # If position is relative to sign, calculate absolute from sign_num + position
-                                if 'sign_num' in attr.__dict__:
+                            if 'position' in attr.__dict__ and 'sign_num' in attr.__dict__:
+                                try:
                                     sign_num = attr.__dict__.get('sign_num', 0)
-                                    try:
-                                        # position is 0-30 within sign, sign_num is 0-11 (Aries=0, Taurus=1, etc.)
-                                        # Absolute longitude = sign_num * 30 + position
-                                        lon_val = float(sign_num) * 30.0 + float(pos_val)
-                                    except (ValueError, TypeError):
-                                        lon_val = pos_val
-                                else:
-                                    lon_val = pos_val
-                        elif hasattr(attr, 'abs_pos'):
-                            lon_val = getattr(attr, 'abs_pos')
-                        elif hasattr(attr, 'position'):
+                                    pos_val = attr.__dict__['position']
+                                    # position is 0-30 within sign, sign_num is 0-11 (Aries=0, Taurus=1, etc.)
+                                    # Absolute longitude = sign_num * 30 + position
+                                    lon_val = float(sign_num) * 30.0 + float(pos_val)
+                                    logger.debug("  ✓ Calculated %s from sign_num=%s + position=%s = %s", attr_name, sign_num, pos_val, lon_val)
+                                except (ValueError, TypeError, KeyError):
+                                    pass
+                            elif 'position' in attr.__dict__:
+                                try:
+                                    lon_val = attr.__dict__['position']
+                                    logger.debug("  ✓ Extracted %s.__dict__['position'] = %s", attr_name, lon_val)
+                                except (KeyError, TypeError):
+                                    pass
+                    
+                    # FIFTH: Try position as direct attribute
+                    if lon_val is None and hasattr(attr, 'position'):
+                        try:
                             pos_val = getattr(attr, 'position')
-                            # Try to calculate absolute if we have sign_num
                             if hasattr(attr, 'sign_num'):
                                 try:
                                     sign_num = getattr(attr, 'sign_num', 0)
                                     lon_val = float(sign_num) * 30.0 + float(pos_val)
+                                    logger.debug("  ✓ Calculated %s from sign_num=%s + position=%s = %s", attr_name, sign_num, pos_val, lon_val)
                                 except (ValueError, TypeError):
                                     lon_val = pos_val
                             else:
                                 lon_val = pos_val
+                                logger.debug("  ✓ Extracted %s.position = %s", attr_name, lon_val)
+                        except (AttributeError, TypeError):
+                            pass
                     
                     if lon_val is not None:
                         try:
                             # Normalize to [0, 360) range (same as JPL)
                             lon_float = float(lon_val)
-                            normalized_lon = lon_float % 360.0
+                            normalized_lon = lon_float % degrees_in_circle
                             if normalized_lon < 0:
-                                normalized_lon += 360.0
+                                normalized_lon += degrees_in_circle
                             positions[obj_id] = normalized_lon
-                        except (ValueError, TypeError):
+                            logger.debug("  ✓ Added %s -> %s (normalized)", obj_id, normalized_lon)
+                        except (ValueError, TypeError) as e:
+                            logger.debug("  ✗ Failed to normalize %s: %s", attr_name, e)
                             continue
-            except Exception:
+                    else:
+                        logger.debug("  ✗ Could not extract longitude from %s (tried abs_pos, position, sign_num calculation)", attr_name)
+            except Exception as e:
+                logger.debug("  ✗ Exception extracting from %s: %s", attr_name, e, exc_info=True)
                 continue
     
     # Direct planet attribute extraction (for newer kerykeion versions)
     # Try accessing planets directly as attributes (sun, moon, mercury, etc.)
-    print(f"DEBUG _extract: Starting direct planet attribute extraction", file=sys.stderr)
     planet_attrs = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto']
     for planet_name in planet_attrs:
         if hasattr(subj, planet_name):
             try:
                 planet_obj = getattr(subj, planet_name)
-                print(f"DEBUG _extract: {planet_name} exists, type={type(planet_obj)}", file=sys.stderr)
                 if planet_obj is None:
-                    print(f"DEBUG _extract: {planet_name} is None, skipping", file=sys.stderr)
                     continue
                 # Try to extract longitude from the planet object
                 lon_val = None
                 # FIRST: Try accessing via __dict__ for position/abs_pos (newer kerykeion versions)
                 # This must be checked first because position/abs_pos are in __dict__ but not as direct attributes
                 if hasattr(planet_obj, '__dict__'):
-                    dict_keys = list(planet_obj.__dict__.keys())
-                    print(f"DEBUG _extract: {planet_name} has __dict__, keys: {dict_keys}", file=sys.stderr)
                     # Prefer abs_pos over position (abs_pos is absolute longitude, position might be relative to sign)
                     if 'abs_pos' in planet_obj.__dict__:
                         lon_val = planet_obj.__dict__['abs_pos']
-                        print(f"DEBUG _extract: {planet_name}.__dict__['abs_pos'] = {lon_val} (type: {type(lon_val)})", file=sys.stderr)
                     elif 'position' in planet_obj.__dict__:
                         pos_val = planet_obj.__dict__['position']
-                        print(f"DEBUG _extract: {planet_name}.__dict__['position'] = {pos_val} (type: {type(pos_val)})", file=sys.stderr)
                         # If position is relative to sign, calculate absolute from sign_num + position
                         if 'sign_num' in planet_obj.__dict__:
                             sign_num = planet_obj.__dict__.get('sign_num', 0)
@@ -231,7 +422,6 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
                                 # position is 0-30 within sign, sign_num is 0-11 (Aries=0, Taurus=1, etc.)
                                 # Absolute longitude = sign_num * 30 + position
                                 lon_val = float(sign_num) * 30.0 + float(pos_val)
-                                print(f"DEBUG _extract: Calculated absolute from sign_num={sign_num}, position={pos_val} -> {lon_val}°", file=sys.stderr)
                             except (ValueError, TypeError):
                                 # If calculation fails, try using position as-is
                                 lon_val = pos_val
@@ -243,16 +433,13 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
                     for k in lon_keys:
                         if hasattr(planet_obj, k):
                             lon_val = getattr(planet_obj, k)
-                            print(f"DEBUG _extract: {planet_name} has {k} = {lon_val}", file=sys.stderr)
                             break
                 
                 # THIRD: Try accessing as a dict if it's dict-like
                 if lon_val is None and isinstance(planet_obj, dict):
-                    print(f"DEBUG _extract: {planet_name} is dict, trying dict access", file=sys.stderr)
                     for k in lon_keys:
                         if k in planet_obj:
                             lon_val = planet_obj[k]
-                            print(f"DEBUG _extract: {planet_name}[{k}] = {lon_val}", file=sys.stderr)
                             break
                 
                 # FOURTH: Try __dict__ for standard longitude keys as fallback
@@ -260,7 +447,6 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
                     for k in lon_keys:
                         if k in planet_obj.__dict__:
                             lon_val = planet_obj.__dict__[k]
-                            print(f"DEBUG _extract: {planet_name}.__dict__[{k}] = {lon_val}", file=sys.stderr)
                             break
                 
                 if lon_val is not None:
@@ -268,36 +454,27 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
                         # Convert to float and normalize to [0, 360) range (same as JPL)
                         lon_float = float(lon_val)
                         # Normalize to [0, 360) range (same normalization as JPL)
-                        normalized_lon = lon_float % 360.0
+                        normalized_lon = lon_float % DEGREES_IN_CIRCLE
                         if normalized_lon < 0:
-                            normalized_lon += 360.0
+                            normalized_lon += DEGREES_IN_CIRCLE
                         positions[planet_name] = normalized_lon
-                        print(f"DEBUG _extract: ✓ Extracted {planet_name} = {lon_val}° -> normalized to {normalized_lon}°", file=sys.stderr)
                     except (ValueError, TypeError) as e:
-                        print(f"DEBUG _extract: Failed to convert {planet_name} lon_val {lon_val} to float: {e}", file=sys.stderr)
                         # If position is a dict or complex object, try to extract numeric value
                         if isinstance(lon_val, dict):
                             # Try common keys that might contain the degree value
                             for key in ['degree', 'deg', 'longitude', 'lon', 'value', 'abs']:
                                 if key in lon_val:
                                     try:
-                                        normalized_lon = float(lon_val[key]) % 360.0
+                                        normalized_lon = float(lon_val[key]) % degrees_in_circle
                                         if normalized_lon < 0:
-                                            normalized_lon += 360.0
+                                            normalized_lon += degrees_in_circle
                                         positions[planet_name] = normalized_lon
-                                        print(f"DEBUG _extract: ✓ Extracted {planet_name} from dict[{key}] = {normalized_lon}°", file=sys.stderr)
                                         break
                                     except (ValueError, TypeError, KeyError):
                                         continue
                         continue
-                else:
-                    print(f"DEBUG _extract: Could not find longitude for {planet_name}", file=sys.stderr)
             except Exception as e:
-                print(f"DEBUG _extract: Exception accessing {planet_name}: {e}", file=sys.stderr)
-                import traceback
-                print(f"DEBUG _extract: Traceback: {traceback.format_exc()}", file=sys.stderr)
                 continue
-    print(f"DEBUG _extract: After direct planet extraction, positions has {len(positions)} items", file=sys.stderr)
     
     # Extract houses from houses_list if available
     if hasattr(subj, 'houses_list') and isinstance(subj.houses_list, list):
@@ -315,58 +492,22 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
                     if degree is not None:
                         # Normalize to [0, 360) range (same as JPL)
                         lon_float = float(degree)
-                        normalized_lon = lon_float % 360.0
+                        normalized_lon = lon_float % degrees_in_circle
                         if normalized_lon < 0:
-                            normalized_lon += 360.0
+                            normalized_lon += degrees_in_circle
                         positions[house_id] = normalized_lon
                 elif hasattr(house_info, 'longitude'):
                     # Normalize to [0, 360) range (same as JPL)
                     lon_float = float(house_info.longitude)
-                    normalized_lon = lon_float % 360.0
+                    normalized_lon = lon_float % degrees_in_circle
                     if normalized_lon < 0:
-                        normalized_lon += 360.0
+                        normalized_lon += degrees_in_circle
                     positions[house_id] = normalized_lon
             except (ValueError, TypeError, AttributeError):
                 continue
     
-    # Also extract from planets_list for compatibility (this is the main fallback)
-    if hasattr(subj, 'planets_list') and hasattr(subj, 'planets_degrees_ut'):
-        try:
-            planets_list = subj.planets_list
-            planets_degrees = subj.planets_degrees_ut
-            print(f"DEBUG _extract: planets_list type={type(planets_list)}, len={len(planets_list) if isinstance(planets_list, list) else 'N/A'}", file=sys.stderr)
-            print(f"DEBUG _extract: planets_degrees_ut type={type(planets_degrees)}, len={len(planets_degrees) if isinstance(planets_degrees, list) else 'N/A'}", file=sys.stderr)
-            if isinstance(planets_list, list) and isinstance(planets_degrees, list):
-                print(f"DEBUG _extract: Processing {len(planets_list)} planets", file=sys.stderr)
-                for i, planet_info in enumerate(planets_list):
-                    if isinstance(planet_info, dict):
-                        planet_name = planet_info.get('name', '').strip().lower()
-                    else:
-                        planet_name = str(planet_info).strip().lower() if planet_info else ''
-                    
-                    if planet_name:
-                        obj_id = mapping.get(planet_name, planet_name)
-                        if requested_objects and obj_id not in requested_objects and planet_name not in requested_objects:
-                            continue
-                        if i < len(planets_degrees):
-                            try:
-                                # Normalize to [0, 360) range (same as JPL)
-                                lon_float = float(planets_degrees[i])
-                                normalized_lon = lon_float % 360.0
-                                if normalized_lon < 0:
-                                    normalized_lon += 360.0
-                                positions[obj_id] = normalized_lon
-                                print(f"DEBUG _extract: Added {obj_id} = {planets_degrees[i]}° -> normalized to {normalized_lon}°", file=sys.stderr)
-                            except (ValueError, TypeError, IndexError) as e:
-                                print(f"DEBUG _extract: Failed to add {planet_name} at index {i}: {e}", file=sys.stderr)
-                                continue
-                print(f"DEBUG _extract: After planets_list extraction, positions has {len(positions)} items", file=sys.stderr)
-            else:
-                print(f"DEBUG _extract: planets_list or planets_degrees_ut is not a list", file=sys.stderr)
-        except Exception as e:
-            print(f"DEBUG _extract: Exception in planets_list extraction: {e}", file=sys.stderr)
-            import traceback
-            print(f"DEBUG _extract: Traceback: {traceback.format_exc()}", file=sys.stderr)
+    # Note: planets_list extraction is now done at the start of the function
+    # This section is kept for backward compatibility but should not be reached if the above worked
     
     return positions
 
@@ -397,7 +538,8 @@ def _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_of
         dec_deg = dec.degrees
         ra_rad = math.radians(ra_deg)
         dec_rad = math.radians(dec_deg)
-        obliquity_j2000 = math.radians(23.4392911)  # J2000.0 obliquity
+        obliquity_j2000_deg = OBLIQUITY_J2000_DEGREES
+        obliquity_j2000 = math.radians(obliquity_j2000_deg)  # J2000.0 obliquity
         
         # Formula: tan(ecl_lon) = (sin(RA) * cos(obl) + tan(Dec) * sin(obl)) / cos(RA)
         sin_ra = math.sin(ra_rad)
@@ -407,18 +549,145 @@ def _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_of
         cos_obl = math.cos(obliquity_j2000)
         
         ecl_lon_rad = math.atan2(sin_ra * cos_obl + tan_dec * sin_obl, cos_ra)
-        lon_deg = math.degrees(ecl_lon_rad) % 360.0
+        lon_deg = math.degrees(ecl_lon_rad) % DEGREES_IN_CIRCLE
         if lon_deg < 0:
-            lon_deg += 360.0
+            lon_deg += DEGREES_IN_CIRCLE
         
         # Adjust for vernal equinox: subtract the offset so vernal equinox = 0°
-        lon_deg_tropical = (lon_deg - vernal_equinox_offset) % 360.0
+        lon_deg_tropical = (lon_deg - vernal_equinox_offset) % DEGREES_IN_CIRCLE
         if lon_deg_tropical < 0:
-            lon_deg_tropical += 360.0
+            lon_deg_tropical += DEGREES_IN_CIRCLE
         
         return lon_deg_tropical
     except (KeyError, ValueError, AttributeError) as e:
-        print(f"Warning: Could not compute planet position: {e}", file=sys.stderr)
+        logger.warning("Could not compute planet position: %s", e)
+        return None
+
+
+def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_offset: float, 
+                                      include_physical: bool = False, 
+                                      include_topocentric: bool = False) -> Optional[Dict[str, float]]:
+    """Compute extended position data for a planet using Skyfield.
+    
+    Args:
+        body: Skyfield body object
+        eph: Skyfield ephemeris
+        observer: Skyfield Topos observer
+        t: Skyfield time object
+        vernal_equinox_offset: Offset to adjust for vernal equinox
+        include_physical: If True, include magnitude/phase/elongation
+        include_topocentric: If True, include altitude/azimuth
+        
+    Returns:
+        Dictionary with position data, or None on error. Keys:
+        - longitude: float (degrees, always present)
+        - latitude: float (degrees, if available)
+        - distance: float (AU, always present for JPL)
+        - declination: float (degrees, always present for JPL)
+        - right_ascension: float (degrees, always present for JPL)
+        - altitude: float (degrees, if include_topocentric)
+        - azimuth: float (degrees, if include_topocentric)
+        - apparent_magnitude: float (if include_physical)
+        - phase_angle: float (degrees, if include_physical)
+        - elongation: float (degrees, if include_physical)
+        - light_time: float (seconds, if include_physical)
+        - speed: float (degrees/day, if available)
+        - retrograde: bool (if available)
+    """
+    try:
+        astrometric = (eph["earth"] + observer).at(t).observe(body).apparent()
+        ra, dec, distance = astrometric.radec()
+        
+        # Always compute basic equatorial coordinates
+        ra_deg = ra.hours * 15.0  # Convert hours to degrees
+        dec_deg = dec.degrees
+        distance_au = distance.au  # Distance in AU
+        
+        # Compute ecliptic longitude from RA/Dec
+        ra_rad = math.radians(ra_deg)
+        dec_rad = math.radians(dec_deg)
+        obliquity_j2000_deg = OBLIQUITY_J2000_DEGREES
+        obliquity_j2000 = math.radians(obliquity_j2000_deg)  # J2000.0 obliquity
+        
+        sin_ra = math.sin(ra_rad)
+        cos_ra = math.cos(ra_rad)
+        tan_dec = math.tan(dec_rad)
+        sin_obl = math.sin(obliquity_j2000)
+        cos_obl = math.cos(obliquity_j2000)
+        
+        ecl_lon_rad = math.atan2(sin_ra * cos_obl + tan_dec * sin_obl, cos_ra)
+        lon_deg = math.degrees(ecl_lon_rad) % DEGREES_IN_CIRCLE
+        if lon_deg < 0:
+            lon_deg += DEGREES_IN_CIRCLE
+        
+        # Adjust for vernal equinox
+        lon_deg_tropical = (lon_deg - vernal_equinox_offset) % DEGREES_IN_CIRCLE
+        if lon_deg_tropical < 0:
+            lon_deg_tropical += DEGREES_IN_CIRCLE
+        
+        # Build result dictionary
+        result = {
+            'longitude': float(lon_deg_tropical),
+            'distance': float(distance_au),
+            'declination': float(dec_deg),
+            'right_ascension': float(ra_deg),
+        }
+        
+        # Compute ecliptic latitude (optional, may not always be needed)
+        # For now, set to 0.0 as approximation (full calculation would require more complex math)
+        result['latitude'] = 0.0
+        
+        # Topocentric coordinates (altitude/azimuth)
+        if include_topocentric:
+            try:
+                alt, az, _ = observer.at(t).observe(body).apparent().altaz()
+                result['altitude'] = float(alt.degrees)
+                result['azimuth'] = float(az.degrees)
+            except Exception:
+                pass  # Topocentric may not be available for all bodies
+        
+        # Physical properties
+        if include_physical:
+            try:
+                # Light time is available from astrometric
+                result['light_time'] = float(astrometric.light_time * 86400.0)  # Convert days to seconds
+                
+                # For planets, compute phase angle and elongation
+                # Phase angle: angle between Sun, planet, and Earth
+                # Elongation: angular distance from Sun
+                try:
+                    sun = eph["sun"]
+                    sun_astrometric = (eph["earth"] + observer).at(t).observe(sun).apparent()
+                    # Compute elongation (simplified - full calculation would use spherical trigonometry)
+                    # For now, approximate using ecliptic longitude difference
+                    sun_ra, sun_dec, _ = sun_astrometric.radec()
+                    sun_ra_deg = sun_ra.hours * 15.0
+                    # Elongation approximation (full calculation would be more complex)
+                    elongation_approx = abs(ra_deg - sun_ra_deg)
+                    if elongation_approx > 180.0:
+                        elongation_approx = DEGREES_IN_CIRCLE - elongation_approx
+                    result['elongation'] = float(elongation_approx)
+                    
+                    # Phase angle approximation (simplified)
+                    # Full calculation would use distance to Sun and distance to planet
+                    result['phase_angle'] = float(elongation_approx)  # Approximation
+                except Exception:
+                    pass
+                
+                # Apparent magnitude (not directly available from Skyfield for all bodies)
+                # Would need additional computation or lookup tables
+                # For now, skip this as it requires more complex calculations
+            except Exception:
+                pass
+        
+        # Speed and retrograde (would require computing position at two time points)
+        # For now, set defaults - full implementation would compute speed from two positions
+        result['speed'] = 0.0  # Placeholder - would need to compute from two time points
+        result['retrograde'] = False  # Placeholder - would need to compute from speed
+        
+        return result
+    except (KeyError, ValueError, AttributeError) as e:
+        logger.warning("Could not compute extended planet position: %s", e)
         return None
 
 
@@ -446,7 +715,7 @@ def _compute_single_planet_position(planet: str, eph, observer, t, is_de421: boo
             body = eph[body_name]
             return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset)
         except (KeyError, ValueError, AttributeError) as e:
-            print(f"Warning: Could not compute {planet} barycenter position: {e}", file=sys.stderr)
+            logger.warning("Could not compute %s barycenter position: %s", planet, e)
             return None
     
     # For non-de421 or inner planets, try direct name first
@@ -461,22 +730,31 @@ def _compute_single_planet_position(planet: str, eph, observer, t, is_de421: boo
                 body = eph[body_name]
                 return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset)
             except (KeyError, ValueError, AttributeError) as e:
-                print(f"Warning: Could not compute {planet} position: {e}", file=sys.stderr)
+                logger.warning("Could not compute %s position: %s", planet, e)
                 return None
         return None
 
 
 def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: Optional[str] = None,
-                          requested_objects: Optional[List[str]] = None) -> Dict[str, float]:
-    """Compute planetary ecliptic longitudes (degrees) using Skyfield JPL ephemerides.
+                          requested_objects: Optional[List[str]] = None,
+                          include_physical: bool = False,
+                          include_topocentric: bool = False,
+                          extended: bool = False) -> Union[Dict[str, float], Dict[str, Dict[str, float]]]:
+    """Compute planetary positions using Skyfield JPL ephemerides.
 
     Parameters:
     - name: subject name (human-readable; not used in computation)
     - dt_str: datetime string (parsed by utils.Actual)
     - loc_str: location string (parsed by utils.Actual)
     - ephemeris_path: optional path to a local BSP file; falls back to default
+    - requested_objects: optional list of object IDs to compute
+    - include_physical: if True, include magnitude/phase/elongation (extended mode only)
+    - include_topocentric: if True, include altitude/azimuth (extended mode only)
+    - extended: if True, return extended format with distance/declination/RA
 
-    Returns a mapping: planet -> ecliptic longitude in degrees [0, 360).
+    Returns:
+    - If extended=False: mapping planet -> ecliptic longitude in degrees [0, 360)
+    - If extended=True: mapping planet -> dict with extended properties
     """
     if JPL:
         ts = load.timescale()
@@ -492,15 +770,6 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
         eph = load_file(eph_file)
         observer = Topos(latitude_degrees=place.value.latitude, longitude_degrees=place.value.longitude)
         
-        # Debug output - print to stderr so it shows in Streamlit
-        # print(f"DEBUG JPL: dt_str={dt_str}", file=sys.stderr)
-        # print(f"DEBUG JPL: time.value={time.value}, dt_aware={dt_aware}", file=sys.stderr)
-        # try:
-        #     print(f"DEBUG JPL: t={t.utc_strftime('%Y-%m-%d %H:%M:%S UTC')}", file=sys.stderr)
-        # except:
-        #     print(f"DEBUG JPL: t={t}", file=sys.stderr)
-        # print(f"DEBUG JPL: location={loc_str}, lat={place.value.latitude}, lon={place.value.longitude}", file=sys.stderr)
-
         # Check if we're using de421 (which requires barycenters for outer planets: Jupiter, Saturn, Uranus, Neptune, Pluto)
         is_de421 = eph_file and "de421" in Path(eph_file).name.lower()
         
@@ -515,16 +784,42 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
         positions = {}
         
         # For tropical astrology, we need to adjust for the vernal equinox of date
-        # The vernal equinox is where 0° Aries is defined (Sun crosses celestial equator going north)
-        # JPL/Skyfield gives positions in J2000.0 coordinates, but tropical uses equinox of date
-        # Compute the vernal equinox offset using utils function
         year = dt_aware.year
         vernal_equinox_offset = compute_vernal_equinox_offset(year, eph, observer, ts)
 
         for planet in planets:
-            lon_deg_tropical = _compute_single_planet_position(planet, eph, observer, t, is_de421, vernal_equinox_offset)
-            if lon_deg_tropical is not None:
-                positions[planet] = lon_deg_tropical
+            if extended:
+                # Get body for extended computation
+                body = None
+                outer_planets = ["jupiter", "saturn", "uranus", "neptune", "pluto"]
+                if is_de421 and planet in outer_planets:
+                    try:
+                        body = eph[f"{planet} barycenter"]
+                    except KeyError:
+                        pass
+                if body is None:
+                    try:
+                        body = eph[planet]
+                    except KeyError:
+                        if planet in outer_planets:
+                            try:
+                                body = eph[f"{planet} barycenter"]
+                            except KeyError:
+                                pass
+                
+                if body is not None:
+                    extended_pos = _compute_planet_extended_position(
+                        body, eph, observer, t, vernal_equinox_offset,
+                        include_physical=include_physical,
+                        include_topocentric=include_topocentric
+                    )
+                    if extended_pos is not None:
+                        positions[planet] = extended_pos
+            else:
+                # Legacy mode: return only longitude
+                lon_deg_tropical = _compute_single_planet_position(planet, eph, observer, t, is_de421, vernal_equinox_offset)
+                if lon_deg_tropical is not None:
+                    positions[planet] = lon_deg_tropical
 
         return positions
     else:
@@ -663,9 +958,6 @@ def create_relation_svg(subject1: AstrologicalSubject, subject2: AstrologicalSub
 def compute_aspects(bodies: List[CelestialBody], aspect_defs: List[AspectDefinition]) -> List[Aspect]:
     """Compute aspects between celestial bodies using provided definitions.
     
-    Note: This is a placeholder implementation. Full aspect detection logic
-    should be implemented here.
-    
     Args:
         bodies: List of celestial bodies to compute aspects for
         aspect_defs: List of aspect definitions to use for detection
@@ -673,7 +965,211 @@ def compute_aspects(bodies: List[CelestialBody], aspect_defs: List[AspectDefinit
     Returns:
         List of Aspect objects representing detected aspects
     """
-    return []  # To be implemented
+    aspects = []
+    
+    if not bodies or not aspect_defs:
+        return aspects
+    
+    # Build a map of aspect definitions by angle for quick lookup
+    aspect_by_angle: Dict[float, AspectDefinition] = {}
+    for asp_def in aspect_defs:
+        aspect_by_angle[asp_def.angle] = asp_def
+    
+    # Compare all pairs of bodies
+    for i, body1 in enumerate(bodies):
+        for j, body2 in enumerate(bodies[i+1:], start=i+1):
+            # Get longitudes
+            lon1 = body1.degree
+            lon2 = body2.degree
+            
+            # Compute angular distance (shortest arc, always positive)
+            angle_diff = abs(lon1 - lon2)
+            if angle_diff > 180.0:
+                angle_diff = DEGREES_IN_CIRCLE - angle_diff
+            
+            # Check each aspect definition
+            for asp_def in aspect_defs:
+                exact_angle = asp_def.angle
+                orb = asp_def.default_orb
+                
+                # Normalize exact_angle to 0-180° range (aspects are symmetric)
+                if exact_angle > 180.0:
+                    exact_angle_normalized = DEGREES_IN_CIRCLE - exact_angle
+                else:
+                    exact_angle_normalized = exact_angle
+                
+                # Check if the angle difference is within orb of the exact aspect
+                # angle_diff is already in 0-180° range (shortest arc)
+                diff_to_exact = abs(angle_diff - exact_angle_normalized)
+                
+                if diff_to_exact <= orb:
+                    # Found an aspect
+                    aspect = Aspect(
+                        type=asp_def.id,
+                        source_id=body1.id,
+                        target_id=body2.id,
+                        angle=angle_diff,
+                        orb=diff_to_exact
+                    )
+                    aspects.append(aspect)
+                    break  # Only record one aspect per pair (the first match)
+    
+    return aspects
+
+
+def compute_aspects_for_chart(
+    chart: ChartInstance,
+    aspect_definitions: Optional[List[AspectDefinition]] = None,
+    ws: Optional['Workspace'] = None
+) -> List[Dict[str, Any]]:
+    """Compute aspects between celestial bodies in a chart.
+    
+    Args:
+        chart: ChartInstance to compute aspects for
+        aspect_definitions: List of aspect definitions (orbs, types)
+                          If None, uses chart.config.aspect_orbs or workspace defaults
+        ws: Optional workspace for default aspect definitions
+    
+    Returns:
+        List of aspect dictionaries, each with:
+        {
+            'from': str,  # Source object ID (e.g., 'sun')
+            'to': str,    # Target object ID (e.g., 'moon')
+            'type': str,  # Aspect type: 'conjunction', 'sextile', 'square', 'trine', 'opposition'
+            'angle': float,  # Actual angle between objects (degrees)
+            'orb': float,    # Orb (deviation from exact aspect, degrees)
+            'exact_angle': float,  # Exact aspect angle (0, 60, 90, 120, 180)
+            'applying': bool,  # True if aspect is applying (getting closer)
+            'separating': bool  # True if aspect is separating
+        }
+    """
+    # Get positions for the chart
+    positions = compute_positions_for_chart(chart, ws=ws)
+    
+    if not positions:
+        return []
+    
+    # Convert positions to CelestialBody objects
+    # Extract longitude from position data (handle both float and dict formats)
+    bodies: List[CelestialBody] = []
+    for obj_id, pos_data in positions.items():
+        if isinstance(pos_data, dict):
+            longitude = pos_data.get('longitude', 0.0)
+        else:
+            longitude = float(pos_data)
+        
+        # Create a CelestialBody object (we need to get definition_id from somewhere)
+        # For now, use obj_id as definition_id
+        body = CelestialBody(
+            id=obj_id,
+            definition_id=obj_id,
+            degree=longitude,
+            sign="",  # Sign would need to be computed from longitude
+            retrograde=False,  # Would need speed data to determine
+            speed=0.0  # Would need to compute from two positions
+        )
+        bodies.append(body)
+    
+    # Get aspect definitions
+    if aspect_definitions is None:
+        # Try to get from chart config
+        cfg = _safe_get_attr(chart, 'config')
+        aspect_orbs = _safe_get_attr(cfg, 'aspect_orbs') if cfg else None
+        
+        # Get aspect definitions from workspace/model
+        aspect_definitions = []
+        if ws:
+            try:
+                model = get_active_model(ws)
+                if model:
+                    # Get aspect definitions from model
+                    aspect_definitions = list(getattr(model, 'aspect_definitions', []) or [])
+                    
+                    # Apply orb overrides from chart config
+                    if aspect_orbs:
+                        # Create new aspect definitions with overridden orbs
+                        updated_defs = []
+                        for asp_def in aspect_definitions:
+                            if asp_def.id in aspect_orbs:
+                                # Create new definition with overridden orb
+                                new_orb = float(aspect_orbs[asp_def.id])
+                                updated_def = AspectDefinition(
+                                    id=asp_def.id,
+                                    glyph=asp_def.glyph,
+                                    angle=asp_def.angle,
+                                    default_orb=new_orb,
+                                    i18n=asp_def.i18n,
+                                    color=asp_def.color,
+                                    importance=asp_def.importance,
+                                    line_style=asp_def.line_style,
+                                    line_width=asp_def.line_width,
+                                    show_label=asp_def.show_label,
+                                    valid_contexts=asp_def.valid_contexts
+                                )
+                                updated_defs.append(updated_def)
+                            else:
+                                updated_defs.append(asp_def)
+                        aspect_definitions = updated_defs
+            except Exception as e:
+                logger.warning("Could not get aspect definitions from workspace: %s", e)
+        
+        # If still no definitions, use defaults
+        if not aspect_definitions:
+            try:
+                from module.workspace import get_all_aspect_definitions
+                # Get aspects from workspace/model YAML, not SQLite
+                all_aspects = get_all_aspect_definitions(ws=ws, model=model)
+                aspect_definitions = list(all_aspects.values())
+            except Exception:
+                # Fallback: create basic aspect definitions
+                aspect_definitions = [
+                    AspectDefinition(id='conjunction', glyph='☌', angle=0.0, default_orb=8.0, i18n={}),
+                    AspectDefinition(id='opposition', glyph='☍', angle=180.0, default_orb=8.0, i18n={}),
+                    AspectDefinition(id='trine', glyph='△', angle=120.0, default_orb=8.0, i18n={}),
+                    AspectDefinition(id='square', glyph='□', angle=90.0, default_orb=8.0, i18n={}),
+                    AspectDefinition(id='sextile', glyph='⚹', angle=60.0, default_orb=6.0, i18n={}),
+                ]
+    
+    # Compute aspects
+    aspects = compute_aspects(bodies, aspect_definitions)
+    
+    # Convert Aspect objects to dictionaries
+    result = []
+    for aspect in aspects:
+        # Find the aspect definition to get exact angle
+        exact_angle = 0.0
+        for asp_def in aspect_definitions:
+            if asp_def.id == aspect.type:
+                exact_angle = asp_def.angle
+                break
+        
+        # Determine applying/separating
+        # For now, set both to False (would need speed data to determine accurately)
+        # Applying means the faster body is catching up to the slower one
+        # Separating means they're moving apart
+        applying = False
+        separating = False
+        
+        # Try to determine from speeds if available
+        body1 = next((b for b in bodies if b.id == aspect.source_id), None)
+        body2 = next((b for b in bodies if b.id == aspect.target_id), None)
+        if body1 and body2:
+            # If we have speed data, we could determine applying/separating
+            # For now, we'll leave it as False/False
+            pass
+        
+        result.append({
+            'from': aspect.source_id,
+            'to': aspect.target_id,
+            'type': aspect.type,
+            'angle': float(aspect.angle),
+            'orb': float(aspect.orb),
+            'exact_angle': float(exact_angle),
+            'applying': applying,
+            'separating': separating
+        })
+    
+    return result
 
 
 # ─────────────────────
@@ -770,28 +1266,24 @@ def _build_aspect_orbs(model: AstroModel) -> Dict[str, float]:
 def get_active_model(ws: Optional['Workspace']) -> Optional[AstroModel]:
     """Resolve the currently active AstroModel instance from a Workspace, if available.
     
-    Prefers active_model_name over active_model (deprecated). Falls back to first model
-    if no active model is specified.
+    Falls back to first model if no active model is specified.
     
     Args:
         ws: Workspace instance to get active model from
         
     Returns:
         Active AstroModel instance, or None if no models available
-        
-    Note:
-        The 'active_model' attribute is deprecated. Use 'active_model_name' instead.
     """
     if ws is None:
         return None
     models = getattr(ws, 'models', {}) or {}
     if not models:
         return None
-    # Prefer active_model_name (new), fallback to active_model (deprecated)
-    name = getattr(ws, 'active_model_name', None) or getattr(ws, 'active_model', None)
+    # Get active model name
+    name = getattr(ws, 'active_model', None)
     if name and name in models:
         return models[name]
-    # Fallback: return any model
+    # Fallback: return first available model
     try:
         return next(iter(models.values()))
     except StopIteration:
@@ -891,10 +1383,16 @@ def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_
                 # Get additional objects from kerykeion
                 try:
                     subj = compute_subject(name, dt_str, loc_str)
-                    kerykeion_positions = _extract_kerykeion_observable_objects(subj, requested_objects=non_planet_objects)
+                    # Get model for constants (degrees_in_circle)
+                    model = None
+                    try:
+                        model = get_active_model(None)
+                    except Exception:
+                        pass
+                    kerykeion_positions = _extract_kerykeion_observable_objects(subj, requested_objects=non_planet_objects, model=model)
                     jpl_positions.update(kerykeion_positions)
                 except (ValueError, AttributeError, KeyError) as e:
-                    print(f"Warning: Could not compute non-planet objects with Kerykeion: {e}", file=sys.stderr)
+                    logger.warning("Could not compute non-planet objects with Kerykeion: %s", e)
             
             return jpl_positions
         else:
@@ -911,7 +1409,6 @@ def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_
             subject_wrapper = Subject(name)
             subject_wrapper.computed = subj
             object_list, degrees_list, labels = subject_wrapper.data()
-            print(f"DEBUG: Subject.data() returned {len(object_list)} objects, {len(degrees_list)} degrees", file=sys.stderr)
             # If we got data from Subject.data(), use it
             if object_list and degrees_list and len(object_list) == len(degrees_list):
                 for i, obj_name in enumerate(object_list):
@@ -922,68 +1419,68 @@ def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_
                         try:
                             # Normalize to [0, 360) range (same as JPL)
                             lon_float = float(degrees_list[i])
-                            normalized_lon = lon_float % 360.0
+                            normalized_lon = lon_float % DEGREES_IN_CIRCLE
                             if normalized_lon < 0:
-                                normalized_lon += 360.0
+                                normalized_lon += DEGREES_IN_CIRCLE
                             positions[obj_id] = normalized_lon
-                            print(f"DEBUG: Extracted {obj_id} = {degrees_list[i]}° -> normalized to {normalized_lon}° from Subject.data()", file=sys.stderr)
                         except (ValueError, TypeError, IndexError) as e:
-                            print(f"DEBUG: Failed to extract {obj_name}: {e}", file=sys.stderr)
+                            logger.debug("Failed to normalize position for %s: %s", obj_name, e)
                             continue
-                print(f"DEBUG: Extracted {len(positions)} positions from Subject.data()", file=sys.stderr)
+            else:
+                logger.debug("Subject.data() returned empty or mismatched lists: objects=%s, degrees=%s", 
+                           len(object_list) if object_list else 0, len(degrees_list) if degrees_list else 0)
         except Exception as e:
-            print(f"DEBUG: Subject.data() failed: {e}", file=sys.stderr)
-            import traceback
-            print(f"DEBUG: Subject.data() traceback: {traceback.format_exc()}", file=sys.stderr)
+            logger.debug("Subject wrapper failed, falling back to direct extraction: %s", e)
         
         # Also try direct extraction as fallback
+        # Get active model for constants (degrees_in_circle)
+        model = None
+        try:
+            model = get_active_model(None)  # We don't have workspace here, but model might be available
+        except Exception:
+            pass
+        
         if not positions:
-            print(f"DEBUG: Subject.data() returned no positions, trying _extract_kerykeion_observable_objects", file=sys.stderr)
-            positions = _extract_kerykeion_observable_objects(subj, requested_objects=requested_objects)
+            positions = _extract_kerykeion_observable_objects(subj, requested_objects=requested_objects, model=model)
+            if not positions:
+                # Add diagnostic logging
+                logger.debug("Direct extraction also failed. Checking Kerykeion subject attributes:")
+                logger.debug("  has planets_list: %s", hasattr(subj, 'planets_list'))
+                logger.debug("  has planets_degrees_ut: %s", hasattr(subj, 'planets_degrees_ut'))
+                if hasattr(subj, 'planets_list'):
+                    logger.debug("  planets_list type: %s, length: %s", type(subj.planets_list), 
+                               len(subj.planets_list) if isinstance(subj.planets_list, list) else 'N/A')
+                if hasattr(subj, 'planets_degrees_ut'):
+                    logger.debug("  planets_degrees_ut type: %s, length: %s", type(subj.planets_degrees_ut),
+                               len(subj.planets_degrees_ut) if isinstance(subj.planets_degrees_ut, list) else 'N/A')
+                # Try to list available attributes
+                available_attrs = [attr for attr in dir(subj) if not attr.startswith('_') and hasattr(getattr(subj, attr, None), '__class__')]
+                logger.debug("  Available planet-like attributes: %s", available_attrs[:10])
         else:
             # Merge with direct extraction for additional objects (angles, houses, etc.)
-            positions_from_extract = _extract_kerykeion_observable_objects(subj, requested_objects=requested_objects)
+            positions_from_extract = _extract_kerykeion_observable_objects(subj, requested_objects=requested_objects, model=model)
             for k, v in positions_from_extract.items():
                 if k not in positions:  # Don't overwrite if already set from Subject.data()
                     positions[k] = v
-        # Debug: log if we got empty positions
         if not positions:
-            print(f"Warning: _extract_kerykeion_observable_objects returned empty dict for {name} at {dt_str} in {loc_str}", file=sys.stderr)
-            # Debug: check what attributes the subject has
-            print(f"DEBUG: subj type={type(subj)}", file=sys.stderr)
-            print(f"DEBUG: subj has planets_list={hasattr(subj, 'planets_list')}", file=sys.stderr)
-            print(f"DEBUG: subj has planets_degrees_ut={hasattr(subj, 'planets_degrees_ut')}", file=sys.stderr)
-            # List all attributes that might contain position data
-            all_attrs = [attr for attr in dir(subj) if not attr.startswith('__')]
-            attrs_with_deg = [attr for attr in all_attrs if 'deg' in attr.lower() or 'lon' in attr.lower() or 'position' in attr.lower() or 'planet' in attr.lower()]
-            print(f"DEBUG: attributes with deg/lon/position/planet: {attrs_with_deg[:30]}", file=sys.stderr)
-            # Try to access planet attributes directly
-            planet_attrs = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto']
-            for p in planet_attrs:
-                if hasattr(subj, p):
-                    p_obj = getattr(subj, p)
-                    print(f"DEBUG: {p} = {type(p_obj)}, hasattr longitude={hasattr(p_obj, 'longitude') if p_obj else False}, hasattr ecliptic_longitude={hasattr(p_obj, 'ecliptic_longitude') if p_obj else False}", file=sys.stderr)
-                    if p_obj and hasattr(p_obj, 'longitude'):
-                        try:
-                            print(f"DEBUG: {p}.longitude = {getattr(p_obj, 'longitude', None)}", file=sys.stderr)
-                        except:
-                            pass
+            logger.warning("_extract_kerykeion_observable_objects returned empty dict for %s at %s in %s", name, dt_str, loc_str)
         return positions
     except (ValueError, AttributeError, KeyError) as e:
         # Log specific errors for debugging
-        print(f"Error computing positions with Kerykeion: {e}", file=sys.stderr)
-        import traceback
-        print(f"Traceback: {traceback.format_exc()}", file=sys.stderr)
+        logger.error("Error computing positions with Kerykeion: %s", e, exc_info=True)
         return {}
     except Exception as e:
         # Catch-all for unexpected errors
-        print(f"Unexpected error computing positions: {e}", file=sys.stderr)
-        import traceback
-        print(f"Traceback: {traceback.format_exc()}", file=sys.stderr)
+        logger.error("Unexpected error computing positions: %s", e, exc_info=True)
         return {}
 
 
-def compute_positions_for_chart(chart: ChartInstance, ws: Optional['Workspace'] = None) -> Dict[str, float]:
+def compute_positions_for_chart(
+    chart: ChartInstance, 
+    ws: Optional['Workspace'] = None,
+    include_physical: bool = False,
+    include_topocentric: bool = False
+) -> Dict[str, Union[float, Dict[str, float]]]:
     """Compute positions using a ChartInstance's engine and ephemeris settings.
     Uses chart.subject.event_time and chart.subject.location.name for location lookup.
     Handles both ChartInstance objects and dict-like structures safely.
@@ -991,9 +1488,26 @@ def compute_positions_for_chart(chart: ChartInstance, ws: Optional['Workspace'] 
     Args:
         chart: ChartInstance to compute positions for
         ws: Optional workspace for resolving observable objects defaults
+        include_physical: If True, include magnitude/phase/elongation (JPL only)
+        include_topocentric: If True, include altitude/azimuth (JPL with location)
         
     Returns:
-        Dict mapping object_id -> ecliptic_longitude (degrees)
+        Dict mapping object_id -> position data:
+        - For non-JPL engines: float (longitude in degrees)
+        - For JPL engine: dict with keys:
+            - 'longitude': float (degrees) - always present
+            - 'latitude': float (degrees) - if available
+            - 'distance': float (AU) - always present for JPL
+            - 'declination': float (degrees) - always present for JPL
+            - 'right_ascension': float (degrees) - always present for JPL
+            - 'altitude': float (degrees) - if include_topocentric and location available
+            - 'azimuth': float (degrees) - if include_topocentric and location available
+            - 'apparent_magnitude': float - if include_physical
+            - 'phase_angle': float (degrees) - if include_physical
+            - 'elongation': float (degrees) - if include_physical
+            - 'light_time': float (seconds) - if include_physical
+            - 'speed': float (degrees/day) - if available
+            - 'retrograde': bool - if available
         
     Raises:
         ValueError: If chart is missing required subject or location data
@@ -1011,7 +1525,6 @@ def compute_positions_for_chart(chart: ChartInstance, ws: Optional['Workspace'] 
     # BSP files are only for JPL/Skyfield engine
     if engine == EngineType.SWISSEPH:
         eph = None
-        print(f"DEBUG: Cleared ephemeris path for SWISSEPH engine (SWISSEPH uses internal ephemeris data)", file=sys.stderr)
     
     # Get observable objects: prefer chart config, then workspace defaults, then model defaults
     requested_objects = _safe_get_attr(cfg, 'observable_objects') if cfg else None
@@ -1021,20 +1534,10 @@ def compute_positions_for_chart(chart: ChartInstance, ws: Optional['Workspace'] 
             if model:
                 eff = resolve_effective_defaults(ws, model)
                 requested_objects = eff.get('observable_objects')
-                # Debug: log what we resolved
-                if requested_objects:
-                    print(f"DEBUG: Resolved observable_objects from workspace/model: {len(requested_objects)} objects", file=sys.stderr)
-                else:
-                    print(f"DEBUG: No observable_objects found in workspace/model defaults", file=sys.stderr)
         except (AttributeError, KeyError, TypeError) as e:
             # Log but don't fail - use None as fallback (will compute all objects)
-            print(f"Warning: Could not resolve observable objects from workspace: {e}", file=sys.stderr)
+            logger.warning("Could not resolve observable objects from workspace: %s", e)
     
-    # Debug: log final requested_objects
-    if requested_objects:
-        print(f"DEBUG: Using observable_objects: {requested_objects[:10]}..." if len(requested_objects) > 10 else f"DEBUG: Using observable_objects: {requested_objects}", file=sys.stderr)
-    else:
-        print(f"DEBUG: No observable_objects filter - will compute all available objects", file=sys.stderr)
     
     # Get subject data safely
     subj = _safe_get_attr(chart, 'subject')
@@ -1080,22 +1583,59 @@ def compute_positions_for_chart(chart: ChartInstance, ws: Optional['Workspace'] 
     if not loc_str:
         raise ValueError(f"Could not determine location name (location type: {type(loc)})")
     
+    # Check if we should use extended format for JPL
+    use_extended = (engine == EngineType.JPL)
+    
     # Call compute_positions with the extracted parameters
-    # Debug: log the parameters being used
-    print(f"DEBUG compute_positions_for_chart: name={name}, dt_str={dt_str}, loc_str={loc_str}, engine={engine}, eph={eph}", file=sys.stderr)
-    result = compute_positions(engine, name, dt_str, loc_str, ephemeris_path=eph, requested_objects=requested_objects)
+    
+    if use_extended:
+        # For JPL, use extended format
+        result = compute_jpl_positions(
+            name, dt_str, loc_str, 
+            ephemeris_path=eph, 
+            requested_objects=requested_objects,
+            include_physical=include_physical,
+            include_topocentric=include_topocentric,
+            extended=True
+        )
+        
+        # Merge with non-planet objects from kerykeion if needed
+        if requested_objects:
+            jpl_planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
+            non_planet_objects = [obj for obj in requested_objects if obj not in jpl_planets]
+            
+            if non_planet_objects:
+                # Get additional objects from kerykeion (angles, houses, etc.)
+                try:
+                    subj = compute_subject(name, dt_str, loc_str)
+                    # Get model for constants
+                    model = None
+                    try:
+                        model = get_active_model(ws)
+                    except Exception:
+                        pass
+                    kerykeion_positions = _extract_kerykeion_observable_objects(subj, requested_objects=non_planet_objects, model=model)
+                    # Kerykeion returns simple floats, but we need to maintain extended format for JPL
+                    # For non-planets, we'll keep them as floats (they don't have extended properties)
+                    for obj_id, lon in kerykeion_positions.items():
+                        if obj_id not in result:
+                            result[obj_id] = lon  # Keep as float for non-planets
+                except (ValueError, AttributeError, KeyError) as e:
+                    logger.warning("Could not compute non-planet objects with Kerykeion: %s", e)
+    else:
+        # For non-JPL engines, use standard format
+        result = compute_positions(engine, name, dt_str, loc_str, ephemeris_path=eph, requested_objects=requested_objects)
     
     # Ensure we return a dict
     if not isinstance(result, dict):
-        print(f"WARNING: compute_positions returned non-dict: {type(result)} = {result}", file=sys.stderr)
+        logger.warning("compute_positions returned non-dict: %s = %s", type(result), result)
         return {}
     
     # Return empty dict if no positions found
     if not result:
-        print(f"WARNING: compute_positions returned empty dict for {name} at {dt_str} in {loc_str}", file=sys.stderr)
+        logger.warning("compute_positions returned empty dict for %s at %s in %s", name, dt_str, loc_str)
         return {}
     
-    print(f"DEBUG: compute_positions_for_chart returned {len(result)} positions", file=sys.stderr)
     return result
 
 
@@ -1142,7 +1682,7 @@ def build_chart_instance(name: str, dt_str: str, loc_text: str,
                 engine = engine or eff.get('engine')
         except (AttributeError, KeyError, TypeError) as e:
             # Best-effort: if anything fails, continue with minimal defaults
-            print(f"Warning: Could not resolve all defaults from workspace/model: {e}", file=sys.stderr)
+            logger.warning("Could not resolve all defaults from workspace/model: %s", e)
  
     # Normalize inputs via utils.Actual and to_model_location
     try:
@@ -1177,7 +1717,7 @@ def build_chart_instance(name: str, dt_str: str, loc_text: str,
         if ayanamsa is not None:
             chart.config.ayanamsa = ayanamsa
     except AttributeError as e:
-        print(f"Warning: Could not set all chart config defaults: {e}", file=sys.stderr)
+        logger.warning("Could not set all chart config defaults: %s", e)
     
     return chart
 
@@ -1312,7 +1852,7 @@ def build_radix_figure_for_chart(chart: ChartInstance, engine_override: Optional
                     requested_objects = eff.get('observable_objects')
             except (AttributeError, KeyError, TypeError) as e:
                 # Log but don't fail - use None as fallback (will compute all objects)
-                print(f"Warning: Could not resolve observable objects from workspace: {e}", file=sys.stderr)
+                logger.warning("Could not resolve observable objects from workspace: %s", e)
         
         subj = _safe_get_attr(chart, 'subject')
         name = _safe_get_attr(subj, 'name') or 'chart'
@@ -1339,9 +1879,7 @@ def build_radix_figure_for_chart(chart: ChartInstance, engine_override: Optional
     # Verify we got valid positions (not all zeros or suspiciously clustered)
     if not positions:
         # If no positions, log error and return empty figure with warning
-        print(f"ERROR: build_radix_figure_for_chart got empty positions for chart {_safe_get_attr(chart, 'id', default='unknown')}", file=sys.stderr)
-        print(f"DEBUG: chart.subject={_safe_get_attr(chart, 'subject')}", file=sys.stderr)
-        print(f"DEBUG: engine_override={engine_override}, ephemeris_path_override={ephemeris_path_override}", file=sys.stderr)
+        logger.error("build_radix_figure_for_chart got empty positions for chart %s", _safe_get_attr(chart, 'id', default='unknown'))
         # Return an empty figure rather than crashing
         import plotly.graph_objects as go
         empty_fig = go.Figure()

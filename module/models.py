@@ -262,6 +262,10 @@ class ModelSettings:
     # Context-specific body lists (optional, for transits/directions)
     default_transit_bodies: Optional[List[str]] = None
     default_direction_bodies: Optional[List[str]] = None
+    # Computational constants (not user-configurable, but part of model for consistency)
+    degrees_in_circle: float = 360.0  # Full circle in degrees
+    obliquity_j2000: float = 23.4392911  # J2000.0 obliquity of the ecliptic in degrees
+    coordinate_tolerance: float = 0.0001  # Coordinate comparison tolerance (~11 meters at equator)
 
 
 @dataclass
@@ -393,45 +397,94 @@ class WorkspaceDefaults:
     """Aggregated default settings for a workspace (preferred YAML shape).
 
     This mirrors the desired manifest structure under the top-level key 'default'.
+    Provides workspace-wide defaults that can be overridden at the workspace level.
     """
+    # Astrological computation defaults
+    default_house_system: Optional[HouseSystem] = None
+    default_bodies: Optional[List[str]] = None  # Default celestial bodies to compute
+    default_aspects: Optional[List[str]] = None  # Default aspects to compute
+
+    # Ephemeris settings
     ephemeris_engine: Optional[EngineType] = None
     ephemeris_backend: Optional[str] = None
-    location_name: Optional[str] = None
-    location_latitude: Optional[float] = None
-    location_longitude: Optional[float] = None
-    timezone: Optional[str] = None
-    language: Optional[str] = None
-    theme: Optional[str] = None
-    # Optional overrides to model defaults (when present these take precedence)
-    default_house_system: Optional[HouseSystem] = None
-    default_bodies: Optional[List[str]] = None
-    default_aspects: Optional[List[str]] = None  # Legacy: simple list of aspect IDs
-    # Observable objects to include in charts (list of object IDs from BodyDefinition)
-    # This extends/overrides model.default_bodies with additional objects like angles, houses, etc.
-    observable_objects: Optional[List[str]] = None
-    # Aspect settings with full configuration (overrides default_aspects if present)
-    aspect_settings: Optional[List[AspectSettings]] = None
+
     # Color settings
     element_colors: Optional[ElementColorSettings] = None
     radix_point_colors: Optional[RadixPointColorSettings] = None
-    # Time system preference
-    time_system: Optional[TimeSystem] = None
+    
+    # Location and language settings
+    default_location: Optional[Location] = None
+    language: Optional[str] = None
 
+    # Display settings
+    theme: Optional[str] = None
+    time_system: Optional[TimeSystem] = None
 
 @dataclass
 class Workspace:
+    """Complete workspace container for astrological chart analysis.
+    
+    A Workspace represents a project or collection of astrological work, containing
+    all the data, settings, and configurations needed for chart computation and analysis.
+    It serves as the top-level organizational unit for managing charts, subjects, and
+    their associated metadata.
+    
+    Structure:
+        - **Identity & Configuration**:
+            - owner: Workspace owner/creator identifier
+            - active_model: Currently active astrological model (e.g., "western", "vedic")
+            - default: Default settings (ephemeris, location, house system, language, theme)
+            
+        - **Astrological Models**:
+            - models: Available astrological model catalogs (planet/aspect definitions, zodiac systems)
+            - model_overrides: Custom modifications to model definitions
+            
+        - **Core Data Collections**:
+            - subjects: People or events for which charts can be created
+            - charts: Computed chart instances (actual charts with planetary positions)
+            - chart_presets: Reusable configuration templates (house system, display settings)
+            
+        - **Organization & Presentation**:
+            - layouts: View configurations for displaying charts (single, dual-wheel, comparison)
+            - annotations: Notes, interpretations, and commentary
+            - aspects: List of aspect IDs enabled for this workspace
+            
+    Typical Usage:
+        1. Load or create a workspace
+        2. Add subjects (people/events with birth data)
+        3. Create charts using subjects and presets
+        4. Apply layouts to visualize charts
+        5. Add annotations for interpretation
+        
+    Example:
+        ```python
+        ws = Workspace(
+            owner="astrologer@example.com",
+            active_model="western",
+            default=WorkspaceDefaults(
+                ephemeris_engine=EngineType.SWISSEPH,
+                ephemeris_backend=None,
+                default_house_system=HouseSystem.PLACIDUS
+            ),
+            subjects=[...],
+            charts=[...]
+        )
+        ```
+    """
+    # Required fields (no defaults)
     owner: str
-    default_ephemeris: EphemerisSource
-    active_model: str
-    chart_presets: List[ChartPreset]
     subjects: List[ChartSubject]
     charts: List[ChartInstance]
+    chart_presets: List[ChartPreset]
     layouts: List[ViewLayout]
     annotations: List[Annotation]
-    model_overrides: Optional[ModelOverrides] = None
-    aspects: List[str] = field(default_factory=list)
-    default: Optional[WorkspaceDefaults] = None
+    
+    # Optional fields (with defaults)
+    active_model: Optional[str] = None
+    default: WorkspaceDefaults = field(default_factory=WorkspaceDefaults)
+    # Workspace-level overrides (override default.* settings)
+    aspects: List[str] = field(default_factory=list)  # Overrides default.default_aspects
+    bodies: List[str] = field(default_factory=list)  # Overrides default.default_bodies
     # Loaded model catalogs available in this workspace, keyed by name
     models: Dict[str, AstroModel] = field(default_factory=dict)
-    # Optional explicit name for active model (preferred over active_model if set)
-    active_model_name: Optional[str] = None
+    model_overrides: Optional[ModelOverrides] = None

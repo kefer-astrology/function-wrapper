@@ -1,22 +1,18 @@
-import sqlite3
-from enum import Enum
 from pathlib import Path
 from datetime import datetime, date, time
-
-from pandas import read_sql_query
 from typing import Union, Optional, List, Dict, Iterator, Callable, Tuple, Any
 from dataclasses import asdict, is_dataclass
 try:
     from module.models import (
-        Workspace, EphemerisSource, ChartPreset, ChartSubject,
+        Workspace, ChartPreset, ChartSubject,
         ChartInstance, ViewLayout, Annotation, ChartConfig, Location, HouseSystem, EngineType, WorkspaceDefaults,
-        BodyDefinition, ObjectType, AspectDefinition, AspectSettings, AstroModel
+        BodyDefinition, ObjectType, AspectDefinition, AstroModel
     )
 except ImportError:
     from models import (
-        Workspace, EphemerisSource, ChartPreset, ChartSubject,
+        Workspace, ChartPreset, ChartSubject,
         ChartInstance, ViewLayout, Annotation, ChartConfig, Location, HouseSystem, EngineType, WorkspaceDefaults,
-        BodyDefinition, ObjectType, AspectDefinition, AspectSettings, AstroModel
+        BodyDefinition, ObjectType, AspectDefinition, AstroModel
     )
 try:
     from module.utils import read_yaml_file, write_yaml_file, write_json_file, resolve_under_base, _to_primitive, load_sfs_models_from_dir, parse_sfs_content, export_workspace_yaml
@@ -31,17 +27,6 @@ except ImportError:
 # ─────────────────────
 # ⚙️ CONFIGURATION
 # ─────────────────────
-
-# Default localization settings
-DEFAULT_LANGUAGE = "cs"
-FALLBACK_LANGUAGE = "en"
-SUPPORTED_LANGUAGES = ["en", "cs", "fr"]
-
-TRANSLATION_BACKEND = "yaml"
-# Path to translation files (for YAML)
-TRANSLATION_DIR = Path(__file__).parent / "locales"
-# SQLite settings (optional)
-TRANSLATION_DB = Path(__file__).parent / "settings.db"
 
 # Default location
 DEFAULT_LOCATION = {
@@ -179,28 +164,6 @@ def _load_many_items(base_dir: str, items: list, cls: type) -> List:
     return out
 
 
-def _parse_default_ephemeris(manifest: dict) -> EphemerisSource:
-    """Parse default_ephemeris from manifest with fallbacks.
-    
-    Args:
-        manifest: Workspace manifest dictionary
-        
-    Returns:
-        EphemerisSource instance parsed from manifest
-    """
-    de = manifest.get("default_ephemeris")
-    if isinstance(de, dict):
-        return EphemerisSource(name=de.get("name", ""), backend=de.get("backend", ""))
-    elif isinstance(de, str):
-        return EphemerisSource(name="", backend=de)
-    else:
-        # Derive from 'default' block if present
-        dblk = manifest.get('default') if isinstance(manifest.get('default'), dict) else {}
-        ep_name = (dblk.get('ephemeris_backend') or "")
-        ep_backend = (dblk.get('ephemeris_engine') or "")
-        return EphemerisSource(name=ep_name, backend=ep_backend)
-
-
 def _load_chart_presets(base_dir: str, manifest: dict) -> List[ChartPreset]:
     """Load chart presets from manifest.
     
@@ -292,46 +255,60 @@ def _load_annotations(base_dir: str, manifest: dict) -> List[Annotation]:
     return annotations
 
 
-def _parse_workspace_defaults(manifest: dict) -> Optional[WorkspaceDefaults]:
+def _parse_workspace_defaults(manifest: dict) -> WorkspaceDefaults:
     """Parse WorkspaceDefaults from manifest.
     
     Args:
         manifest: Workspace manifest dictionary
         
     Returns:
-        WorkspaceDefaults instance if 'default' block exists in manifest, None otherwise
+        WorkspaceDefaults instance with ephemeris, location, and other defaults
     """
     raw_default = manifest.get('default')
     default_block = raw_default if isinstance(raw_default, dict) else {}
     
-    if not default_block:
-        return None
+    # Handle legacy top-level default_ephemeris for backward compatibility
+    ephemeris_engine = default_block.get('ephemeris_engine')
+    ephemeris_backend = default_block.get('ephemeris_backend')
     
-    # Parse aspect_settings from YAML (list of dicts)
-    aspect_settings = None
-    if default_block.get('aspect_settings'):
-        aspect_settings = []
-        for asp_setting in default_block.get('aspect_settings', []):
-            if isinstance(asp_setting, dict):
-                try:
-                    aspect_settings.append(AspectSettings(**asp_setting))
-                except Exception:
-                    continue
+    if not ephemeris_engine or not ephemeris_backend:
+        # Try to get from legacy default_ephemeris field
+        de = manifest.get("default_ephemeris")
+        if isinstance(de, dict):
+            if not ephemeris_backend:
+                ephemeris_backend = de.get("name", "")
+            if not ephemeris_engine:
+                ephemeris_engine = de.get("backend", "")
+        elif isinstance(de, str) and not ephemeris_engine:
+            ephemeris_engine = de
+    
+    # Parse location if present
+    default_location = None
+    loc_name = default_block.get('location_name')
+    loc_lat = default_block.get('location_latitude')
+    loc_lon = default_block.get('location_longitude')
+    loc_tz = default_block.get('timezone')
+    
+    if loc_name and loc_lat is not None and loc_lon is not None and loc_tz:
+        default_location = Location(
+            name=loc_name,
+            latitude=loc_lat,
+            longitude=loc_lon,
+            timezone=loc_tz
+        )
     
     return WorkspaceDefaults(
-        ephemeris_engine=_safe_engine(default_block.get('ephemeris_engine')),
-        ephemeris_backend=default_block.get('ephemeris_backend'),
-        location_name=default_block.get('location_name'),
-        location_latitude=default_block.get('location_latitude'),
-        location_longitude=default_block.get('location_longitude'),
-        timezone=default_block.get('timezone'),
+        ephemeris_engine=_safe_engine(ephemeris_engine),
+        ephemeris_backend=ephemeris_backend,
+        default_location=default_location,
         language=default_block.get('language'),
         theme=default_block.get('theme'),
         default_house_system=None,  # Will be set from model if needed
         default_bodies=default_block.get('default_bodies'),
         default_aspects=default_block.get('default_aspects'),
-        observable_objects=default_block.get('observable_objects'),
-        aspect_settings=aspect_settings,
+        element_colors=None,  # TODO: parse from default_block if present
+        radix_point_colors=None,  # TODO: parse from default_block if present
+        time_system=None,  # TODO: parse from default_block if present
     )
 
 
@@ -341,12 +318,8 @@ def _load_workspace_from_manifest(manifest: dict, base_dir: str) -> Workspace:
     This resolves referenced YAML files (subjects, charts, layouts, presets,
     annotations) relative to `base_dir` while validating paths.
     """
-    # Parse ephemeris and model settings
-    default_ephemeris = _parse_default_ephemeris(manifest)
-    active_model_name = manifest.get("active_model_name")
-    active_model = manifest.get("active_model", "default")
-    if active_model_name is None:
-        active_model_name = active_model
+    # Parse model settings
+    active_model = manifest.get("active_model")
 
     # Load all workspace components
     chart_presets = _load_chart_presets(base_dir, manifest)
@@ -363,13 +336,12 @@ def _load_workspace_from_manifest(manifest: dict, base_dir: str) -> Workspace:
         # fallback to legacy key if present, else empty list
         aspects = list(manifest.get('default_aspects') or [])
 
-    # Parse workspace defaults
+    # Parse workspace defaults (includes ephemeris settings)
     ws_defaults = _parse_workspace_defaults(manifest)
 
     ws = Workspace(
         owner=manifest.get('owner', ''),
-        default_ephemeris=default_ephemeris,
-        active_model=active_model,  # Deprecated: kept for backward compatibility
+        active_model=active_model,
         chart_presets=chart_presets,
         subjects=subjects,
         charts=charts,
@@ -379,294 +351,15 @@ def _load_workspace_from_manifest(manifest: dict, base_dir: str) -> Workspace:
         aspects=aspects or [],
         default=ws_defaults,
     )
-    # Set active_model_name (preferred)
-    ws.active_model_name = active_model_name
     return ws
-
-
-# ─────────────────────
-# 🌐 TRANSLATION SERVICE
-# ─────────────────────
-
-class TranslationBackend(str, Enum):
-    YAML = "yaml"
-    SQLITE = "sqlite"
-
-
-class TranslationService:
-    """Provide simple i18n label loading from YAML files or SQLite.
-    
-    Use `get(domain, key, lang)` for single lookups and `inject_i18n(items, ...)`
-    to batch-attach translations under `item.i18n` keyed by item id.
-    """
-    def __init__(self, backend: str = TRANSLATION_BACKEND):
-        self.backend = TranslationBackend(backend)
-        self.cache: Dict[str, Dict[str, Dict[str, str]]] = {}
-
-    def get(self, domain: str, key: str, lang: Optional[str] = None) -> Optional[str]:
-        """Return translated value for a given domain/key in the selected language.
-        
-        Falls back to DEFAULT_LANGUAGE via `_load` if not provided.
-        """
-        lang = lang or DEFAULT_LANGUAGE
-        data = self._load(domain, lang)
-        return data.get(key)
-
-    def inject_i18n(self, items: List, domain: str, lang: Optional[str] = None):
-        """Attach translations for `items` in-place under `item.i18n`.
-        
-        Each `item` is expected to have an `id` attribute used as the lookup key.
-        Domain and language select the translation file or DB rows.
-        """
-        lang = lang or DEFAULT_LANGUAGE
-        translations = self._load(domain, lang)
-        for item in items:
-            item.i18n = translations.get(item.id, {})
-
-    def _load(self, domain: str, lang: str) -> Dict[str, Dict[str, str]]:
-        """Load and cache translation maps for a (domain, lang) pair."""
-        key = f"{domain}:{lang}"
-        if key in self.cache:
-            return self.cache[key]
-
-        if self.backend == TranslationBackend.YAML:
-            path = TRANSLATION_DIR / lang / f"{domain}.yml"
-            try:
-                data = read_yaml_file(path)
-            except FileNotFoundError:
-                data = {}
-        else:
-            data = self._load_from_sqlite(domain, lang)
-
-        self.cache[key] = data
-        return data
-
-    def _load_from_sqlite(self, domain: str, lang: str) -> Dict[str, Dict[str, str]]:
-        """Load translations from SQLite table `translations`.
-        
-        Expected schema: (domain TEXT, language TEXT, key TEXT, label TEXT, value TEXT)
-        Returns nested mapping: {key: {label: value}}.
-        """
-        data = {}
-        try:
-            with sqlite3.connect(TRANSLATION_DB) as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT key, label, value
-                    FROM translations
-                    WHERE domain = ? AND language = ?
-                """, (domain, lang))
-                for key, label, value in cursor.fetchall():
-                    if key not in data:
-                        data[key] = {}
-                    data[key][label] = value
-        except sqlite3.Error:
-            data = {}
-        return data
-
-
-def change_language(default: str = "cz") -> dict:
-    """Return a simple language mapping from SQLite `language` table.
-    
-    Args:
-        default: Column name to use for values, e.g., "cz" or "en", defaults to "cz"
-        
-    Returns:
-        Dictionary mapping language keys to translated values
-    """
-    with sqlite3.connect(Path(__file__).parent / "settings.db") as dbcon:
-        df = read_sql_query("SELECT * FROM language ORDER BY id;", dbcon)
-    return dict(zip(df["col"], df[default]))
 
 
 # ─────────────────────
 # 🔭 OBSERVABLE OBJECTS MANAGEMENT
 # ─────────────────────
-
-def init_observable_objects_db(db_path: Optional[Path] = None) -> None:
-    """Initialize SQLite database schema for custom observable object definitions.
-    
-    Args:
-        db_path: Optional path to SQLite database, defaults to TRANSLATION_DB
-        
-    Note:
-        Creates the 'observable_objects' table if it doesn't exist.
-        This is optional and won't break if the database doesn't exist.
-    """
-    db = db_path or TRANSLATION_DB
-    try:
-        with sqlite3.connect(db) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS observable_objects (
-                    id TEXT PRIMARY KEY,
-                    glyph TEXT,
-                    formula TEXT,
-                    element TEXT,
-                    avg_speed REAL DEFAULT 0.0,
-                    max_orb REAL DEFAULT 0.0,
-                    object_type TEXT,
-                    computation_map_jpl TEXT,
-                    computation_map_kerykeion TEXT,
-                    computation_map_swisseph TEXT,
-                    requires_location INTEGER DEFAULT 0,
-                    requires_house_system INTEGER DEFAULT 0,
-                    i18n_caption TEXT,
-                    i18n_abbreviation TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            conn.commit()
-    except sqlite3.Error:
-        # Silently fail if database operations fail
-        pass
-
-
-def load_custom_observable_objects(db_path: Optional[Path] = None) -> List[BodyDefinition]:
-    """Load custom observable object definitions from SQLite database.
-    
-    Args:
-        db_path: Optional path to SQLite database, defaults to TRANSLATION_DB
-        
-    Returns:
-        List of BodyDefinition objects for custom objects defined in the database.
-        Returns empty list if database doesn't exist or table is missing.
-    """
-    db = db_path or TRANSLATION_DB
-    objects = []
-    
-    if not db.exists():
-        return objects
-    
-    try:
-        with sqlite3.connect(db) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT id, glyph, formula, element, avg_speed, max_orb, object_type,
-                       computation_map_jpl, computation_map_kerykeion, computation_map_swisseph,
-                       requires_location, requires_house_system, i18n_caption, i18n_abbreviation
-                FROM observable_objects
-            """)
-            
-            for row in cursor.fetchall():
-                (obj_id, glyph, formula, element, avg_speed, max_orb, obj_type,
-                 map_jpl, map_kerykeion, map_swisseph,
-                 req_loc, req_house, i18n_cap, i18n_abbr) = row
-                
-                # Build computation_map
-                computation_map = {}
-                if map_jpl:
-                    computation_map["jpl"] = map_jpl
-                if map_kerykeion:
-                    computation_map["swisseph"] = map_kerykeion  # kerykeion uses swisseph
-                if map_swisseph:
-                    computation_map["swisseph"] = map_swisseph
-                
-                # Build i18n dict
-                i18n = {}
-                if i18n_cap:
-                    i18n["Caption"] = i18n_cap
-                if i18n_abbr:
-                    i18n["Abbreviation"] = i18n_abbr
-                
-                # Parse object_type
-                obj_type_enum = None
-                if obj_type:
-                    try:
-                        obj_type_enum = ObjectType(obj_type)
-                    except ValueError:
-                        pass
-                
-                obj = BodyDefinition(
-                    id=obj_id,
-                    glyph=glyph or "",
-                    formula=formula or "",
-                    element=element,
-                    avg_speed=float(avg_speed) if avg_speed else 0.0,
-                    max_orb=float(max_orb) if max_orb else 0.0,
-                    i18n=i18n,
-                    object_type=obj_type_enum,
-                    computation_map=computation_map,
-                    requires_location=bool(req_loc),
-                    requires_house_system=bool(req_house),
-                )
-                objects.append(obj)
-    except sqlite3.Error:
-        # Silently fail if database operations fail
-        pass
-    
-    return objects
-
-
-def save_custom_observable_object(obj: BodyDefinition, db_path: Optional[Path] = None) -> bool:
-    """Save a custom observable object definition to SQLite database.
-    
-    Args:
-        obj: BodyDefinition to save
-        db_path: Optional path to SQLite database, defaults to TRANSLATION_DB
-        
-    Returns:
-        True if successful, False otherwise
-    """
-    db = db_path or TRANSLATION_DB
-    
-    # Ensure database exists and is initialized
-    init_observable_objects_db(db_path)
-    
-    try:
-        with sqlite3.connect(db) as conn:
-            cursor = conn.cursor()
-            
-            # Extract computation map values
-            map_jpl = obj.computation_map.get("jpl")
-            map_kerykeion = obj.computation_map.get("swisseph")  # kerykeion uses swisseph
-            map_swisseph = obj.computation_map.get("swisseph")
-            
-            # Extract i18n values
-            i18n_cap = obj.i18n.get("Caption")
-            i18n_abbr = obj.i18n.get("Abbreviation")
-            
-            cursor.execute("""
-                INSERT OR REPLACE INTO observable_objects
-                (id, glyph, formula, element, avg_speed, max_orb, object_type,
-                 computation_map_jpl, computation_map_kerykeion, computation_map_swisseph,
-                 requires_location, requires_house_system, i18n_caption, i18n_abbreviation)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                obj.id, obj.glyph, obj.formula, obj.element,
-                obj.avg_speed, obj.max_orb,
-                obj.object_type.value if obj.object_type else None,
-                map_jpl, map_kerykeion, map_swisseph,
-                1 if obj.requires_location else 0,
-                1 if obj.requires_house_system else 0,
-                i18n_cap, i18n_abbr
-            ))
-            conn.commit()
-            return True
-    except sqlite3.Error:
-        return False
-
-
-def delete_custom_observable_object(obj_id: str, db_path: Optional[Path] = None) -> bool:
-    """Delete a custom observable object definition from SQLite database.
-    
-    Args:
-        obj_id: ID of observable object to delete
-        db_path: Optional path to SQLite database, defaults to TRANSLATION_DB
-        
-    Returns:
-        True if successful, False otherwise
-    """
-    db = db_path or TRANSLATION_DB
-    
-    try:
-        with sqlite3.connect(db) as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM observable_objects WHERE id = ?", (obj_id,))
-            conn.commit()
-            return cursor.rowcount > 0
-    except sqlite3.Error:
-        return False
+# Note: Custom objects and aspects are now loaded from YAML workspace/model files only.
+# SQLite-based functions have been removed from core workspace logic.
+# If you need SQLite-based storage, implement it in your UI module (see ui_translations.py).
 
 
 def get_default_observable_objects() -> Dict[str, BodyDefinition]:
@@ -764,22 +457,29 @@ def get_default_observable_objects() -> Dict[str, BodyDefinition]:
     return defaults
 
 
-def get_all_observable_objects(db_path: Optional[Path] = None) -> Dict[str, BodyDefinition]:
-    """Get all observable objects (defaults + custom from database).
+def get_all_observable_objects(ws: Optional['Workspace'] = None, model: Optional[AstroModel] = None) -> Dict[str, BodyDefinition]:
+    """Get all observable objects (defaults + custom from workspace/model YAML).
     
     Args:
-        db_path: Optional path to SQLite database, defaults to TRANSLATION_DB
+        ws: Optional Workspace to load custom objects from
+        model: Optional AstroModel to get body definitions from
         
     Returns:
         Dictionary mapping object_id -> BodyDefinition. Custom objects from
-        database override defaults with the same id.
+        workspace/model override defaults with the same id.
     """
     all_objects = get_default_observable_objects()
     
-    # Load custom objects from database and merge (custom overrides defaults)
-    custom_objects = load_custom_observable_objects(db_path)
-    for obj in custom_objects:
-        all_objects[obj.id] = obj
+    # Load custom objects from model (YAML-based)
+    if model and hasattr(model, 'body_definitions'):
+        for obj in model.body_definitions:
+            all_objects[obj.id] = obj
+    
+    # Load custom objects from workspace model_overrides if present
+    if ws and hasattr(ws, 'model_overrides') and ws.model_overrides:
+        if hasattr(ws.model_overrides, 'body_definitions'):
+            for obj in ws.model_overrides.body_definitions:
+                all_objects[obj.id] = obj
     
     return all_objects
 
@@ -787,159 +487,8 @@ def get_all_observable_objects(db_path: Optional[Path] = None) -> Dict[str, Body
 # ─────────────────────
 # 🔺 ASPECT DEFINITIONS MANAGEMENT
 # ─────────────────────
-
-def init_aspect_definitions_db(db_path: Optional[Path] = None) -> None:
-    """Initialize SQLite database schema for custom aspect definitions.
-    
-    Args:
-        db_path: Optional path to SQLite database, defaults to TRANSLATION_DB
-        
-    Note:
-        Creates the 'aspect_definitions' table if it doesn't exist.
-        This is optional and won't break if the database doesn't exist.
-    """
-    db = db_path or TRANSLATION_DB
-    try:
-        with sqlite3.connect(db) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS aspect_definitions (
-                    id TEXT PRIMARY KEY,
-                    glyph TEXT,
-                    angle REAL,
-                    default_orb REAL,
-                    color TEXT,
-                    importance INTEGER,
-                    line_style TEXT,
-                    line_width REAL,
-                    show_label INTEGER DEFAULT 1,
-                    i18n_caption TEXT,
-                    i18n_abbreviation TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            conn.commit()
-    except sqlite3.Error:
-        # Silently fail if database operations fail
-        pass
-
-
-def load_custom_aspect_definitions(db_path: Optional[Path] = None) -> List[AspectDefinition]:
-    """Load custom aspect definitions from SQLite database.
-    
-    Args:
-        db_path: Optional path to SQLite database, defaults to TRANSLATION_DB
-        
-    Returns:
-        List of AspectDefinition objects for custom aspects defined in the database.
-        Returns empty list if database doesn't exist or table is missing.
-    """
-    db = db_path or TRANSLATION_DB
-    aspects = []
-    
-    if not db.exists():
-        return aspects
-    
-    try:
-        with sqlite3.connect(db) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT id, glyph, angle, default_orb, color, importance, line_style, line_width, show_label,
-                       i18n_caption, i18n_abbreviation
-                FROM aspect_definitions
-            """)
-            
-            for row in cursor.fetchall():
-                (asp_id, glyph, angle, default_orb, color, importance, line_style, line_width, show_label,
-                 i18n_cap, i18n_abbr) = row
-                
-                # Build i18n dict
-                i18n = {}
-                if i18n_cap:
-                    i18n["Caption"] = i18n_cap
-                if i18n_abbr:
-                    i18n["Abbreviation"] = i18n_abbr
-                
-                asp = AspectDefinition(
-                    id=asp_id,
-                    glyph=glyph or "",
-                    angle=float(angle) if angle is not None else 0.0,
-                    default_orb=float(default_orb) if default_orb is not None else 0.0,
-                    i18n=i18n,
-                    color=color,
-                    importance=importance,
-                    line_style=line_style,
-                    line_width=float(line_width) if line_width is not None else None,
-                    show_label=bool(show_label) if show_label is not None else None,
-                )
-                aspects.append(asp)
-    except sqlite3.Error:
-        # Silently fail if database operations fail
-        pass
-    
-    return aspects
-
-
-def save_custom_aspect_definition(asp: AspectDefinition, db_path: Optional[Path] = None) -> bool:
-    """Save a custom aspect definition to SQLite database.
-    
-    Args:
-        asp: AspectDefinition to save
-        db_path: Optional path to SQLite database, defaults to TRANSLATION_DB
-        
-    Returns:
-        True if successful, False otherwise
-    """
-    db = db_path or TRANSLATION_DB
-    
-    # Ensure database exists and is initialized
-    init_aspect_definitions_db(db_path)
-    
-    try:
-        with sqlite3.connect(db) as conn:
-            cursor = conn.cursor()
-            
-            # Extract i18n values
-            i18n_cap = asp.i18n.get("Caption")
-            i18n_abbr = asp.i18n.get("Abbreviation")
-            
-            cursor.execute("""
-                INSERT OR REPLACE INTO aspect_definitions
-                (id, glyph, angle, default_orb, color, importance, line_style, line_width, show_label,
-                 i18n_caption, i18n_abbreviation)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                asp.id, asp.glyph, asp.angle, asp.default_orb,
-                asp.color, asp.importance, asp.line_style, asp.line_width,
-                1 if asp.show_label else 0 if asp.show_label is not None else 1,
-                i18n_cap, i18n_abbr
-            ))
-            conn.commit()
-            return True
-    except sqlite3.Error:
-        return False
-
-
-def delete_custom_aspect_definition(asp_id: str, db_path: Optional[Path] = None) -> bool:
-    """Delete a custom aspect definition from SQLite database.
-    
-    Args:
-        asp_id: ID of aspect definition to delete
-        db_path: Optional path to SQLite database, defaults to TRANSLATION_DB
-        
-    Returns:
-        True if successful, False otherwise
-    """
-    db = db_path or TRANSLATION_DB
-    
-    try:
-        with sqlite3.connect(db) as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM aspect_definitions WHERE id = ?", (asp_id,))
-            conn.commit()
-            return cursor.rowcount > 0
-    except sqlite3.Error:
-        return False
+# Note: Custom aspects are now loaded from YAML workspace/model files only.
+# SQLite-based functions have been removed from core workspace logic.
 
 
 def get_default_aspect_definitions() -> Dict[str, AspectDefinition]:
@@ -984,22 +533,29 @@ def get_default_aspect_definitions() -> Dict[str, AspectDefinition]:
     return defaults
 
 
-def get_all_aspect_definitions(db_path: Optional[Path] = None) -> Dict[str, AspectDefinition]:
-    """Get all aspect definitions (defaults + custom from database).
+def get_all_aspect_definitions(ws: Optional['Workspace'] = None, model: Optional[AstroModel] = None) -> Dict[str, AspectDefinition]:
+    """Get all aspect definitions (defaults + custom from workspace/model YAML).
     
     Args:
-        db_path: Optional path to SQLite database, defaults to TRANSLATION_DB
+        ws: Optional Workspace to load custom aspects from
+        model: Optional AstroModel to get aspect definitions from
         
     Returns:
         Dictionary mapping aspect_id -> AspectDefinition. Custom aspects from
-        database override defaults with the same id.
+        workspace/model override defaults with the same id.
     """
     all_aspects = get_default_aspect_definitions()
     
-    # Load custom aspects from database and merge (custom overrides defaults)
-    custom_aspects = load_custom_aspect_definitions(db_path)
-    for asp in custom_aspects:
-        all_aspects[asp.id] = asp
+    # Load custom aspects from model (YAML-based)
+    if model and hasattr(model, 'aspect_definitions'):
+        for asp in model.aspect_definitions:
+            all_aspects[asp.id] = asp
+    
+    # Load custom aspects from workspace model_overrides if present
+    if ws and hasattr(ws, 'model_overrides') and ws.model_overrides:
+        if hasattr(ws.model_overrides, 'aspect_definitions'):
+            for asp in ws.model_overrides.aspect_definitions:
+                all_aspects[asp.id] = asp
     
     return all_aspects
 
@@ -1066,25 +622,8 @@ def _serialize(obj: Any) -> Any:
 def init_workspace(base_dir: Union[str, Path], owner: str, active_model: str, default_ephemeris: Dict[str, str]) -> Path:
     """Initialize a new workspace directory structure and manifest.
     
-    Args:
-        base_dir: Base directory for workspace files
-        owner: Workspace owner identifier
-        active_model: Active model name (deprecated, use active_model_name in Workspace)
-        default_ephemeris: Dictionary with 'name' and 'backend' keys for ephemeris settings
-        
-    Returns:
-        Path to created workspace.yaml manifest file
-        
-    Note:
-        The 'active_model' parameter is deprecated. Use 'active_model_name' in the
-        Workspace object after creation instead. Creates subdirectories for subjects,
-        charts, layouts, annotations, and presets. Initializes database tables.
-    """
-    """Scaffold a new workspace directory tree and write a base manifest.
-    
     Creates subfolders `subjects/`, `charts/`, `layouts/`, `annotations/`, `presets/`
     and a `workspace.yaml` manifest that references none by default.
-    Also initializes the observable_objects table in the SQLite database.
     
     Returns:
     - Absolute path to the created `workspace.yaml` file.
@@ -1103,41 +642,26 @@ def init_workspace(base_dir: Union[str, Path], owner: str, active_model: str, de
     for d in (subjects_dir, charts_dir, layouts_dir, annotations_dir, presets_dir):
         _ensure_dir(d)
     
-    # Initialize database tables
-    init_observable_objects_db()
-    init_aspect_definitions_db()
-
-    # Build default_ephemeris for top-level (for consistency with _parse_default_ephemeris)
-    default_ephemeris_dict = {
-        "name": default_ephemeris.get("name") or "",
-        "backend": default_ephemeris.get("backend") or "jpl"
-    }
-    
+    # Note: Database initialization removed - custom objects/aspects are YAML-based
     manifest = {
         "owner": owner,
-        "default_ephemeris": default_ephemeris_dict,  # Top-level for consistency
-        "active_model_name": active_model,  # Preferred
-        "active_model": active_model,  # Deprecated: kept for backward compatibility
-        # preferred new structure
+        "active_model": active_model,
         "aspects": [],
         "default": {
-            # engine = computation backend (e.g., jpl)
-            "ephemeris_engine": (default_ephemeris.get("backend") or "jpl"),
-            # backend = ephemeris file/model id (e.g., de430.bsp)
+            # Ephemeris settings
+            "ephemeris_engine": (default_ephemeris.get("backend") or "swisseph"),
             "ephemeris_backend": default_ephemeris.get("name"),
+            # Location settings
             "location_name": (DEFAULT_LOCATION.get("name") if isinstance(DEFAULT_LOCATION, dict) else None),
             "location_latitude": (DEFAULT_LOCATION.get("latitude") if isinstance(DEFAULT_LOCATION, dict) else None),
             "location_longitude": (DEFAULT_LOCATION.get("longitude") if isinstance(DEFAULT_LOCATION, dict) else None),
             "timezone": (DEFAULT_LOCATION.get("timezone") if isinstance(DEFAULT_LOCATION, dict) else None),
-            "language": DEFAULT_LANGUAGE,
+            # Other settings
+            "language": "cs",  # Default language (UI-specific, see ui_translations.py)
             "theme": "default",
             "default_house_system": None,
             "default_bodies": None,
             "default_aspects": None,
-            # Observable objects can be set here (list of object IDs)
-            "observable_objects": None,
-            # Aspect settings (list of aspect configuration dicts)
-            "aspect_settings": None,
         },
         # modular refs
         "chart_presets": [],
@@ -1182,43 +706,32 @@ def _build_default_block(workspace: Workspace) -> dict:
         Dictionary containing default settings for ephemeris, location, language, theme, etc.
     """
     d = workspace.default
-    ws_engine = getattr(workspace.default_ephemeris, 'backend', None) or 'jpl'
-    ws_backend = getattr(workspace.default_ephemeris, 'name', None)
     
-    if d is not None:
-        return {
-            "ephemeris_engine": (getattr(d.ephemeris_engine, 'value', d.ephemeris_engine) if d.ephemeris_engine else ws_engine),
-            "ephemeris_backend": (d.ephemeris_backend or ws_backend),
-            "location_name": (d.location_name if d.location_name is not None else (DEFAULT_LOCATION.get("name") if isinstance(DEFAULT_LOCATION, dict) else None)),
-            "location_latitude": (d.location_latitude if d.location_latitude is not None else (DEFAULT_LOCATION.get("latitude") if isinstance(DEFAULT_LOCATION, dict) else None)),
-            "location_longitude": (d.location_longitude if d.location_longitude is not None else (DEFAULT_LOCATION.get("longitude") if isinstance(DEFAULT_LOCATION, dict) else None)),
-            "timezone": (d.timezone if d.timezone is not None else (DEFAULT_LOCATION.get("timezone") if isinstance(DEFAULT_LOCATION, dict) else None)),
-            "language": (d.language if d.language is not None else DEFAULT_LANGUAGE),
-            "theme": (d.theme if d.theme is not None else "default"),
-            "default_house_system": (getattr(d.default_house_system, 'value', d.default_house_system) if d.default_house_system else None),
-            "default_bodies": (d.default_bodies if d.default_bodies else None),
-            "default_aspects": (d.default_aspects if d.default_aspects else None),
-            "observable_objects": (d.observable_objects if d.observable_objects else None),
-            "aspect_settings": ([_serialize(asp) for asp in d.aspect_settings] if d.aspect_settings else None),
-        }
+    # Serialize location if present, otherwise use fallback defaults
+    if d.default_location:
+        location_name = d.default_location.name
+        location_latitude = d.default_location.latitude
+        location_longitude = d.default_location.longitude
+        timezone = d.default_location.timezone
     else:
-        # Populate sensible defaults even if workspace.default is None
-        # Include all fields for consistency, even if None
-        return {
-            "ephemeris_engine": ws_engine,
-            "ephemeris_backend": ws_backend,
-            "location_name": (DEFAULT_LOCATION.get("name") if isinstance(DEFAULT_LOCATION, dict) else None),
-            "location_latitude": (DEFAULT_LOCATION.get("latitude") if isinstance(DEFAULT_LOCATION, dict) else None),
-            "location_longitude": (DEFAULT_LOCATION.get("longitude") if isinstance(DEFAULT_LOCATION, dict) else None),
-            "timezone": (DEFAULT_LOCATION.get("timezone") if isinstance(DEFAULT_LOCATION, dict) else None),
-            "language": DEFAULT_LANGUAGE,
-            "theme": "default",
-            "default_house_system": None,
-            "default_bodies": None,
-            "default_aspects": None,
-            "observable_objects": None,
-            "aspect_settings": None,
-        }
+        location_name = DEFAULT_LOCATION.get("name") if isinstance(DEFAULT_LOCATION, dict) else None
+        location_latitude = DEFAULT_LOCATION.get("latitude") if isinstance(DEFAULT_LOCATION, dict) else None
+        location_longitude = DEFAULT_LOCATION.get("longitude") if isinstance(DEFAULT_LOCATION, dict) else None
+        timezone = DEFAULT_LOCATION.get("timezone") if isinstance(DEFAULT_LOCATION, dict) else None
+    
+    return {
+        "ephemeris_engine": (getattr(d.ephemeris_engine, 'value', d.ephemeris_engine) if d.ephemeris_engine else None),
+        "ephemeris_backend": d.ephemeris_backend,
+        "location_name": location_name,
+        "location_latitude": location_latitude,
+        "location_longitude": location_longitude,
+        "timezone": timezone,
+        "language": (d.language if d.language is not None else "cs"),  # Default language (UI-specific)
+        "theme": (d.theme if d.theme is not None else "default"),
+        "default_house_system": (getattr(d.default_house_system, 'value', d.default_house_system) if d.default_house_system else None),
+        "default_bodies": (d.default_bodies if d.default_bodies else None),
+        "default_aspects": (d.default_aspects if d.default_aspects else None),
+    }
 
 
 def save_workspace_modular(workspace: Workspace, base_dir: Union[str, Path]) -> Path:
@@ -1250,23 +763,12 @@ def save_workspace_modular(workspace: Workspace, base_dir: Union[str, Path]) -> 
     # Build manifest
     default_block = _build_default_block(workspace)
     
-    # Prefer active_model_name, fallback to active_model for backward compatibility
-    active_model_name = getattr(workspace, 'active_model_name', None)
-    active_model = getattr(workspace, 'active_model', 'default')
-    if active_model_name is None:
-        active_model_name = active_model
-    
-    # Build default_ephemeris for top-level (for consistency with _parse_default_ephemeris)
-    default_ephemeris_dict = {
-        "name": getattr(workspace.default_ephemeris, 'name', None) or "",
-        "backend": getattr(workspace.default_ephemeris, 'backend', None) or ""
-    }
+    # Get active model
+    active_model = getattr(workspace, 'active_model', None)
     
     manifest = {
         "owner": workspace.owner,
-        "default_ephemeris": default_ephemeris_dict,  # Top-level for consistency
-        "active_model_name": active_model_name,  # Preferred
-        "active_model": active_model,  # Deprecated: kept for backward compatibility
+        "active_model": active_model,
         "aspects": list(getattr(workspace, 'aspects', []) or []),
         "default": default_block,
         # modular refs
@@ -1576,6 +1078,89 @@ def scan_workspace_changes(base_dir: Union[str, Path]) -> Dict[str, Dict[str, Li
     return result
 
 
+def sync_workspace(workspace_path: Union[str, Path], auto_import: bool = True, auto_remove: bool = False) -> Dict[str, Any]:
+    """Synchronize workspace manifest with files on disk.
+    
+    This function:
+    1. Scans for chart/subject files on disk that aren't in the manifest (new files)
+    2. Optionally imports new charts/subjects into the workspace
+    3. Optionally removes references to missing files from the manifest
+    4. Saves the updated workspace
+    
+    Args:
+        workspace_path: Path to workspace.yaml
+        auto_import: If True, automatically import new charts/subjects found on disk
+        auto_remove: If True, remove references to missing files from manifest
+        
+    Returns:
+        Dict with sync results:
+        - 'changes': Dict from scan_workspace_changes()
+        - 'imported_charts': List of chart IDs imported
+        - 'imported_subjects': List of subject IDs imported
+        - 'removed_charts': List of chart references removed (if auto_remove=True)
+        - 'removed_subjects': List of subject references removed (if auto_remove=True)
+    """
+    workspace_path = Path(workspace_path)
+    base_dir = workspace_path.parent
+    
+    # Load current workspace
+    ws = load_workspace(str(workspace_path))
+    
+    # Scan for changes
+    changes = scan_workspace_changes(base_dir)
+    
+    result = {
+        'changes': changes,
+        'imported_charts': [],
+        'imported_subjects': [],
+        'removed_charts': [],
+        'removed_subjects': [],
+    }
+    
+    # Import new charts
+    if auto_import:
+        try:
+            from module.utils import import_chart_yaml
+        except ImportError:
+            from utils import import_chart_yaml
+        
+        for fname in changes.get('charts', {}).get('new_on_disk', []):
+            chart_path = base_dir / 'charts' / fname
+            try:
+                chart = import_chart_yaml(str(chart_path))
+                add_or_update_chart(ws, chart, base_dir=base_dir)
+                result['imported_charts'].append(chart.id)
+            except Exception:
+                continue
+    
+    # Import new subjects
+    if auto_import:
+        for fname in changes.get('subjects', {}).get('new_on_disk', []):
+            subject_path = base_dir / 'subjects' / fname
+            try:
+                data = read_yaml_file(str(subject_path))
+                if isinstance(data, dict):
+                    subj = ChartSubject(**data)
+                    add_subject(ws, subj, base_dir=base_dir)
+                    result['imported_subjects'].append(subj.id)
+            except Exception:
+                continue
+    
+    # Remove missing files from manifest
+    if auto_remove:
+        prune_result = prune_workspace_manifest(base_dir)
+        result['removed_charts'] = prune_result.get('removed_charts', [])
+        result['removed_subjects'] = prune_result.get('removed_subjects', [])
+        # Reload workspace after pruning
+        ws = load_workspace(str(workspace_path))
+    
+    # Save workspace if we made changes
+    if result['imported_charts'] or result['imported_subjects']:
+        save_workspace_modular(ws, base_dir)
+    
+    return result
+
+
 def prune_workspace_manifest(base_dir: Union[str, Path]) -> Dict[str, List[str]]:
     """Prune workspace.yaml to remove references to modular files that no longer exist.
     
@@ -1775,15 +1360,15 @@ def populate_workspace_models(ws: Any, dir_path: Union[str, Path]) -> Dict[str, 
         Dictionary of loaded models
         
     Note:
-        If ws.active_model_name is not set and any models were loaded,
+        If ws.active_model is not set and any models were loaded,
         sets it to the first key.
     """
     loaded = load_sfs_models_from_dir(dir_path)
     try:
         if hasattr(ws, 'models'):
             ws.models.update(loaded)
-        if not getattr(ws, 'active_model_name', None) and loaded:
-            ws.active_model_name = next(iter(loaded.keys()))
+        if not getattr(ws, 'active_model', None) and loaded:
+            ws.active_model = next(iter(loaded.keys()))
     except Exception:
         pass
     return loaded
@@ -1811,17 +1396,19 @@ def build_workspace_from_sfs(dir_path: Union[str, Path], owner: str = "local",
     active_name = next(iter(models.keys())) if models else ""
     ws = Workspace(
         owner=owner,
-        default_ephemeris=EphemerisSource(name=ephemeris_name, backend=ephemeris_backend),
         active_model=active_name,
         chart_presets=[],
         subjects=[],
         charts=[],
         layouts=[],
         annotations=[],
+        default=WorkspaceDefaults(
+            ephemeris_engine=_safe_engine(ephemeris_backend),
+            ephemeris_backend=ephemeris_name,
+        ),
     )
     ws.models.update(models)
-    ws.active_model_name = active_name or None
-    ws.default = WorkspaceDefaults()
+    ws.active_model = active_name or None
     return ws
 
 
