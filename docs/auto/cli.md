@@ -26,6 +26,13 @@ Commands:
     - get_workspace_settings: Get workspace settings and defaults
     - list_charts: List all charts in workspace
     - get_chart: Get chart details by ID
+    - sync_workspace: Synchronize workspace manifest with files on disk
+    - export_parquet: Export stored positions to Parquet files
+    
+Storage:
+    - DuckDB database: workspace_dir/data/workspace.db
+    - Parquet files: workspace_dir/data/parquet/*.parquet
+    - Enable storage: Set store_in_db=True in compute_chart args
 
 ## Functions
 
@@ -93,6 +100,29 @@ Compute transit series for a time range.
 
 Dict with transit series results
 
+### `cmd_export_parquet`
+
+```python
+cmd_export_parquet(args: Dict[str, Any]) -> Dict[str, Any]
+```
+
+Export stored positions to Parquet files.
+
+#### Parameters
+
+- **workspace_path**: Path to workspace.yaml
+
+- **chart_id**: Optional chart ID to export (if not provided, exports all)
+
+- **output_dir**: Optional output directory (defaults to workspace/data/parquet)
+
+- **partition_by_date**: If True, partition by date (default: True)
+
+
+#### Returns
+
+Dict with list of created Parquet file paths
+
 ### `cmd_get_chart`
 
 ```python
@@ -145,6 +175,27 @@ List all charts in workspace.
 #### Returns
 
 Dict with list of chart summaries
+
+### `cmd_sync_workspace`
+
+```python
+cmd_sync_workspace(args: Dict[str, Any]) -> Dict[str, Any]
+```
+
+Synchronize workspace manifest with files on disk.
+
+#### Parameters
+
+- **workspace_path**: Path to workspace.yaml
+
+- **auto_import**: If True, import new charts/subjects found on disk (default: True)
+
+- **auto_remove**: If True, remove references to missing files (default: False)
+
+
+#### Returns
+
+Dict with sync results
 
 ### `main`
 
