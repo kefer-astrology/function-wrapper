@@ -55,8 +55,8 @@ class TestWorkspaceFlow(unittest.TestCase):
             data = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
             self.assertEqual(data["owner"], "Tester")
             self.assertEqual(data["active_model"], "default")
-            self.assertEqual(data["default_ephemeris"]["name"], "de421")
-            self.assertEqual(data["default_ephemeris"]["backend"], "jpl")
+            self.assertEqual(data["default"]["ephemeris_backend"], "de421")
+            self.assertEqual(data["default"]["ephemeris_engine"], "jpl")
             self.assertIsInstance(data["charts"], list)
             self.assertEqual(len(data["charts"]), 0)
 
@@ -93,8 +93,8 @@ class TestWorkspaceFlow(unittest.TestCase):
             # Basic settings present
             self.assertEqual(ws.owner, "OwnerName")
             self.assertEqual(ws.active_model, "hellenic")
-            self.assertEqual(ws.default_ephemeris.name, "de431")
-            self.assertEqual(ws.default_ephemeris.backend, "jpl")
+            self.assertEqual(ws.default.ephemeris_backend, "de431")
+            self.assertEqual(ws.default.ephemeris_engine.value, "jpl")
             # Add a chart and ensure it surfaces in workspace traversal
             chart = _make_sample_chart(name="Sample A")
             add_chart(ws, chart, base_dir=base)

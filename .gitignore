@@ -179,6 +179,11 @@ cython_debug/
 # source,cache and result files for astro computation
 cache/
 result/
-/source/*
+source/*
+
 # take there only default source file
-!/source/de421.bsp
+!source/de421.bsp
+!source/starfisher_sample.sfs
+
+# Test sample workspace (for inspection)
+tests/sample/
