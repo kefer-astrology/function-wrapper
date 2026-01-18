@@ -49,14 +49,16 @@ except ImportError:
 
 try:
     from module.workspace import (
-        change_language, load_workspace, add_or_update_chart,
+        load_workspace, add_or_update_chart,
         scan_workspace_changes, save_workspace_modular, summarize_chart, add_subject,
     )
+    from module.ui_translations import change_language
 except ImportError:
     from workspace import (
-        change_language, load_workspace, add_or_update_chart,
+        load_workspace, add_or_update_chart,
         scan_workspace_changes, save_workspace_modular, summarize_chart, add_subject,
     )
+    from ui_translations import change_language
 
 # -----------------------------
 # Toolbar / layout configuration
@@ -1098,8 +1100,8 @@ def _render_initial_dialog():
         
         elif section == "Výpočetní engine":
             st.subheader("Výpočetní engine")
-            engine_options = ["JPL / Skyfield", "Kerykeion / swisseph"]
-            selected_engine = st.selectbox("Výchozí výpočetní engine", engine_options, key="init_engine")
+            engine_options = ["Kerykeion / swisseph", "JPL / Skyfield"]
+            selected_engine = st.selectbox("Výchozí výpočetní engine", engine_options, key="init_engine", index=0)
             if selected_engine == "JPL / Skyfield":
                 st.session_state["ws_default_engine"] = EngineType.JPL
             else:
@@ -1214,7 +1216,7 @@ def main():
             st.empty()
 
     # Helper defaults for compute
-    engine_choice = st.session_state.get('settings_engine', "JPL / Skyfield (local de421.bsp)")
+    engine_choice = st.session_state.get('settings_engine', "Kerykeion (default)")
     eph_path = st.session_state.get('settings_eph', default_ephemeris_path())
 
     # -----------------------------
@@ -1389,7 +1391,7 @@ def main():
                     st.selectbox(
                         "Ephemeris Engine",
                         ["Kerykeion (default)", "JPL / Skyfield (local de421.bsp)"],
-                        index=1,
+                        index=0,
                         key="settings_engine"
                     )
                     st.text_input(
@@ -1486,7 +1488,7 @@ def main():
                     try:
                         from services import build_chart_instance
                         # EngineType is already imported at module level, don't re-import
-                        from models import Workspace, EphemerisSource, WorkspaceDefaults, HouseSystem
+                        from models import Workspace, WorkspaceDefaults, HouseSystem
                         
                         # Get chart type and tags
                         chart_type = st.session_state.get('chart_type', ChartMode.NATAL.value)
@@ -1496,40 +1498,32 @@ def main():
                         # Create a temporary workspace with defaults from initial dialog
                         temp_ws = None
                         if st.session_state.get('ws_default_engine') or st.session_state.get('ws_default_loc') or st.session_state.get('ws_house_sys'):
-                            # Build ephemeris source
+                            # Get engine
                             engine = st.session_state.get('ws_default_engine', EngineType.SWISSEPH)
-                            eph_source = EphemerisSource(
-                                backend=engine.value if isinstance(engine, EngineType) else str(engine),
-                                name=None
-                            )
                             
                             # Build workspace defaults
                             house_sys_str = st.session_state.get('ws_house_sys', 'Placidus')
                             house_sys = None
                             try:
                                 house_sys = HouseSystem[house_sys_str.upper().replace(' ', '_')]
-                            except:
+                            except (KeyError, AttributeError, TypeError):
                                 house_sys = HouseSystem.PLACIDUS
                             
+                            # TODO: Build proper Location object if we have coordinates/timezone
+                            # For now, just set basic defaults without location
                             ws_defaults = WorkspaceDefaults(
                                 ephemeris_engine=engine if isinstance(engine, EngineType) else EngineType.SWISSEPH,
                                 ephemeris_backend=None,
-                                location_name=st.session_state.get('ws_default_loc', 'Prague'),
-                                location_latitude=None,
-                                location_longitude=None,
-                                timezone=None,
+                                default_location=None,  # TODO: Create Location object from session state
                                 language=st.session_state.get('settings', {}).get('language', 'cs'),
                                 theme=st.session_state.get('ws_color_theme', 'default'),
                                 default_house_system=house_sys,
                                 default_bodies=None,
                                 default_aspects=None,
-                                observable_objects=None,
-                                aspect_settings=None
                             )
                             
                             temp_ws = Workspace(
                                 owner="session",
-                                default_ephemeris=eph_source,
                                 active_model="western",
                                 chart_presets=[],
                                 subjects=[],

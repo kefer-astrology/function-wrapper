@@ -19,25 +19,47 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.uix.togglebutton import ToggleButton
 
-from services import (
-    compute_positions,
-    list_open_view_rows,
-    search_charts,
-    build_chart_instance,
-    find_chart_by_name_or_id,
-    build_radix_figure_for_chart,
-)
-from utils import (
-    Actual, combine_date_time, now_utc, 
-    prepare_horoscope, default_ephemeris_path, 
-    import_chart_yaml, read_yaml_file, write_yaml_file
-)
-from workspace import (
-    change_language, load_workspace, init_workspace,
-    add_or_update_chart, save_workspace_modular, summarize_chart,
-    add_subject, scan_workspace_changes,
-)
-from z_visual import build_radix_figure, write_plotly_html
+# Standardized imports with fallback for direct execution
+try:
+    from module.services import (
+        compute_positions,
+        list_open_view_rows,
+        search_charts,
+        build_chart_instance,
+        find_chart_by_name_or_id,
+        build_radix_figure_for_chart,
+    )
+    from module.utils import (
+        Actual, combine_date_time, now_utc, 
+        prepare_horoscope, default_ephemeris_path, 
+        import_chart_yaml, read_yaml_file, write_yaml_file
+    )
+    from module.workspace import (
+        change_language, load_workspace, init_workspace,
+        add_or_update_chart, save_workspace_modular, summarize_chart,
+        add_subject, scan_workspace_changes,
+    )
+    from module.z_visual import build_radix_figure, write_plotly_html
+except ImportError:
+    from services import (
+        compute_positions,
+        list_open_view_rows,
+        search_charts,
+        build_chart_instance,
+        find_chart_by_name_or_id,
+        build_radix_figure_for_chart,
+    )
+    from utils import (
+        Actual, combine_date_time, now_utc, 
+        prepare_horoscope, default_ephemeris_path, 
+        import_chart_yaml, read_yaml_file, write_yaml_file
+    )
+    from workspace import (
+        change_language, load_workspace, init_workspace,
+        add_or_update_chart, save_workspace_modular, summarize_chart,
+        add_subject, scan_workspace_changes,
+    )
+    from z_visual import build_radix_figure, write_plotly_html
 
 try:
     from module.models import EngineType, ChartInstance, ChartSubject, ChartConfig, HouseSystem, ChartMode
@@ -61,7 +83,7 @@ class MyApp(MDApp):
     current_person_index = NumericProperty(0)
     current_person_name = StringProperty("")
     # engine settings (optional)
-    engine_mode = StringProperty("jpl")  # values: "default" or "jpl"; prefer offline JPL by default
+    engine_mode = StringProperty("default")  # values: "default" (swisseph) or "jpl"; prefer swisseph by default
     ephemeris_file = StringProperty("")
     workspace_dir = StringProperty("")
     # center content mode: overview | chart_settings | chart | general | chart_create | open_view
@@ -370,7 +392,7 @@ class MyApp(MDApp):
                         base_dir=base,
                         owner="User",
                         active_model="default",
-                        default_ephemeris={"name": "de421", "backend": "jpl"},
+                        default_ephemeris={"name": None, "backend": "swisseph"},
                     )
                 except Exception as e:
                     self.show_message(f"Failed to init workspace: {e}")
@@ -1131,7 +1153,7 @@ class MyApp(MDApp):
         theme_options = ['default','dark','light']
 
         house_val = str(getattr(ws,'default_house_system','PLACIDUS') or 'PLACIDUS')
-        engine_val = str(getattr(getattr(ws,'default',None),'ephemeris_engine','JPL') or 'JPL')
+        engine_val = str(getattr(getattr(ws,'default',None),'ephemeris_engine','SWISSEPH') or 'SWISSEPH')
         theme_val = str(getattr(ws,'color_theme','default') or 'default')
 
         house_btn = self._md_button(house_val, style='tonal', height=36)
@@ -1230,8 +1252,8 @@ class MyApp(MDApp):
                 ws.default_aspects = [a.strip() for a in (aspects_inp.text or '').split(',') if a.strip()]
                 ws.color_theme = theme_val or 'default'
                 try:
-                    eng_key = (engine_val or 'JPL').upper()
-                    ws.default.ephemeris_engine = getattr(EngineType, eng_key, EngineType.JPL)
+                    eng_key = (engine_val or 'SWISSEPH').upper()
+                    ws.default.ephemeris_engine = getattr(EngineType, eng_key, EngineType.SWISSEPH)
                 except Exception:
                     pass
                 save_workspace_modular(ws, self.workspace_dir)
