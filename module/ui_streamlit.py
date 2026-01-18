@@ -769,16 +769,16 @@ def _open_workspace_center():
             if not base_dir:
                 st.warning("Zadejte cestu ke složce")
             else:
+                # Define a safe root directory for all workspaces
+                workspace_root = (Path.cwd() / "workspaces").resolve()
                 # Validate and resolve path to prevent path traversal attacks
                 try:
-                    base_path = Path(base_dir).resolve()
-                    # Ensure path is absolute and properly resolved (resolve() normalizes and removes ..)
-                    if not base_path.is_absolute():
-                        raise ValueError("Invalid path: must be an absolute path")
-                    # Additional check: ensure resolved path doesn't contain parent directory references
-                    if ".." in base_path.parts:
-                        raise ValueError("Invalid path: path traversal detected")
-                    manifest = base_path / "workspace.yaml"
+                    # Interpret the user input as a path inside the workspace_root
+                    requested_path = workspace_root / base_dir
+                    resolved_base_path = requested_path.resolve()
+                    # Ensure the resolved path is within the workspace_root
+                    resolved_base_path.relative_to(workspace_root)
+                    manifest = resolved_base_path / "workspace.yaml"
                 except (ValueError, OSError) as e:
                     st.error(f"Neplatná cesta: {e}")
                     return
