@@ -1,7 +1,7 @@
 baseURL = 'https://kefer-astrology.github.io/function-wrapper/'
 languageCode = 'en-us'
 title = 'Kefer Astrology API Documentation'
-theme = 'github.com/gohugoio/hugo-theme-bootstrap'
+theme = 'github.com/nanxiaobei/hugo-paper'
 
 [params]
   description = "Complete API documentation for Kefer Astrology function-wrapper"
@@ -10,10 +10,13 @@ theme = 'github.com/gohugoio/hugo-theme-bootstrap'
   [markup.goldmark]
     [markup.goldmark.renderer]
       unsafe = true  # Allow raw HTML in markdown (needed for code blocks)
+  [markup.highlight]
+    style = "github"
+    codeFences = true
 
 [module]
   [[module.imports]]
-    path = "github.com/gohugoio/hugo-theme-bootstrap"
+    path = "github.com/nanxiaobei/hugo-paper"
     disable = false
 
 # Configure content directory

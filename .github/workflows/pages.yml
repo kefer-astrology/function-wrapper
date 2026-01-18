@@ -37,10 +37,17 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
-      - name: Install Hugo theme
+      - name: Initialize and install Hugo modules
         run: |
-          hugo mod get -u
+          # Initialize Hugo modules if not already initialized
+          if [ ! -f "go.mod" ]; then
+            hugo mod init github.com/kefer-astrology/function-wrapper
+          fi
+          # Download and update modules
+          hugo mod get -u github.com/nanxiaobei/hugo-paper
           hugo mod tidy
+          # List modules to verify
+          hugo mod list
       
       - name: Build with Hugo
         run: |
