@@ -1,64 +1,47 @@
 # Documentation
 
-This directory contains auto-generated API documentation for the Kefer Astrology function-wrapper project.
+This directory contains documentation for using the Kefer Astrology sidecar module.
 
-## Files
+## User Documentation
 
-- **`auto/`** - Module documentation with Hugo frontmatter
-- **`models.mmd`** - Mermaid class diagram showing all dataclasses
-- **`enums.md`** - Complete enumeration overview
-- **`_index.md`** - Hugo index page
+### API References
+- **`CLI_API_REFERENCE.md`** - Complete CLI command reference
+- **`TAURI_SVELTE_INTEGRATION.md`** - How to integrate with Tauri + Svelte frontend
+- **`STORAGE_STRATEGY.md`** - When and how to use Python vs Rust storage
 
-## Hugo Integration
+### Auto-Generated API Docs
+- **`auto/`** - Module documentation generated from docstrings
+  - `auto/cli.md` - CLI module API
+  - `auto/storage.md` - Storage module API
+  - `auto/services.md` - Services module API
+  - `auto/workspace.md` - Workspace module API
+  - etc.
 
-### Mermaid Diagrams
+## Developer Documentation
 
-To embed the Mermaid diagram in Hugo, you have several options:
+- **`TESTING_GUIDE.md`** - How to write and run tests
+- **`architecture.md`** - System architecture overview
+- **`models.mmd`** - Mermaid class diagram
+- **`enums.md`** - Enumeration reference
 
-1. **Direct inclusion** (if Hugo theme supports Mermaid):
-   ```markdown
-   ```mermaid
-   {{< readfile "docs/models.mmd" >}}
-   ```
-   ```
+## Generating Documentation
 
-2. **Using Hugo shortcode** (create `layouts/shortcodes/mermaid.html`):
-   ```html
-   {{ $content := .Inner }}
-   <div class="mermaid">
-   {{ $content }}
-   </div>
-   ```
-
-3. **Using external Mermaid renderer**:
-   - Install a Hugo theme that supports Mermaid (e.g., `hugo-theme-techdoc`)
-   - Or use a JavaScript library like `mermaid.js` in your theme
-
-### GitHub Pages Deployment
-
-The GitHub Action automatically:
-1. Generates all documentation on push to `main`
-2. Commits the generated files back to the repository
-3. Files are ready for Hugo to process
-
-To deploy with Hugo:
-1. Configure GitHub Pages to use Hugo
-2. Set the source to `/docs` directory
-3. Hugo will process all `.md` files with frontmatter
-
-## Manual Generation
-
-To generate documentation locally:
-
+### Auto-Generate API Docs
 ```bash
-# Activate your venv
-source venv/bin/activate
-
-# Generate all docs
 make docs
-
-# Or manually:
-KIVY_NO_ARGS=1 python -m devtools.docs_export --out docs/auto --hugo
-python -m devtools.diagram_export --out docs/models.mmd --enums-out docs/enums.md
 ```
 
+This generates:
+- `docs/auto/*.md` - Module API documentation from docstrings
+- `docs/models.mmd` - Class diagram
+- `docs/enums.md` - Enum reference
+
+### Manual Documentation
+User guides and integration docs are maintained manually in this directory.
+
+## Quick Links
+
+- **For Tauri Integration**: See `TAURI_SVELTE_INTEGRATION.md`
+- **For CLI Usage**: See `CLI_API_REFERENCE.md`
+- **For Storage**: See `STORAGE_STRATEGY.md`
+- **For API Reference**: See `auto/` directory

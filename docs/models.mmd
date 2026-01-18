@@ -198,6 +198,9 @@ class ModelSettings {
   List~str~ default_direction_aspects
   List~str~ default_transit_bodies
   List~str~ default_direction_bodies
+  float degrees_in_circle
+  float obliquity_j2000
+  float coordinate_tolerance
 }
 
 
@@ -243,37 +246,31 @@ class ViewModule {
 
 class Workspace {
   str owner
-  EphemerisSource default_ephemeris
-  str active_model
-  List~ChartPreset~ chart_presets
   List~ChartSubject~ subjects
   List~ChartInstance~ charts
+  List~ChartPreset~ chart_presets
   List~ViewLayout~ layouts
   List~Annotation~ annotations
-  ModelOverrides model_overrides
-  List~str~ aspects
+  str active_model
   WorkspaceDefaults default
+  List~str~ aspects
+  List~str~ bodies
   Dict~str,AstroModel~ models
-  str active_model_name
+  ModelOverrides model_overrides
 }
 
 
 class WorkspaceDefaults {
-  EngineType(Enum) ephemeris_engine
-  str ephemeris_backend
-  str location_name
-  float location_latitude
-  float location_longitude
-  str timezone
-  str language
-  str theme
   HouseSystem(Enum) default_house_system
   List~str~ default_bodies
   List~str~ default_aspects
-  List~str~ observable_objects
-  List~AspectSettings~ aspect_settings
+  EngineType(Enum) ephemeris_engine
+  str ephemeris_backend
   ElementColorSettings element_colors
   RadixPointColorSettings radix_point_colors
+  Location default_location
+  str language
+  str theme
   TimeSystem(Enum) time_system
 }
 
@@ -299,10 +296,9 @@ Workspace --> AstroModel
 Workspace --> ChartInstance
 Workspace --> ChartPreset
 Workspace --> ChartSubject
-Workspace --> EphemerisSource
 Workspace --> ModelOverrides
 Workspace --> ViewLayout
 Workspace --> WorkspaceDefaults
-WorkspaceDefaults --> AspectSettings
 WorkspaceDefaults --> ElementColorSettings
+WorkspaceDefaults --> Location
 WorkspaceDefaults --> RadixPointColorSettings

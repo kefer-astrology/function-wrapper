@@ -281,7 +281,7 @@ ModelOverrides(points: List[module.models.OverrideEntry] = &lt;factory&gt;, aspe
 
 ### class `ModelSettings` 
 
-ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: List[str], default_bodies: List[str], standard_orb: float, default_transit_aspects: Optional[List[str]] = None, default_direction_aspects: Optional[List[str]] = None, default_transit_bodies: Optional[List[str]] = None, default_direction_bodies: Optional[List[str]] = None)
+ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: List[str], default_bodies: List[str], standard_orb: float, default_transit_aspects: Optional[List[str]] = None, default_direction_aspects: Optional[List[str]] = None, default_transit_bodies: Optional[List[str]] = None, default_direction_bodies: Optional[List[str]] = None, degrees_in_circle: float = 360.0, obliquity_j2000: float = 23.4392911, coordinate_tolerance: float = 0.0001)
 
 #### Dataclass fields
 
@@ -293,6 +293,9 @@ ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: 
 - `default_direction_aspects: Optional`
 - `default_transit_bodies: Optional`
 - `default_direction_bodies: Optional`
+- `degrees_in_circle: float`
+- `obliquity_j2000: float`
+- `coordinate_tolerance: float`
 
 ### class `ObjectType` (str, Enum)
 
@@ -369,47 +372,89 @@ ViewModule(type: module.models.ViewModuleType, config: Dict)
 
 ### class `Workspace` 
 
-Workspace(owner: str, default_ephemeris: module.models.EphemerisSource, active_model: str, chart_presets: List[module.models.ChartPreset], subjects: List[module.models.ChartSubject], charts: List[module.models.ChartInstance], layouts: List[module.models.ViewLayout], annotations: List[module.models.Annotation], model_overrides: Optional[module.models.ModelOverrides] = None, aspects: List[str] = &lt;factory&gt;, default: Optional[module.models.WorkspaceDefaults] = None, models: Dict[str, module.models.AstroModel] = &lt;factory&gt;, active_model_name: Optional[str] = None)
+Complete workspace container for astrological chart analysis.
+
+A Workspace represents a project or collection of astrological work, containing
+all the data, settings, and configurations needed for chart computation and analysis.
+It serves as the top-level organizational unit for managing charts, subjects, and
+their associated metadata.
+
+Structure:
+    - **Identity & Configuration**:
+        - owner: Workspace owner/creator identifier
+        - active_model: Currently active astrological model (e.g., "western", "vedic")
+        - default: Default settings (ephemeris, location, house system, language, theme)
+        
+    - **Astrological Models**:
+        - models: Available astrological model catalogs (planet/aspect definitions, zodiac systems)
+        - model_overrides: Custom modifications to model definitions
+        
+    - **Core Data Collections**:
+        - subjects: People or events for which charts can be created
+        - charts: Computed chart instances (actual charts with planetary positions)
+        - chart_presets: Reusable configuration templates (house system, display settings)
+        
+    - **Organization & Presentation**:
+        - layouts: View configurations for displaying charts (single, dual-wheel, comparison)
+        - annotations: Notes, interpretations, and commentary
+        - aspects: List of aspect IDs enabled for this workspace
+        
+Typical Usage:
+    1. Load or create a workspace
+    2. Add subjects (people/events with birth data)
+    3. Create charts using subjects and presets
+    4. Apply layouts to visualize charts
+    5. Add annotations for interpretation
+    
+Example:
+    ```python
+    ws = Workspace(
+        owner="astrologer@example.com",
+        active_model="western",
+        default=WorkspaceDefaults(
+            ephemeris_engine=EngineType.SWISSEPH,
+            ephemeris_backend=None,
+            default_house_system=HouseSystem.PLACIDUS
+        ),
+        subjects=[...],
+        charts=[...]
+    )
+    ```
 
 #### Dataclass fields
 
 - `owner: str`
-- `default_ephemeris: EphemerisSource`
-- `active_model: str`
-- `chart_presets: List`
 - `subjects: List`
 - `charts: List`
+- `chart_presets: List`
 - `layouts: List`
 - `annotations: List`
-- `model_overrides: Optional`
+- `active_model: Optional`
+- `default: WorkspaceDefaults`
 - `aspects: List`
-- `default: Optional`
+- `bodies: List`
 - `models: Dict`
-- `active_model_name: Optional`
+- `model_overrides: Optional`
 
 ### class `WorkspaceDefaults` 
 
 Aggregated default settings for a workspace (preferred YAML shape).
 
 This mirrors the desired manifest structure under the top-level key 'default'.
+Provides workspace-wide defaults that can be overridden at the workspace level.
 
 #### Dataclass fields
 
-- `ephemeris_engine: Optional`
-- `ephemeris_backend: Optional`
-- `location_name: Optional`
-- `location_latitude: Optional`
-- `location_longitude: Optional`
-- `timezone: Optional`
-- `language: Optional`
-- `theme: Optional`
 - `default_house_system: Optional`
 - `default_bodies: Optional`
 - `default_aspects: Optional`
-- `observable_objects: Optional`
-- `aspect_settings: Optional`
+- `ephemeris_engine: Optional`
+- `ephemeris_backend: Optional`
 - `element_colors: Optional`
 - `radix_point_colors: Optional`
+- `default_location: Optional`
+- `language: Optional`
+- `theme: Optional`
 - `time_system: Optional`
 
 ### class `ZodiacType` (str, Enum)
