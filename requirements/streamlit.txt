@@ -132,7 +132,9 @@ pluggy==1.6.0
 protobuf==6.33.0
     # via streamlit
 pyarrow==21.0.0
-    # via streamlit
+    # via
+    #   -r requirements/base.in
+    #   streamlit
 pycparser==2.23
     # via cffi
 pydantic==2.12.4
@@ -221,8 +223,9 @@ tzdata==2025.2
     # via pandas
 url-normalize==2.2.1
     # via requests-cache
-urllib3==2.5.0
+urllib3==2.6.3
     # via
+    #   -r requirements/base.in
     #   requests
     #   requests-cache
 watchdog==6.0.0

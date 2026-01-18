@@ -93,6 +93,8 @@ plotly==6.3.1
     # via -r requirements/base.in
 pluggy==1.6.0
     # via pytest
+pyarrow==23.0.0
+    # via -r requirements/base.in
 pycparser==2.23
     # via cffi
 pydantic==2.12.3
@@ -158,8 +160,9 @@ tzdata==2025.2
     # via pandas
 url-normalize==2.2.1
     # via requests-cache
-urllib3==2.5.0
+urllib3==2.6.3
     # via
+    #   -r requirements/base.in
     #   requests
     #   requests-cache
 wheel==0.45.1
