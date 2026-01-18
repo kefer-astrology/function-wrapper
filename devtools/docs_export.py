@@ -33,12 +33,13 @@ def _load_target_modules() -> List[ModuleSpec]:
     """
     targets: List[ModuleSpec] = []
     
-    # Import in dependency order: models -> utils -> z_visual -> services -> workspace -> others
+    # Import in dependency order: models -> utils -> z_visual -> services -> workspace -> cli -> storage -> others
     # This ensures dependencies are available when needed
     # Note: services depends on z_visual, so z_visual must come before services
+    # cli depends on services/workspace, storage is optional
     # Skip ui_kivy in CI environments where X server is not available
     # It will be handled gracefully by the import error handling below
-    dependency_order = ["models", "utils", "z_visual", "services", "workspace", "ui_streamlit", "ui_kivy"]
+    dependency_order = ["models", "utils", "z_visual", "services", "workspace", "cli", "storage", "ui_streamlit", "ui_kivy"]
     
     # Helper to create a stub module
     def _create_stub_module(module_name):
