@@ -30,6 +30,8 @@ contourpy==1.3.3
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
+duckdb==1.4.3
+    # via -r requirements/base.in
 flatbuffers==25.9.23
     # via timezonefinder
 fonttools==4.60.1
