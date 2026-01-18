@@ -1,0 +1,148 @@
+name: Run Test Suite
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'module/**'
+      - 'tests/**'
+      - 'requirements/**'
+      - 'pyproject.toml'
+      - '.github/workflows/tests.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'module/**'
+      - 'tests/**'
+      - 'requirements/**'
+      - 'pyproject.toml'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev pkg-config
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Install base requirements (must succeed)
+          pip install -r requirements/base.txt
+      
+      - name: Run test suite
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          python -m unittest discover -s tests -p "test_*.py" -v
+      
+      - name: Test summary
+        if: always()
+        run: |
+          echo "## Test Results (Python ${{ matrix.python-version }})" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ All tests passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  test-comprehensive:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev pkg-config
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/base.txt
+      
+      - name: Run comprehensive test suite
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          python -m unittest tests.test_comprehensive.TestComprehensive -v
+      
+      - name: Check test sample workspace
+        if: success()
+        run: |
+          if [ -d "tests/sample" ]; then
+            echo "✅ Sample workspace created successfully"
+            ls -la tests/sample/
+          else
+            echo "⚠️  Sample workspace not found (may be in .gitignore)"
+          fi
+
+  test-summary:
+    runs-on: ubuntu-latest
+    needs: [test, test-comprehensive]
+    if: always()
+    
+    steps:
+      - name: Test Summary
+        run: |
+          echo "## Test Suite Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Matrix Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Python Version | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Check if any test job failed
+          TEST_FAILED=false
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            TEST_FAILED=true
+            echo "| 3.11, 3.12, 3.13 | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| 3.11, 3.12, 3.13 | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.test-comprehensive.result }}" == "success" ]; then
+            echo "| Comprehensive | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            TEST_FAILED=true
+            echo "| Comprehensive | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$TEST_FAILED" = "true" ]; then
+            echo "⚠️  Some tests failed. Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
+          fi
