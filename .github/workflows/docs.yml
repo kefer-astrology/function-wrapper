@@ -75,6 +75,8 @@ jobs:
           # Add all changes in docs directory (only files that exist and were modified)
           git add docs/
           git commit -m "docs: auto-generate documentation [skip ci]" || exit 0
+          # Pull latest changes and rebase our commit on top
+          git pull --rebase origin main
           git push origin HEAD:main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
