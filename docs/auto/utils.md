@@ -13,7 +13,7 @@ weight: 10
 
 ## Functions
 
-### `combine_date_time`
+## `combine_date_time`
 
 ```python
 combine_date_time(input_date: datetime.date, input_time: datetime.time) -> datetime.datetime
@@ -32,7 +32,7 @@ Combine a date and time into a naive datetime (no timezone).
 
 Naive datetime combining date and time
 
-### `compute_vernal_equinox_offset`
+## `compute_vernal_equinox_offset`
 
 ```python
 compute_vernal_equinox_offset(year: int, eph, observer, ts) -> float
@@ -55,7 +55,7 @@ Compute the vernal equinox offset for tropical astrology adjustment.
 
 The ecliptic longitude offset in degrees [0, 360)
 
-### `default_ephemeris_path`
+## `default_ephemeris_path`
 
 ```python
 default_ephemeris_path() -> str
@@ -67,7 +67,7 @@ Return the default path to the local JPL ephemeris file.
 
 Absolute path to de421.bsp file in source/ directory
 
-### `ensure_aware`
+## `ensure_aware`
 
 ```python
 ensure_aware(dt: datetime.datetime, tz_name: Optional[str] = None) -> datetime.datetime
@@ -87,7 +87,7 @@ Return a timezone-aware datetime.
 Timezone-aware datetime. If dt is already aware, returns unchanged.
     If tz_name provided, localizes to that timezone. Otherwise uses UTC.
 
-### `expand_range`
+## `expand_range`
 
 ```python
 expand_range(center: datetime.datetime, days: int) -> module.models.DateRange
@@ -106,7 +106,7 @@ Create a DateRange centered on a datetime extending days on both sides.
 
 DateRange from (center - days) to (center + days)
 
-### `export_chart_yaml`
+## `export_chart_yaml`
 
 ```python
 export_chart_yaml(chart: module.models.ChartInstance, dest_dir: str) -> str
@@ -125,7 +125,7 @@ Export a ChartInstance as YAML into dest_dir.
 
 Absolute file path to exported YAML file
 
-### `export_workspace_yaml`
+## `export_workspace_yaml`
 
 ```python
 export_workspace_yaml(ws: module.models.Workspace, dest_path: Union[str, pathlib._local.Path]) -> pathlib._local.Path
@@ -150,7 +150,7 @@ Resolved Path to exported YAML file
 Uses the local serializer to convert dataclasses, enums, and datetimes
     to primitives. Ensures parent directory exists.
 
-### `find_vernal_equinox_datetime`
+## `find_vernal_equinox_datetime`
 
 ```python
 find_vernal_equinox_datetime(year: int) -> datetime.datetime
@@ -167,7 +167,7 @@ Find the approximate datetime of the vernal equinox for a given year.
 
 A timezone-aware UTC datetime for the approximate vernal equinox
 
-### `import_chart_yaml`
+## `import_chart_yaml`
 
 ```python
 import_chart_yaml(path: str) -> module.models.ChartInstance
@@ -184,7 +184,7 @@ Read a chart YAML file from disk and parse into a ChartInstance.
 
 ChartInstance parsed from YAML file
 
-### `in_range`
+## `in_range`
 
 ```python
 in_range(dt: datetime.datetime, dr: module.models.DateRange) -> bool
@@ -203,7 +203,7 @@ Check if datetime lies within the inclusive DateRange.
 
 True if dt is within [start, end] (inclusive), False otherwise
 
-### `load_sfs_models_from_dir`
+## `load_sfs_models_from_dir`
 
 ```python
 load_sfs_models_from_dir(dir_path: Union[str, pathlib._local.Path]) -> Dict[str, module.models.AstroModel]
@@ -221,7 +221,7 @@ Scan a directory for StarFisher .sfs files and build AstroModel catalogs.
 Dictionary mapping model name (from file stem or parsed model.name) to AstroModel.
     Files that cannot be decoded or parsed are skipped.
 
-### `location_equals`
+## `location_equals`
 
 ```python
 location_equals(loc1: module.models.Location, loc2: module.models.Location) -> bool
@@ -240,7 +240,7 @@ Check approximate equality of two Location objects.
 
 True if locations are approximately equal, False otherwise
 
-### `location_from_coords`
+## `location_from_coords`
 
 ```python
 location_from_coords(lat: float, lon: float, name: str = '') -> module.models.Location
@@ -261,7 +261,7 @@ Build a Location from raw coordinates, inferring timezone via TimezoneFinder.
 
 Location instance with inferred timezone
 
-### `now_utc`
+## `now_utc`
 
 ```python
 now_utc() -> datetime.datetime
@@ -269,7 +269,7 @@ now_utc() -> datetime.datetime
 
 Return current time as a timezone-aware UTC datetime.
 
-### `parse_chart_yaml`
+## `parse_chart_yaml`
 
 ```python
 parse_chart_yaml(data: dict) -> module.models.ChartInstance
@@ -296,7 +296,7 @@ Removes 'computed_chart' if present (it's recomputable and shouldn't be loaded f
 
 ⚠️ ValueError: If subject data is invalid
 
-### `parse_sfs_content`
+## `parse_sfs_content`
 
 ```python
 parse_sfs_content(content: str) -> Tuple[module.models.AstroModel, Dict[str, Any]]
@@ -314,7 +314,7 @@ Parse the content of a StarFisher .sfs file and map to AstroModel.
 Tuple of (AstroModel, display_config_dict) where display_config_dict
     contains display-related settings from the .sfs file
 
-### `parse_yaml_content`
+## `parse_yaml_content`
 
 ```python
 parse_yaml_content(data: Union[str, bytes]) -> dict
@@ -336,7 +336,7 @@ Parsed YAML as dictionary, or empty dict if empty/invalid
 
 Useful for handling uploaded files or in-memory YAML content uniformly.
 
-### `prepare_horoscope`
+## `prepare_horoscope`
 
 ```python
 prepare_horoscope(name: str = '', dt: datetime.datetime = None, loc: module.models.Location = None, engine: Optional[module.models.EngineType] = None, ephemeris_path: Optional[str] = None, zodiac: module.models.ZodiacType = <ZodiacType.TROPICAL: 'Tropical'>, house: module.models.HouseSystem = <HouseSystem.PLACIDUS: 'Placidus'>) -> module.models.ChartInstance
@@ -365,7 +365,7 @@ Create a ChartInstance with basic configuration.
 
 ChartInstance with configured ChartSubject and ChartConfig
 
-### `read_yaml_file`
+## `read_yaml_file`
 
 ```python
 read_yaml_file(path: Union[str, pathlib._local.Path]) -> dict
@@ -387,7 +387,7 @@ Parsed YAML content as dictionary, or empty dict if file is empty
 
 This is a thin wrapper around yaml.safe_load that always returns a dict.
 
-### `resolve_under_base`
+## `resolve_under_base`
 
 ```python
 resolve_under_base(base: Union[str, pathlib._local.Path], rel_path: Union[str, pathlib._local.Path]) -> pathlib._local.Path
@@ -411,7 +411,7 @@ Resolved Path that is contained within base
 
 ⚠️ ValueError: If path is absolute or attempts directory traversal outside base
 
-### `to_timezone`
+## `to_timezone`
 
 ```python
 to_timezone(dt: datetime.datetime, tz_name: str) -> datetime.datetime
@@ -430,7 +430,7 @@ Convert a timezone-aware datetime to the target timezone by name.
 
 Datetime converted to target timezone
 
-### `write_json_file`
+## `write_json_file`
 
 ```python
 write_json_file(path: Union[str, pathlib._local.Path], data: dict, *, indent: int = 2) -> None
@@ -451,7 +451,7 @@ Write a dict to a JSON file.
 
 Ensures parent directory exists before writing.
 
-### `write_yaml_file`
+## `write_yaml_file`
 
 ```python
 write_yaml_file(path: Union[str, pathlib._local.Path], data: dict, *, sort_keys: bool = False, allow_unicode: bool = True) -> None

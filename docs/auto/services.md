@@ -13,7 +13,7 @@ weight: 10
 
 ## Functions
 
-### `build_chart_instance`
+## `build_chart_instance`
 
 ```python
 build_chart_instance(name: str, dt_str: str, loc_text: str, mode: module.models.ChartMode, ws: Optional[module.models.Workspace] = None, ephemeris_path: Optional[str] = None) -> module.models.ChartInstance
@@ -23,7 +23,7 @@ Build a ChartInstance using workspace defaults when provided.
 - Resolves engine and house system from ws if available.
 - Uses utils.prepare_horoscope to produce a fully-typed ChartInstance.
 
-### `build_radix_figure_for_chart`
+## `build_radix_figure_for_chart`
 
 ```python
 build_radix_figure_for_chart(chart: module.models.ChartInstance, engine_override: Optional[module.models.EngineType] = None, ephemeris_path_override: Optional[str] = None, ws: Optional[ForwardRef('Workspace')] = None) -> Any
@@ -46,7 +46,7 @@ Extract positions from a ChartInstance's computed_chart and return a Plotly Figu
 
 Plotly Figure object ready for rendering
 
-### `compute_aspects`
+## `compute_aspects`
 
 ```python
 compute_aspects(bodies: List[module.models.CelestialBody], aspect_defs: List[module.models.AspectDefinition]) -> List[module.models.Aspect]
@@ -65,7 +65,7 @@ Compute aspects between celestial bodies using provided definitions.
 
 List of Aspect objects representing detected aspects
 
-### `compute_aspects_for_chart`
+## `compute_aspects_for_chart`
 
 ```python
 compute_aspects_for_chart(chart: module.models.ChartInstance, aspect_definitions: Optional[List[module.models.AspectDefinition]] = None, ws: Optional[ForwardRef('Workspace')] = None) -> List[Dict[str, Any]]
@@ -96,7 +96,7 @@ List of aspect dictionaries, each with:
         'separating': bool  # True if aspect is separating
     }
 
-### `compute_jpl_positions`
+## `compute_jpl_positions`
 
 ```python
 compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None, include_physical: bool = False, include_topocentric: bool = False, extended: bool = False) -> Union[Dict[str, float], Dict[str, Dict[str, float]]]
@@ -128,7 +128,7 @@ Compute planetary positions using Skyfield JPL ephemerides.
 - If extended=False: mapping planet -&gt; ecliptic longitude in degrees [0, 360)
 - If extended=True: mapping planet -&gt; dict with extended properties
 
-### `compute_positions`
+## `compute_positions`
 
 ```python
 compute_positions(engine: Optional[module.models.EngineType], name: str, dt_str: str, loc_str: str, ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None) -> Dict[str, float]
@@ -163,7 +163,7 @@ Dict mapping object_id -&gt; ecliptic_longitude (degrees). Empty dict on error.
 ⚠️ ValueError: If datetime or location cannot be parsed
     FileNotFoundError: If ephemeris file is specified but not found
 
-### `compute_positions_for_chart`
+## `compute_positions_for_chart`
 
 ```python
 compute_positions_for_chart(chart: module.models.ChartInstance, ws: Optional[ForwardRef('Workspace')] = None, include_physical: bool = False, include_topocentric: bool = False) -> Dict[str, Union[float, Dict[str, float]]]
@@ -208,7 +208,7 @@ Dict mapping object_id -&gt; position data:
 
 ⚠️ ValueError: If chart is missing required subject or location data
 
-### `compute_positions_for_inputs`
+## `compute_positions_for_inputs`
 
 ```python
 compute_positions_for_inputs(engine: Optional[module.models.EngineType], name: str, dt_str: str, loc_text: str, ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None) -> Dict[str, float]
@@ -216,7 +216,7 @@ compute_positions_for_inputs(engine: Optional[module.models.EngineType], name: s
 
 Thin wrapper over compute_positions to normalize/forward parameters from UI layers.
 
-### `compute_subject`
+## `compute_subject`
 
 ```python
 compute_subject(name: str, dt_str: str, loc_str: str, zodiac: str = 'Tropic') -> kerykeion.backword.AstrologicalSubject
@@ -239,7 +239,7 @@ Construct a Kerykeion AstrologicalSubject from strings.
 
 AstrologicalSubject instance with computed positions
 
-### `create_relation_svg`
+## `create_relation_svg`
 
 ```python
 create_relation_svg(subject1: kerykeion.backword.AstrologicalSubject, subject2: kerykeion.backword.AstrologicalSubject, chart_type: str = 'Synastry') -> kerykeion.backword.KerykeionChartSVG
@@ -260,7 +260,7 @@ Create a Kerykeion SVG chart for relation/composite types.
 
 KerykeionChartSVG instance with generated SVG chart
 
-### `extract_kerykeion_points`
+## `extract_kerykeion_points`
 
 ```python
 extract_kerykeion_points(obj: Any) -> pandas.core.frame.DataFrame
@@ -277,7 +277,7 @@ Extract KerykeionPointModel attributes from an object into a DataFrame.
 
 DataFrame with one row per KerykeionPointModel attribute found
 
-### `find_chart_by_name_or_id`
+## `find_chart_by_name_or_id`
 
 ```python
 find_chart_by_name_or_id(ws: Optional[module.models.Workspace], name_or_id: str) -> Optional[module.models.ChartInstance]
@@ -296,7 +296,7 @@ Find a chart in the workspace by subject name or chart ID.
 
 ChartInstance if found, None otherwise
 
-### `get_active_model`
+## `get_active_model`
 
 ```python
 get_active_model(ws: Optional[ForwardRef('Workspace')]) -> Optional[module.models.AstroModel]
@@ -313,7 +313,7 @@ Resolve the currently active AstroModel instance from a Workspace, if available.
 
 Active AstroModel instance, or None if no models available
 
-### `list_open_view_rows`
+## `list_open_view_rows`
 
 ```python
 list_open_view_rows(ws: Optional[module.models.Workspace]) -> List[Dict[str, str]]
@@ -330,7 +330,7 @@ Produce table rows for Open view display.
 
 List of dictionaries with keys: name, event_time, location, tags, search_text
 
-### `merge_model_with_overrides`
+## `merge_model_with_overrides`
 
 ```python
 merge_model_with_overrides(model: module.models.AstroModel, overrides: Optional[module.models.ModelOverrides]) -> module.models.AstroModel
@@ -349,7 +349,7 @@ Return a new AstroModel with selective overrides applied.
 
 New AstroModel instance with overrides applied
 
-### `resolve_effective_defaults`
+## `resolve_effective_defaults`
 
 ```python
 resolve_effective_defaults(ws: 'Workspace', model: Optional[module.models.AstroModel]) -> Dict[str, object]
@@ -369,7 +369,7 @@ Resolve effective defaults merging workspace overrides on top of AstroModel sett
 Dictionary with keys: house_system, bodies, aspects, standard_orb, engine,
     zodiac_type, ayanamsa, aspect_orbs, observable_objects
 
-### `search_charts`
+## `search_charts`
 
 ```python
 search_charts(ws: Optional[module.models.Workspace], query: str) -> List[module.models.ChartInstance]
