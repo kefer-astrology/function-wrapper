@@ -1,0 +1,44 @@
+<!-- Sticky top bar with header and search -->
+<div class="sticky top-0 z-50 w-full border-b border-gray-700 shadow-sm backdrop-blur-sm" style="background-color: #1a1a1a !important; position: sticky; top: 0;">
+  <div class="mx-auto flex items-center px-8" style="max-width: 90% !important; gap: 2rem; min-height: 6rem; padding-top: 1.5rem; padding-bottom: 1.5rem;">
+    <div class="flex items-center" style="flex: 3;">
+      <a
+        class="text-2xl font-medium no-underline text-white"
+        href="{{- `` | absURL -}}"
+        >{{ site.Title }}</a
+      >
+      <div
+        class="btn-dark text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right] invert"
+        role="button"
+        aria-label="Dark"
+      ></div>
+    </div>
+    <div style="flex: 2;">
+      {{- partial "search.html" . -}}
+    </div>
+  </div>
+</div>
+
+<script>
+  // Dark mode toggle (reuse from theme)
+  const htmlClass = document.documentElement.classList;
+  const btnDark = document.querySelector('.btn-dark');
+  if (btnDark) {
+    btnDark.addEventListener('click', () => {
+      const isDark = localStorage.getItem('dark') !== 'true';
+      localStorage.setItem('dark', isDark);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', isDark ? "rgb(0 0 0 / 85%)" : '#faf8f1');
+      }
+    });
+  }
+  
+  // Initialize dark mode
+  const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  const darkVal = localStorage.getItem('dark');
+  if (darkVal === 'true' || (!darkVal && darkScheme.matches)) {
+    htmlClass.add('dark');
+  }
+</script>

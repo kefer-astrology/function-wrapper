@@ -1,0 +1,362 @@
+<!-- Simple client-side search -->
+<div class="relative">
+  <input 
+    type="text" 
+    id="search-input" 
+    placeholder="Search documentation..." 
+    class="w-full px-4 py-2 rounded-lg border text-sm"
+    style="background-color: #000000 !important; color: #b8860b !important; border-color: #b8860b !important;"
+  />
+  <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 hidden" style="background-color: #1a1a1a !important; border-color: #4a4a4a !important;"></div>
+</div>
+
+<style>
+  #search-input {
+    background-color: #000000 !important;
+    color: #b8860b !important;
+    border-color: #b8860b !important;
+  }
+  #search-input::placeholder {
+    color: #b8860b !important;
+    opacity: 0.7;
+  }
+  #search-input:focus {
+    border-color: #b8860b !important;
+    ring-color: #b8860b !important;
+  }
+</style>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  
+  if (!searchInput) return;
+  
+  // Global search index - will be populated from page links
+  let globalSearchIndex = [];
+  const basePath = '/function-wrapper';
+  
+  // Build search index from all links on the page (these represent all documentation pages)
+  function buildSearchIndex() {
+    const allLinks = Array.from(document.querySelectorAll('a[href]'));
+    const indexMap = new Map();
+    
+    allLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      if (normalized && !normalized.includes('#') && !normalized.includes('http')) {
+        const title = link.textContent.trim();
+        if (title && !indexMap.has(normalized)) {
+          indexMap.set(normalized, {
+            title: title,
+            url: normalized,
+            keywords: (title + ' ' + normalized).toLowerCase()
+          });
+        }
+      }
+    });
+    
+    globalSearchIndex = Array.from(indexMap.values());
+  }
+  
+  // Build index when page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildSearchIndex);
+  } else {
+    buildSearchIndex();
+  }
+  
+  // Helper function to normalize URLs
+  function normalizeUrl(href) {
+    if (!href || href.startsWith('http') || href.startsWith('#')) {
+      return null;
+    }
+    const basePath = '/function-wrapper';
+    let normalized = href.trim();
+    
+    // Remove .md extension if present
+    if (normalized.endsWith('.md')) {
+      normalized = normalized.slice(0, -3);
+    }
+    
+    // Handle relative links
+    if (!normalized.startsWith('/')) {
+      // Relative link - resolve it from current page
+      const currentPath = window.location.pathname;
+      // Remove basePath from current path to get relative path
+      const relativePath = currentPath.startsWith(basePath) 
+        ? currentPath.slice(basePath.length) 
+        : currentPath;
+      // Get directory part (remove filename)
+      const currentDir = relativePath.split('/').slice(0, -1).filter(p => p).join('/');
+      // Build new path
+      if (currentDir) {
+        normalized = '/' + currentDir + '/' + normalized;
+      } else {
+        normalized = '/' + normalized;
+      }
+    }
+    
+    // Ensure basePath is included
+    if (normalized.startsWith('/') && !normalized.startsWith(basePath)) {
+      normalized = basePath + normalized;
+    }
+    
+    // Clean up double slashes
+    normalized = normalized.replace(/\/+/g, '/');
+    
+    // Remove trailing slash except for root
+    if (normalized !== basePath && normalized !== basePath + '/' && normalized.endsWith('/')) {
+      normalized = normalized.slice(0, -1);
+    }
+    
+    return normalized;
+  }
+  
+  // Build comprehensive page index from all links on the page
+  const pageIndex = new Map();
+  const allLinks = Array.from(document.querySelectorAll('a[href]'));
+  
+  allLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    const normalized = normalizeUrl(href);
+    if (normalized) {
+      const text = link.textContent.trim();
+      const linkText = text.toLowerCase();
+      // Store both the title and searchable text
+      pageIndex.set(normalized, {
+        title: text || normalized.split('/').pop(),
+        searchText: linkText,
+        href: normalized
+      });
+    }
+  });
+  
+  // Add current page
+  const currentPath = window.location.pathname;
+  pageIndex.set(currentPath, {
+    title: document.title || 'Current Page',
+    searchText: document.body.textContent.toLowerCase(),
+    href: currentPath
+  });
+  
+  // Simple search function
+  searchInput.addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 1) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+    
+    const results = [];
+    // Split query into words, but also keep the full query for exact matches
+    const queryWords = query.split(' ').filter(w => w.length > 0);
+    const seenUrls = new Set();
+    const seenResults = new Set(); // Track unique results by URL+title
+    
+    // First, search the global index (all linked pages)
+    if (globalSearchIndex.length > 0) {
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query) // Also match full query as substring
+        );
+        
+        if (matches && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title,
+            url: page.url,
+            text: page.title + ' - Documentation page (click to search this page)',
+            priority: 0 // Highest priority for global index matches
+          });
+        }
+      });
+    }
+    
+    // Then, search for links that match the query (these are most reliable)
+    pageIndex.forEach((pageInfo, url) => {
+      // Extract path segments for better matching (e.g., "cli" matches "/auto/cli")
+      const urlSegments = url.toLowerCase().split('/').filter(s => s.length > 0);
+      const searchableText = (pageInfo.searchText + ' ' + pageInfo.title.toLowerCase() + ' ' + urlSegments.join(' ')).toLowerCase();
+      
+      const matches = queryWords.every(word => 
+        searchableText.includes(word) || 
+        urlSegments.some(seg => seg.includes(word))
+      );
+      
+      if (matches && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        results.push({
+          title: pageInfo.title,
+          url: url,
+          text: pageInfo.title + ' - Documentation page',
+          priority: 1 // High priority for direct page matches
+        });
+      }
+    });
+    
+    // Also search for links in the DOM that match (in case they weren't in pageIndex)
+    allLinks.forEach(link => {
+      const linkText = link.textContent.toLowerCase();
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      
+      if (normalized) {
+        // Extract path segments for better matching
+        const urlSegments = normalized.toLowerCase().split('/').filter(s => s.length > 0);
+        const searchableText = (linkText + ' ' + urlSegments.join(' ')).toLowerCase();
+        
+        const matches = queryWords.every(word => 
+          searchableText.includes(word) || 
+          urlSegments.some(seg => seg.includes(word))
+        );
+        
+        if (matches && !seenUrls.has(normalized)) {
+          seenUrls.add(normalized);
+          results.push({
+            title: link.textContent.trim() || normalized.split('/').pop().replace(/-/g, ' '),
+            url: normalized,
+            text: link.textContent.trim() || 'Documentation page',
+            priority: 1 // High priority for direct link matches
+          });
+        }
+      }
+    });
+    
+    // Search all page content comprehensively
+    // First, search for function names, code blocks, and headings
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, code, pre, dt, dd, td, th, strong, em, b').forEach(el => {
+      const text = el.textContent.toLowerCase();
+      // Match if all query words are found, or if the full query is found as a substring
+      const matches = queryWords.length > 0 && (
+        queryWords.every(word => text.includes(word)) || 
+        text.includes(query) // Also match full query as substring (e.g., "jpl" in "compute_jpl_positions")
+      );
+      
+      if (matches && el.textContent.trim() && el.textContent.trim().length > 1) {
+        // Try to find associated page URL
+        let pageUrl = currentPath;
+        let pageTitle = document.title || 'Documentation';
+        
+        // Look for nearby links that might indicate the target page
+        const parent = el.closest('article, section, li, ul, ol, table, dl');
+        if (parent) {
+          const nearbyLink = parent.querySelector('a[href*="/auto/"], a[href*="/enums"], a[href*="/ui_"], a[href*="/models"]');
+          if (nearbyLink) {
+            const normalized = normalizeUrl(nearbyLink.getAttribute('href'));
+            if (normalized) {
+              pageUrl = normalized;
+              pageTitle = nearbyLink.textContent.trim() || pageTitle;
+            }
+          }
+        }
+        
+        // For headings, use them as the title
+        if (el.tagName && el.tagName.match(/^H[1-6]$/)) {
+          pageTitle = el.textContent.trim();
+        }
+        
+        // Extract a meaningful snippet
+        let snippet = el.textContent.trim();
+        if (snippet.length > 200) {
+          // Try to find the query word in context
+          const queryLower = query.toLowerCase();
+          const index = snippet.toLowerCase().indexOf(queryLower);
+          if (index > 0) {
+            const start = Math.max(0, index - 50);
+            snippet = '...' + snippet.substring(start, start + 150) + '...';
+          } else {
+            snippet = snippet.substring(0, 150) + '...';
+          }
+        }
+        
+        const resultKey = pageUrl + '|' + pageTitle;
+        
+        if (!seenResults.has(resultKey)) {
+          seenResults.add(resultKey);
+          results.push({
+            title: pageTitle,
+            url: pageUrl,
+            text: snippet,
+            priority: 2 // Lower priority for content matches
+          });
+        }
+      }
+    });
+    
+    // Also search the entire page body text for comprehensive matching
+    const bodyText = document.body.textContent.toLowerCase();
+    const bodyMatches = queryWords.length > 0 && (
+      queryWords.every(word => bodyText.includes(word)) || 
+      bodyText.includes(query) // Also match full query as substring
+    );
+    
+    if (bodyMatches) {
+      // Check if we already have this page in results
+      const resultKey = currentPath + '|' + (document.title || 'Current Page');
+      if (!seenResults.has(resultKey)) {
+        seenResults.add(resultKey);
+        // Find a relevant snippet containing the query
+        const queryLower = query.toLowerCase();
+        const index = bodyText.indexOf(queryLower);
+        if (index >= 0) {
+          const fullText = document.body.textContent;
+          const snippetStart = Math.max(0, index - 100);
+          const snippetEnd = Math.min(fullText.length, index + query.length + 100);
+          const snippet = '...' + fullText.substring(snippetStart, snippetEnd).trim() + '...';
+          
+          results.push({
+            title: document.title || 'Current Page',
+            url: currentPath,
+            text: snippet,
+            priority: 3 // Lowest priority for general page matches
+          });
+        }
+      }
+    }
+    
+    // Sort by priority, then limit
+    results.sort((a, b) => (a.priority || 2) - (b.priority || 2));
+    
+    // Display results
+    if (results.length > 0) {
+      const resultsHtml = results.slice(0, 10).map((r, idx) => {
+        // Use data attribute for URL to avoid escaping issues
+        const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' + 
+          r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' + 
+          safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+      }).join('');
+      
+      searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+      
+      // Add click handlers to result items
+      searchResults.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.location.href = url;
+          }
+        });
+      });
+      
+      searchResults.classList.remove('hidden');
+    } else {
+      searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+      searchResults.classList.remove('hidden');
+    }
+  });
+  
+  // Close on escape
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      searchResults.classList.add('hidden');
+      searchInput.value = '';
+    }
+  });
+})();
+</script>

@@ -360,7 +360,7 @@ def _render_signature(obj) -> str:
 def _render_function_detailed(func) -> str:
     """Render a function with full docstring details."""
     parts = []
-    parts.append(f"### `{func.__name__}`\n")
+    parts.append(f"## `{func.__name__}`\n")
     
     # Get signature without backticks for code block
     try:
@@ -485,10 +485,33 @@ def generate_module_markdown(name: str, mod, add_frontmatter: bool = False) -> s
         lines.append("weight: 10\n")
         lines.append("---\n\n")
     
+    # Check if this is a stub (failed import)
+    is_stub = hasattr(mod, "__doc__") and mod.__doc__ and "Failed to import" in mod.__doc__
+    if is_stub:
+        # Skip generating docs for failed imports - they're not useful
+        return None
+    
     lines.append(f"# `{name}` module\n")
     if getattr(mod, "__doc__", None):
         mod_doc = inspect.cleandoc(mod.__doc__)
-        lines.append(_md_escape(mod_doc) + "\n")
+        # Preserve markdown lists - ensure proper formatting
+        # Convert indented lists to proper markdown lists
+        lines_doc = mod_doc.split('\n')
+        formatted_lines = []
+        for i, line in enumerate(lines_doc):
+            # If line starts with spaces followed by "- " or "* ", it's a list item
+            # Remove leading spaces but keep the list marker
+            stripped = line.lstrip()
+            if stripped.startswith(('- ', '* ')):
+                # It's a list item - ensure it's at the start (or after proper context)
+                formatted_lines.append(stripped)
+            elif line.strip() and not line.startswith(' '):
+                # Regular line - escape HTML but preserve markdown
+                formatted_lines.append(line.replace("<", "&lt;").replace(">", "&gt;"))
+            else:
+                # Preserve indentation for code blocks and other formatted content
+                formatted_lines.append(line.replace("<", "&lt;").replace(">", "&gt;"))
+        lines.append('\n'.join(formatted_lines) + "\n")
 
     # Functions
     funcs = sorted(list(_iter_public_functions(mod)), key=lambda o: o.__name__)
@@ -533,6 +556,9 @@ def write_all(out_dir: Path | str = "docs/auto", add_frontmatter: bool = False) 
     written: List[Path] = []
     for name, mod in TARGET_MODULES:
         content = generate_module_markdown(name, mod, add_frontmatter=add_frontmatter)
+        if content is None:
+            # Skip failed imports
+            continue
         p = out_root / f"{name}.md"
         p.write_text(content, encoding="utf-8")
         written.append(p)

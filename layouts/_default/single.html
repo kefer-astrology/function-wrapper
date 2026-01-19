@@ -1,0 +1,388 @@
+{{- define "main" -}}
+
+<article class="pt-6">
+  <section class="prose prose-lg" style="max-width: 90% !important;">{{- .Content -}}</section>
+  
+  <style>
+    /* Custom styles for better heading hierarchy and readable text */
+    .prose {
+      color: #374151 !important; /* Gray-700 - more readable than pure black */
+    }
+    .prose p, .prose li, .prose td, .prose th {
+      color: #4b5563 !important; /* Gray-600 - friendly readable color */
+    }
+    .prose h1 {
+      font-size: 2.5rem !important;
+      font-weight: 700 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.5rem;
+      color: #111827 !important; /* Gray-900 for headings */
+    }
+    .prose h2 {
+      font-size: 2rem !important;
+      font-weight: 600 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 0.25rem;
+      color: #1f2937 !important; /* Gray-800 for headings */
+    }
+    .prose h3 {
+      font-size: 1.5rem !important;
+      font-weight: 600 !important;
+      margin-top: 1.5rem !important;
+      margin-bottom: 0.75rem !important;
+      color: #374151 !important; /* Gray-700 for h3 */
+    }
+    .prose a {
+      color: #2563eb !important; /* Blue-600 for links */
+    }
+    .prose a:hover {
+      color: #1d4ed8 !important; /* Blue-700 on hover */
+    }
+    .dark .prose {
+      color: #e5e7eb !important; /* Gray-200 for dark mode */
+    }
+    .dark .prose p, .dark .prose li, .dark .prose td, .dark .prose th {
+      color: #d1d5db !important; /* Gray-300 for dark mode */
+    }
+    .dark .prose h1 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      color: #f9fafb !important; /* Gray-50 for dark mode headings */
+    }
+    .dark .prose h2 {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      color: #f3f4f6 !important; /* Gray-100 for dark mode headings */
+    }
+    .dark .prose h3 {
+      color: #e5e7eb !important; /* Gray-200 for dark mode h3 */
+    }
+    .dark .prose a {
+      color: #60a5fa !important; /* Blue-400 for dark mode links */
+    }
+    /* Parameters styling - dark yellow text */
+    .prose h4 {
+      color: #b8860b !important; /* Dark yellow for parameter headings */
+    }
+    .prose ul li strong,
+    .prose ol li strong {
+      color: #b8860b !important; /* Dark yellow for parameter names */
+    }
+    .dark .prose h4 {
+      color: #b8860b !important; /* Dark yellow for parameter headings in dark mode */
+    }
+    .dark .prose ul li strong,
+    .dark .prose ol li strong {
+      color: #b8860b !important; /* Dark yellow for parameter names in dark mode */
+    }
+    /* Code blocks styling */
+    .prose code {
+      color: #92400e !important; /* Amber-800 for light mode code */
+      background-color: #fef3c7 !important; /* Amber-100 background */
+    }
+    .prose pre {
+      background-color: #1f2937 !important; /* Gray-800 background for code blocks */
+    }
+    .prose pre code {
+      color: #fbbf24 !important; /* Amber-400 - gold color for dark mode code */
+      background-color: transparent !important;
+    }
+    .dark .prose code {
+      color: #fbbf24 !important; /* Amber-400 - gold color for inline code */
+      background-color: rgba(251, 191, 36, 0.1) !important; /* Subtle gold background */
+    }
+    .dark .prose pre {
+      background-color: #111827 !important; /* Darker background for code blocks */
+    }
+    .dark .prose pre code {
+      color: #fbbf24 !important; /* Amber-400 - gold color for dark mode code blocks */
+    }
+  </style>
+
+  <!-- Mermaid diagrams - enable if mermaid param is set -->
+  {{- if or .Params.mermaid site.Params.mermaid -}}
+  {{- partial "mermaid.html" . -}}
+  <style>
+    /* Make Mermaid diagrams vertical and scrollable */
+    .mermaid {
+      overflow-y: auto;
+      overflow-x: auto;
+      cursor: grab;
+      max-width: 100%;
+      max-height: 80vh;
+      display: block;
+    }
+    .mermaid:active {
+      cursor: grabbing;
+    }
+    .mermaid svg {
+      width: 100%;
+      height: auto;
+      min-height: 100%;
+    }
+    /* Vertical container */
+    .mermaid-container {
+      position: relative;
+      overflow-y: auto;
+      overflow-x: auto;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.02);
+      max-height: 80vh;
+      direction: ltr;
+      width: 100%;
+    }
+    /* For class diagrams specifically, set to 90% width and min 1500px height */
+    .mermaid-container:has(.mermaid svg[data-diagram-type="classDiagram"]),
+    .mermaid-container.class-diagram {
+      width: 90% !important;
+      max-width: 90% !important;
+      min-height: 1500px !important;
+      margin: 0 auto;
+    }
+    .dark .mermaid-container {
+      border-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    /* Force class diagrams to be vertical (top-to-bottom) */
+    .mermaid-container svg {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+    /* For class diagrams, ensure vertical layout by constraining width */
+    .mermaid-container .classDiagram {
+      width: 100% !important;
+    }
+    /* Style Mermaid class diagram boxes - darker background and gold text */
+    .mermaid-container svg[data-diagram-type="classDiagram"] rect,
+    .mermaid-container svg[data-diagram-type="classDiagram"] polygon,
+    .mermaid-container svg rect.node,
+    .mermaid-container svg polygon.node {
+      fill: #1a1a1a !important;
+      stroke: #b8860b !important;
+      stroke-width: 2px !important;
+    }
+    .mermaid-container svg[data-diagram-type="classDiagram"] text,
+    .mermaid-container svg[data-diagram-type="classDiagram"] .node text {
+      fill: #fbbf24 !important;
+      color: #fbbf24 !important;
+    }
+    .mermaid-container svg[data-diagram-type="classDiagram"] .classTitle {
+      fill: #fbbf24 !important;
+      font-weight: bold !important;
+    }
+    .mermaid-container svg[data-diagram-type="classDiagram"] .classText {
+      fill: #fbbf24 !important;
+    }
+    /* Target all rects and polygons in class diagrams more aggressively */
+    .mermaid-container.class-diagram svg rect:not([fill="none"]),
+    .mermaid-container.class-diagram svg polygon:not([fill="none"]) {
+      fill: #1a1a1a !important;
+      stroke: #b8860b !important;
+    }
+    .mermaid-container.class-diagram svg text {
+      fill: #fbbf24 !important;
+    }
+    /* Dark mode adjustments */
+    .dark .mermaid-container svg[data-diagram-type="classDiagram"] rect,
+    .dark .mermaid-container svg[data-diagram-type="classDiagram"] polygon {
+      fill: #0a0a0a !important;
+      stroke: #b8860b !important;
+    }
+  </style>
+  <script>
+    // Configure Mermaid for vertical layout and make zoomable
+    document.addEventListener('DOMContentLoaded', function() {
+      // Update Mermaid config for vertical layout
+      if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({ 
+          startOnLoad: true,
+          flowchart: { 
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis'
+          },
+          classDiagram: {
+            useMaxWidth: true,
+            direction: 'TB' // Top to Bottom
+          }
+        });
+      }
+      
+      const mermaidDiagrams = document.querySelectorAll('.mermaid');
+      mermaidDiagrams.forEach(diagram => {
+        // Wrap in container
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        diagram.parentNode.insertBefore(container, diagram);
+        container.appendChild(diagram);
+        
+        // For class diagrams, make them zoomable and readable
+        if (diagram.textContent.includes('classDiagram')) {
+          container.classList.add('class-diagram');
+          setTimeout(() => {
+            const svg = container.querySelector('svg');
+            if (svg) {
+              svg.setAttribute('data-diagram-type', 'classDiagram');
+              
+              // Get viewBox dimensions
+              const viewBox = svg.getAttribute('viewBox');
+              if (viewBox) {
+                const [x, y, width, height] = viewBox.split(' ').map(Number);
+                
+                // Set container to 90% width with scrollable area
+                container.style.width = '90%';
+                container.style.maxWidth = '90%';
+                container.style.minHeight = '1500px';
+                container.style.margin = '0 auto';
+                container.style.overflowX = 'auto';
+                container.style.overflowY = 'auto';
+                container.style.position = 'relative';
+                
+                // Set SVG to actual size (don't scale down)
+                svg.style.width = width + 'px';
+                svg.style.height = height + 'px';
+                svg.style.minWidth = width + 'px';
+                svg.style.minHeight = height + 'px';
+                svg.style.display = 'block';
+                
+                // Apply dark background and gold text styling after render
+                const applyStyles = () => {
+                  // Style all rectangles and polygons (class boxes)
+                  svg.querySelectorAll('rect, polygon').forEach(rect => {
+                    const fill = rect.getAttribute('fill');
+                    // Only style if it's a class box (not a line or other element)
+                    if (fill && (fill.includes('white') || fill.includes('#fff') || fill.includes('rgb(255'))) {
+                      rect.setAttribute('fill', '#1a1a1a');
+                    } else if (!fill || fill === 'none') {
+                      // Check if it's part of a class node
+                      const parent = rect.closest('g.node');
+                      if (parent) {
+                        rect.setAttribute('fill', '#1a1a1a');
+                      }
+                    }
+                    // Update stroke to gold
+                    const stroke = rect.getAttribute('stroke');
+                    if (stroke && stroke !== 'none') {
+                      rect.setAttribute('stroke', '#b8860b');
+                      rect.setAttribute('stroke-width', '2');
+                    }
+                  });
+                  
+                  // Style all text elements - be more aggressive
+                  svg.querySelectorAll('text').forEach(text => {
+                    text.setAttribute('fill', '#fbbf24');
+                    text.style.fill = '#fbbf24';
+                    text.style.color = '#fbbf24';
+                  });
+                  
+                  // Also try to style by class names
+                  svg.querySelectorAll('.node rect, .node polygon').forEach(el => {
+                    el.setAttribute('fill', '#1a1a1a');
+                    el.setAttribute('stroke', '#b8860b');
+                    el.setAttribute('stroke-width', '2');
+                  });
+                  
+                  // Style relationship lines to be more subtle
+                  svg.querySelectorAll('path.edge, .edgePath path').forEach(path => {
+                    path.setAttribute('stroke', '#b8860b');
+                    path.setAttribute('stroke-width', '1.5');
+                  });
+                };
+                
+                // Try multiple times to catch the render
+                setTimeout(applyStyles, 200);
+                setTimeout(applyStyles, 500);
+                setTimeout(applyStyles, 1000);
+                setTimeout(applyStyles, 2000);
+                
+                // Set initial scale to make it readable (scale up if too small)
+                const containerWidthPx = container.offsetWidth || window.innerWidth * 0.9;
+                const minReadableWidth = 1200; // Minimum width for readability
+                const initialScale = Math.max(1, minReadableWidth / width);
+                
+                // Create a wrapper for scaling
+                const scaleWrapper = document.createElement('div');
+                scaleWrapper.style.transformOrigin = 'top left';
+                scaleWrapper.style.transform = `scale(${initialScale})`;
+                scaleWrapper.style.width = width + 'px';
+                scaleWrapper.style.height = height + 'px';
+                svg.parentNode.insertBefore(scaleWrapper, svg);
+                scaleWrapper.appendChild(svg);
+                
+                // Store scale in wrapper for zoom functionality
+                scaleWrapper.dataset.scale = initialScale;
+              }
+            }
+          }, 1500);
+        }
+        
+        // Zoom functionality - check if it's a class diagram with scale wrapper
+        const scaleWrapper = container.querySelector('[data-scale]');
+        let scale = scaleWrapper ? parseFloat(scaleWrapper.dataset.scale) : 1;
+        const minScale = 0.3;
+        const maxScale = 5;
+        
+        // Mouse wheel zoom
+        container.addEventListener('wheel', function(e) {
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            scale = Math.max(minScale, Math.min(maxScale, scale * delta));
+            
+            if (scaleWrapper) {
+              scaleWrapper.style.transform = `scale(${scale})`;
+              scaleWrapper.dataset.scale = scale;
+            } else {
+              diagram.style.transform = `scale(${scale})`;
+              diagram.style.transformOrigin = 'top left';
+            }
+          }
+        }, { passive: false });
+        
+        // Pan with mouse drag
+        let isDragging = false;
+        let startX, startY, scrollLeft, scrollTop;
+        
+        container.addEventListener('mousedown', function(e) {
+          isDragging = true;
+          startX = e.pageX - container.offsetLeft;
+          startY = e.pageY - container.offsetTop;
+          scrollLeft = container.scrollLeft;
+          scrollTop = container.scrollTop;
+          container.style.cursor = 'grabbing';
+        });
+        
+        container.addEventListener('mouseleave', function() {
+          isDragging = false;
+          container.style.cursor = 'grab';
+        });
+        
+        container.addEventListener('mouseup', function() {
+          isDragging = false;
+          container.style.cursor = 'grab';
+        });
+        
+        container.addEventListener('mousemove', function(e) {
+          if (!isDragging) return;
+          e.preventDefault();
+          const x = e.pageX - container.offsetLeft;
+          const y = e.pageY - container.offsetTop;
+          const walkX = (x - startX) * 2;
+          const walkY = (y - startY) * 2;
+          container.scrollLeft = scrollLeft - walkX;
+          container.scrollTop = scrollTop - walkY;
+        });
+      });
+    });
+  </script>
+  {{- end -}}
+
+  <!-- Post Tags - disabled for documentation -->
+</article>
+
+{{- end -}}

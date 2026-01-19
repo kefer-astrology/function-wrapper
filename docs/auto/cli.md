@@ -21,22 +21,22 @@ Usage:
     python -m module.cli &lt;command&gt; [args_json]
     
 Commands:
-    - compute_chart: Compute positions and aspects for a chart
-    - compute_transit_series: Compute transit series for a time range
-    - get_workspace_settings: Get workspace settings and defaults
-    - list_charts: List all charts in workspace
-    - get_chart: Get chart details by ID
-    - sync_workspace: Synchronize workspace manifest with files on disk
-    - export_parquet: Export stored positions to Parquet files
+- compute_chart: Compute positions and aspects for a chart
+- compute_transit_series: Compute transit series for a time range
+- get_workspace_settings: Get workspace settings and defaults
+- list_charts: List all charts in workspace
+- get_chart: Get chart details by ID
+- sync_workspace: Synchronize workspace manifest with files on disk
+- export_parquet: Export stored positions to Parquet files
     
 Storage:
-    - DuckDB database: workspace_dir/data/workspace.db
-    - Parquet files: workspace_dir/data/parquet/*.parquet
-    - Enable storage: Set store_in_db=True in compute_chart args
+- DuckDB database: workspace_dir/data/workspace.db
+- Parquet files: workspace_dir/data/parquet/*.parquet
+- Enable storage: Set store_in_db=True in compute_chart args
 
 ## Functions
 
-### `cmd_compute_chart`
+## `cmd_compute_chart`
 
 ```python
 cmd_compute_chart(args: Dict[str, Any]) -> Dict[str, Any]
@@ -65,7 +65,7 @@ Dict with keys:
         - chart_id: Chart ID
         - stored: True if stored in DuckDB, False otherwise
 
-### `cmd_compute_transit_series`
+## `cmd_compute_transit_series`
 
 ```python
 cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]
@@ -100,7 +100,7 @@ Compute transit series for a time range.
 
 Dict with transit series results
 
-### `cmd_export_parquet`
+## `cmd_export_parquet`
 
 ```python
 cmd_export_parquet(args: Dict[str, Any]) -> Dict[str, Any]
@@ -123,7 +123,7 @@ Export stored positions to Parquet files.
 
 Dict with list of created Parquet file paths
 
-### `cmd_get_chart`
+## `cmd_get_chart`
 
 ```python
 cmd_get_chart(args: Dict[str, Any]) -> Dict[str, Any]
@@ -142,7 +142,7 @@ Get chart details by ID.
 
 Dict with chart details
 
-### `cmd_get_workspace_settings`
+## `cmd_get_workspace_settings`
 
 ```python
 cmd_get_workspace_settings(args: Dict[str, Any]) -> Dict[str, Any]
@@ -159,7 +159,7 @@ Get workspace settings and defaults.
 
 Dict with workspace settings
 
-### `cmd_list_charts`
+## `cmd_list_charts`
 
 ```python
 cmd_list_charts(args: Dict[str, Any]) -> Dict[str, Any]
@@ -176,7 +176,7 @@ List all charts in workspace.
 
 Dict with list of chart summaries
 
-### `cmd_sync_workspace`
+## `cmd_sync_workspace`
 
 ```python
 cmd_sync_workspace(args: Dict[str, Any]) -> Dict[str, Any]
@@ -197,7 +197,7 @@ Synchronize workspace manifest with files on disk.
 
 Dict with sync results
 
-### `main`
+## `main`
 
 ```python
 main()

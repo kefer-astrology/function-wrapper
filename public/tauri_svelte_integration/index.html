@@ -1,0 +1,1262 @@
+<!doctype html>
+
+
+
+
+
+
+
+<html
+  class="not-ready lg:text-base"
+  style="--bg:#faf8f1"
+  lang="en-us"
+  dir="ltr"
+><head><script src="/function-wrapper/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=function-wrapper/livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title> - Kefer Astrology API Documentation</title>
+
+  
+  <meta name="theme-color" />
+
+  <meta name="description" content="Tauri &#43; Svelte Frontend Integration Guide Overview This guide describes how to integrate the Python astrological computation sidecar with a Tauri &#43; Svelte frontend application. The Python backend handles heavy computational tasks (position calculations, aspect detection, transit series), while the frontend manages UI, state, and data storage using DuckDB with Parquet files.
+Architecture ┌─────────────────────────────────────────────────────────────┐ │ Tauri &#43; Svelte Frontend │ │ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ │ │ │ UI Layer │ │ State Store │ │ DuckDB/ │ │ │ │ (Svelte) │ │ (Svelte) │ │ Parquet │ │ │ └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ │ │ │ │ │ │ │ └─────────────────┴──────────────────┘ │ │ │ │ │ ┌───────▼────────┐ │ │ │ Tauri Commands │ │ │ │ (Rust Layer) │ │ │ └───────┬────────┘ │ └────────────────────────────┼─────────────────────────────────┘ │ │ subprocess │ JSON over stdout │ ┌────────────────────────────▼─────────────────────────────────┐ │ Python Sidecar (Computation Engine) │ │ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ │ │ │ CLI API │ │ Services │ │ Workspace │ │ │ │ (module." />
+  <meta name="author" content="Kefer Astrology API Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/function-wrapper/main.min.aa6ea02b0eefe7db1bff5f6c623c536c742cbb74f94dbd38d2d905a87001ac2e.css" integrity="sha256-qm6gKw7v59sb/19sYjxTbHQsu3T5Tb040tkFqHABrC4=" />
+
+  
+  <link rel="preload" as="image" href="http://localhost:1313/function-wrapper/theme.png" />
+
+  
+
+  
+
+  <script
+    defer
+    src="http://localhost:1313/function-wrapper/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+
+  
+  <link
+    rel="icon"
+    href="http://localhost:1313/function-wrapper/favicon.ico"
+  />
+  <link
+    rel="apple-touch-icon"
+    href="http://localhost:1313/function-wrapper/apple-touch-icon.png"
+  />
+
+  <meta name="generator" content="Hugo 0.128.0">
+</head>
+<body
+    class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
+  >
+    
+<div class="sticky top-0 z-50 w-full border-b border-gray-700 shadow-sm backdrop-blur-sm" style="background-color: #1a1a1a !important; position: sticky; top: 0;">
+  <div class="mx-auto flex items-center px-8" style="max-width: 90% !important; gap: 2rem; min-height: 6rem; padding-top: 1.5rem; padding-bottom: 1.5rem;">
+    <div class="flex items-center" style="flex: 3;">
+      <a
+        class="text-2xl font-medium no-underline text-white"
+        href="http://localhost:1313/function-wrapper/"
+        >Kefer Astrology API Documentation</a
+      >
+      <div
+        class="btn-dark text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right] invert"
+        role="button"
+        aria-label="Dark"
+      ></div>
+    </div>
+    <div style="flex: 2;">
+<div class="relative">
+  <input 
+    type="text" 
+    id="search-input" 
+    placeholder="Search documentation..." 
+    class="w-full px-4 py-2 rounded-lg border text-sm"
+    style="background-color: #000000 !important; color: #b8860b !important; border-color: #b8860b !important;"
+  />
+  <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 hidden" style="background-color: #1a1a1a !important; border-color: #4a4a4a !important;"></div>
+</div>
+
+<style>
+  #search-input {
+    background-color: #000000 !important;
+    color: #b8860b !important;
+    border-color: #b8860b !important;
+  }
+  #search-input::placeholder {
+    color: #b8860b !important;
+    opacity: 0.7;
+  }
+  #search-input:focus {
+    border-color: #b8860b !important;
+    ring-color: #b8860b !important;
+  }
+</style>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  
+  if (!searchInput) return;
+  
+  
+  let globalSearchIndex = [];
+  const basePath = '/function-wrapper';
+  
+  
+  function buildSearchIndex() {
+    const allLinks = Array.from(document.querySelectorAll('a[href]'));
+    const indexMap = new Map();
+    
+    allLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      if (normalized && !normalized.includes('#') && !normalized.includes('http')) {
+        const title = link.textContent.trim();
+        if (title && !indexMap.has(normalized)) {
+          indexMap.set(normalized, {
+            title: title,
+            url: normalized,
+            keywords: (title + ' ' + normalized).toLowerCase()
+          });
+        }
+      }
+    });
+    
+    globalSearchIndex = Array.from(indexMap.values());
+  }
+  
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildSearchIndex);
+  } else {
+    buildSearchIndex();
+  }
+  
+  
+  function normalizeUrl(href) {
+    if (!href || href.startsWith('http') || href.startsWith('#')) {
+      return null;
+    }
+    const basePath = '/function-wrapper';
+    let normalized = href.trim();
+    
+    
+    if (normalized.endsWith('.md')) {
+      normalized = normalized.slice(0, -3);
+    }
+    
+    
+    if (!normalized.startsWith('/')) {
+      
+      const currentPath = window.location.pathname;
+      
+      const relativePath = currentPath.startsWith(basePath) 
+        ? currentPath.slice(basePath.length) 
+        : currentPath;
+      
+      const currentDir = relativePath.split('/').slice(0, -1).filter(p => p).join('/');
+      
+      if (currentDir) {
+        normalized = '/' + currentDir + '/' + normalized;
+      } else {
+        normalized = '/' + normalized;
+      }
+    }
+    
+    
+    if (normalized.startsWith('/') && !normalized.startsWith(basePath)) {
+      normalized = basePath + normalized;
+    }
+    
+    
+    normalized = normalized.replace(/\/+/g, '/');
+    
+    
+    if (normalized !== basePath && normalized !== basePath + '/' && normalized.endsWith('/')) {
+      normalized = normalized.slice(0, -1);
+    }
+    
+    return normalized;
+  }
+  
+  
+  const pageIndex = new Map();
+  const allLinks = Array.from(document.querySelectorAll('a[href]'));
+  
+  allLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    const normalized = normalizeUrl(href);
+    if (normalized) {
+      const text = link.textContent.trim();
+      const linkText = text.toLowerCase();
+      
+      pageIndex.set(normalized, {
+        title: text || normalized.split('/').pop(),
+        searchText: linkText,
+        href: normalized
+      });
+    }
+  });
+  
+  
+  const currentPath = window.location.pathname;
+  pageIndex.set(currentPath, {
+    title: document.title || 'Current Page',
+    searchText: document.body.textContent.toLowerCase(),
+    href: currentPath
+  });
+  
+  
+  searchInput.addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 1) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+    
+    const results = [];
+    
+    const queryWords = query.split(' ').filter(w => w.length > 0);
+    const seenUrls = new Set();
+    const seenResults = new Set(); 
+    
+    
+    if (globalSearchIndex.length > 0) {
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query) 
+        );
+        
+        if (matches && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title,
+            url: page.url,
+            text: page.title + ' - Documentation page (click to search this page)',
+            priority: 0 
+          });
+        }
+      });
+    }
+    
+    
+    pageIndex.forEach((pageInfo, url) => {
+      
+      const urlSegments = url.toLowerCase().split('/').filter(s => s.length > 0);
+      const searchableText = (pageInfo.searchText + ' ' + pageInfo.title.toLowerCase() + ' ' + urlSegments.join(' ')).toLowerCase();
+      
+      const matches = queryWords.every(word => 
+        searchableText.includes(word) || 
+        urlSegments.some(seg => seg.includes(word))
+      );
+      
+      if (matches && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        results.push({
+          title: pageInfo.title,
+          url: url,
+          text: pageInfo.title + ' - Documentation page',
+          priority: 1 
+        });
+      }
+    });
+    
+    
+    allLinks.forEach(link => {
+      const linkText = link.textContent.toLowerCase();
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      
+      if (normalized) {
+        
+        const urlSegments = normalized.toLowerCase().split('/').filter(s => s.length > 0);
+        const searchableText = (linkText + ' ' + urlSegments.join(' ')).toLowerCase();
+        
+        const matches = queryWords.every(word => 
+          searchableText.includes(word) || 
+          urlSegments.some(seg => seg.includes(word))
+        );
+        
+        if (matches && !seenUrls.has(normalized)) {
+          seenUrls.add(normalized);
+          results.push({
+            title: link.textContent.trim() || normalized.split('/').pop().replace(/-/g, ' '),
+            url: normalized,
+            text: link.textContent.trim() || 'Documentation page',
+            priority: 1 
+          });
+        }
+      }
+    });
+    
+    
+    
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, code, pre, dt, dd, td, th, strong, em, b').forEach(el => {
+      const text = el.textContent.toLowerCase();
+      
+      const matches = queryWords.length > 0 && (
+        queryWords.every(word => text.includes(word)) || 
+        text.includes(query) 
+      );
+      
+      if (matches && el.textContent.trim() && el.textContent.trim().length > 1) {
+        
+        let pageUrl = currentPath;
+        let pageTitle = document.title || 'Documentation';
+        
+        
+        const parent = el.closest('article, section, li, ul, ol, table, dl');
+        if (parent) {
+          const nearbyLink = parent.querySelector('a[href*="/auto/"], a[href*="/enums"], a[href*="/ui_"], a[href*="/models"]');
+          if (nearbyLink) {
+            const normalized = normalizeUrl(nearbyLink.getAttribute('href'));
+            if (normalized) {
+              pageUrl = normalized;
+              pageTitle = nearbyLink.textContent.trim() || pageTitle;
+            }
+          }
+        }
+        
+        
+        if (el.tagName && el.tagName.match(/^H[1-6]$/)) {
+          pageTitle = el.textContent.trim();
+        }
+        
+        
+        let snippet = el.textContent.trim();
+        if (snippet.length > 200) {
+          
+          const queryLower = query.toLowerCase();
+          const index = snippet.toLowerCase().indexOf(queryLower);
+          if (index > 0) {
+            const start = Math.max(0, index - 50);
+            snippet = '...' + snippet.substring(start, start + 150) + '...';
+          } else {
+            snippet = snippet.substring(0, 150) + '...';
+          }
+        }
+        
+        const resultKey = pageUrl + '|' + pageTitle;
+        
+        if (!seenResults.has(resultKey)) {
+          seenResults.add(resultKey);
+          results.push({
+            title: pageTitle,
+            url: pageUrl,
+            text: snippet,
+            priority: 2 
+          });
+        }
+      }
+    });
+    
+    
+    const bodyText = document.body.textContent.toLowerCase();
+    const bodyMatches = queryWords.length > 0 && (
+      queryWords.every(word => bodyText.includes(word)) || 
+      bodyText.includes(query) 
+    );
+    
+    if (bodyMatches) {
+      
+      const resultKey = currentPath + '|' + (document.title || 'Current Page');
+      if (!seenResults.has(resultKey)) {
+        seenResults.add(resultKey);
+        
+        const queryLower = query.toLowerCase();
+        const index = bodyText.indexOf(queryLower);
+        if (index >= 0) {
+          const fullText = document.body.textContent;
+          const snippetStart = Math.max(0, index - 100);
+          const snippetEnd = Math.min(fullText.length, index + query.length + 100);
+          const snippet = '...' + fullText.substring(snippetStart, snippetEnd).trim() + '...';
+          
+          results.push({
+            title: document.title || 'Current Page',
+            url: currentPath,
+            text: snippet,
+            priority: 3 
+          });
+        }
+      }
+    }
+    
+    
+    results.sort((a, b) => (a.priority || 2) - (b.priority || 2));
+    
+    
+    if (results.length > 0) {
+      const resultsHtml = results.slice(0, 10).map((r, idx) => {
+        
+        const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' + 
+          r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' + 
+          safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+      }).join('');
+      
+      searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+      
+      
+      searchResults.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.location.href = url;
+          }
+        });
+      });
+      
+      searchResults.classList.remove('hidden');
+    } else {
+      searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+      searchResults.classList.remove('hidden');
+    }
+  });
+  
+  
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      searchResults.classList.add('hidden');
+      searchInput.value = '';
+    }
+  });
+})();
+</script>
+</div>
+  </div>
+</div>
+
+<script>
+  
+  const htmlClass = document.documentElement.classList;
+  const btnDark = document.querySelector('.btn-dark');
+  if (btnDark) {
+    btnDark.addEventListener('click', () => {
+      const isDark = localStorage.getItem('dark') !== 'true';
+      localStorage.setItem('dark', isDark);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', isDark ? "rgb(0 0 0 / 85%)" : '#faf8f1');
+      }
+    });
+  }
+  
+  
+  const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  const darkVal = localStorage.getItem('dark');
+  if (darkVal === 'true' || (!darkVal && darkScheme.matches)) {
+    htmlClass.add('dark');
+  }
+</script>
+<main
+      class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
+      style="max-width: 90% !important;"
+    ><article class="pt-6">
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="tauri--svelte-frontend-integration-guide">Tauri + Svelte Frontend Integration Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>This guide describes how to integrate the Python astrological computation sidecar with a Tauri + Svelte frontend application. The Python backend handles heavy computational tasks (position calculations, aspect detection, transit series), while the frontend manages UI, state, and data storage using DuckDB with Parquet files.</p>
+<h2 id="architecture">Architecture</h2>
+<pre tabindex="0"><code>┌─────────────────────────────────────────────────────────────┐
+│                    Tauri + Svelte Frontend                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │   UI Layer   │  │  State Store │  │  DuckDB/     │      │
+│  │  (Svelte)    │  │  (Svelte)    │  │  Parquet     │      │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘      │
+│         │                 │                  │              │
+│         └─────────────────┴──────────────────┘              │
+│                            │                                  │
+│                    ┌───────▼────────┐                        │
+│                    │  Tauri Commands │                        │
+│                    │   (Rust Layer)  │                        │
+│                    └───────┬────────┘                        │
+└────────────────────────────┼─────────────────────────────────┘
+                             │
+                             │ subprocess
+                             │ JSON over stdout
+                             │
+┌────────────────────────────▼─────────────────────────────────┐
+│              Python Sidecar (Computation Engine)              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │   CLI API    │  │  Services    │  │  Workspace  │      │
+│  │  (module.cli)│  │  (compute_*) │  │  (YAML)      │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└───────────────────────────────────────────────────────────────┘
+</code></pre><h2 id="data-flow">Data Flow</h2>
+<ol>
+<li><strong>User Action</strong> → Svelte component triggers action</li>
+<li><strong>Tauri Command</strong> → Rust command handler called</li>
+<li><strong>Python Subprocess</strong> → Tauri spawns Python CLI with JSON args</li>
+<li><strong>Computation</strong> → Python computes positions/aspects/transits</li>
+<li><strong>JSON Response</strong> → Python outputs JSON to stdout</li>
+<li><strong>Store Results</strong> → Frontend stores in DuckDB/Parquet</li>
+<li><strong>UI Update</strong> → Svelte components react to state changes</li>
+</ol>
+<h2 id="tauri-command-implementation">Tauri Command Implementation</h2>
+<h3 id="1-rust-command-handlers">1. Rust Command Handlers</h3>
+<p>Create command handlers in <code>src-tauri/src/commands/compute.rs</code>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">use</span><span style="color:#bbb"> </span>serde::{Deserialize,<span style="color:#bbb"> </span>Serialize};<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">use</span><span style="color:#bbb"> </span>std::collections::HashMap;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">use</span><span style="color:#bbb"> </span>std::process::Command;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">use</span><span style="color:#bbb"> </span>std::path::PathBuf;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">use</span><span style="color:#bbb"> </span>tauri::command;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#999;font-weight:bold;font-style:italic">#[derive(Debug, Serialize, Deserialize)]</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">struct</span> <span style="color:#458;font-weight:bold">ComputeChartArgs</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>workspace_path: <span style="color:#0086b3">String</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>chart_id: <span style="color:#0086b3">String</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>include_physical: <span style="color:#0086b3">Option</span><span style="color:#000;font-weight:bold">&lt;</span><span style="color:#458;font-weight:bold">bool</span><span style="color:#000;font-weight:bold">&gt;</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>include_topocentric: <span style="color:#0086b3">Option</span><span style="color:#000;font-weight:bold">&lt;</span><span style="color:#458;font-weight:bold">bool</span><span style="color:#000;font-weight:bold">&gt;</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#999;font-weight:bold;font-style:italic">#[derive(Debug, Serialize, Deserialize)]</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">struct</span> <span style="color:#458;font-weight:bold">ComputeChartResult</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>positions: <span style="color:#458;font-weight:bold">HashMap</span><span style="color:#000;font-weight:bold">&lt;</span><span style="color:#0086b3">String</span>,<span style="color:#bbb"> </span>serde_json::Value<span style="color:#000;font-weight:bold">&gt;</span>,<span style="color:#bbb">  </span><span style="color:#998;font-style:italic">// Can be float or dict
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>aspects: <span style="color:#0086b3">Vec</span><span style="color:#000;font-weight:bold">&lt;</span>AspectResult<span style="color:#000;font-weight:bold">&gt;</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>chart_id: <span style="color:#0086b3">String</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#999;font-weight:bold;font-style:italic">#[derive(Debug, Serialize, Deserialize)]</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">struct</span> <span style="color:#458;font-weight:bold">AspectResult</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>from: <span style="color:#0086b3">String</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>to: <span style="color:#0086b3">String</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>r#type: <span style="color:#0086b3">String</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>angle: <span style="color:#458;font-weight:bold">f64</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>orb: <span style="color:#458;font-weight:bold">f64</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>exact_angle: <span style="color:#458;font-weight:bold">f64</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>applying: <span style="color:#458;font-weight:bold">bool</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span>separating: <span style="color:#458;font-weight:bold">bool</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#999;font-weight:bold;font-style:italic">#[command]</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">async</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">fn</span> <span style="color:#900;font-weight:bold">compute_chart</span>(args: <span style="color:#458;font-weight:bold">ComputeChartArgs</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#0086b3">Result</span><span style="color:#000;font-weight:bold">&lt;</span>ComputeChartResult,<span style="color:#bbb"> </span><span style="color:#0086b3">String</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>python_exe<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>find_python_executable()<span style="color:#000;font-weight:bold">?</span>;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>module_path<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>get_module_path()<span style="color:#000;font-weight:bold">?</span>;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>args_json<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>serde_json::to_string(<span style="color:#000;font-weight:bold">&amp;</span>args)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.map_err(<span style="color:#000;font-weight:bold">|</span>e<span style="color:#000;font-weight:bold">|</span><span style="color:#bbb"> </span>format!(<span style="color:#d14">&#34;Failed to serialize args: </span><span style="color:#d14">{}</span><span style="color:#d14">&#34;</span>,<span style="color:#bbb"> </span>e))<span style="color:#000;font-weight:bold">?</span>;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>output<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>Command::new(<span style="color:#000;font-weight:bold">&amp;</span>python_exe)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.arg(<span style="color:#d14">&#34;-m&#34;</span>)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.arg(<span style="color:#d14">&#34;module.cli&#34;</span>)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.arg(<span style="color:#d14">&#34;compute_chart&#34;</span>)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.arg(<span style="color:#000;font-weight:bold">&amp;</span>args_json)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.current_dir(<span style="color:#000;font-weight:bold">&amp;</span>module_path)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.output()<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.map_err(<span style="color:#000;font-weight:bold">|</span>e<span style="color:#000;font-weight:bold">|</span><span style="color:#bbb"> </span>format!(<span style="color:#d14">&#34;Failed to execute Python: </span><span style="color:#d14">{}</span><span style="color:#d14">&#34;</span>,<span style="color:#bbb"> </span>e))<span style="color:#000;font-weight:bold">?</span>;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">if</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">!</span>output.status.success()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>error<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span><span style="color:#0086b3">String</span>::from_utf8_lossy(<span style="color:#000;font-weight:bold">&amp;</span>output.stderr);<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#000;font-weight:bold">return</span><span style="color:#bbb"> </span><span style="color:#0086b3">Err</span>(format!(<span style="color:#d14">&#34;Python error: </span><span style="color:#d14">{}</span><span style="color:#d14">&#34;</span>,<span style="color:#bbb"> </span>error));<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>result: <span style="color:#458;font-weight:bold">serde_json</span>::Value<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>serde_json::from_slice(<span style="color:#000;font-weight:bold">&amp;</span>output.stdout)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.map_err(<span style="color:#000;font-weight:bold">|</span>e<span style="color:#000;font-weight:bold">|</span><span style="color:#bbb"> </span>format!(<span style="color:#d14">&#34;Failed to parse Python output: </span><span style="color:#d14">{}</span><span style="color:#d14">&#34;</span>,<span style="color:#bbb"> </span>e))<span style="color:#000;font-weight:bold">?</span>;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">if</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#0086b3">Some</span>(error)<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>result.get(<span style="color:#d14">&#34;error&#34;</span>)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#000;font-weight:bold">return</span><span style="color:#bbb"> </span><span style="color:#0086b3">Err</span>(error.as_str()<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>.unwrap_or(<span style="color:#d14">&#34;Unknown error&#34;</span>)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>.to_string());<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>serde_json::from_value(result)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.map_err(<span style="color:#000;font-weight:bold">|</span>e<span style="color:#000;font-weight:bold">|</span><span style="color:#bbb"> </span>format!(<span style="color:#d14">&#34;Failed to deserialize result: </span><span style="color:#d14">{}</span><span style="color:#d14">&#34;</span>,<span style="color:#bbb"> </span>e))<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">fn</span> <span style="color:#900;font-weight:bold">find_python_executable</span>()<span style="color:#bbb"> </span>-&gt; <span style="color:#0086b3">Result</span><span style="color:#000;font-weight:bold">&lt;</span>PathBuf,<span style="color:#bbb"> </span><span style="color:#0086b3">String</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>candidates<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>vec![<span style="color:#d14">&#34;python3&#34;</span>,<span style="color:#bbb"> </span><span style="color:#d14">&#34;python&#34;</span>,<span style="color:#bbb"> </span><span style="color:#d14">&#34;py&#34;</span>];<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">for</span><span style="color:#bbb"> </span>cmd<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">in</span><span style="color:#bbb"> </span>candidates<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span><span style="color:#000;font-weight:bold">if</span><span style="color:#bbb"> </span>Command::new(cmd)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>.arg(<span style="color:#d14">&#34;--version&#34;</span>)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>.output()<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>.is_ok()<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span><span style="color:#000;font-weight:bold">return</span><span style="color:#bbb"> </span><span style="color:#0086b3">Ok</span>(PathBuf::from(cmd));<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>}<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#0086b3">Err</span>(<span style="color:#d14">&#34;Python executable not found&#34;</span>.to_string())<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">fn</span> <span style="color:#900;font-weight:bold">get_module_path</span>()<span style="color:#bbb"> </span>-&gt; <span style="color:#0086b3">Result</span><span style="color:#000;font-weight:bold">&lt;</span>PathBuf,<span style="color:#bbb"> </span><span style="color:#0086b3">String</span><span style="color:#000;font-weight:bold">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#998;font-style:italic">// In Tauri, you can use env::current_exe() and navigate to the module directory
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#998;font-style:italic">// For development, you might use a configurable path
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span><span style="color:#bbb">    </span>std::env::current_dir()<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.map_err(<span style="color:#000;font-weight:bold">|</span>e<span style="color:#000;font-weight:bold">|</span><span style="color:#bbb"> </span>format!(<span style="color:#d14">&#34;Failed to get current directory: </span><span style="color:#d14">{}</span><span style="color:#d14">&#34;</span>,<span style="color:#bbb"> </span>e))<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.map(<span style="color:#000;font-weight:bold">|</span>p<span style="color:#000;font-weight:bold">|</span><span style="color:#bbb"> </span>p.join(<span style="color:#d14">&#34;function-wrapper&#34;</span>))<span style="color:#bbb">  </span><span style="color:#998;font-style:italic">// Adjust path as needed
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>}<span style="color:#bbb">
+</span></span></span></code></pre></div><h3 id="2-register-commands-in-tauri">2. Register Commands in Tauri</h3>
+<p>In <code>src-tauri/src/main.rs</code>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">use</span><span style="color:#bbb"> </span>tauri::Manager;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#999;font-weight:bold;font-style:italic">#[tauri::command]</span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">fn</span> <span style="color:#900;font-weight:bold">greet</span>(name: <span style="color:#000;font-weight:bold">&amp;</span><span style="color:#458;font-weight:bold">str</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#0086b3">String</span> {<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>format!(<span style="color:#d14">&#34;Hello, </span><span style="color:#d14">{}</span><span style="color:#d14">!&#34;</span>,<span style="color:#bbb"> </span>name)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#000;font-weight:bold">fn</span> <span style="color:#900;font-weight:bold">main</span>()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>tauri::Builder::default()<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.invoke_handler(tauri::generate_handler![<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>greet,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>compute_chart,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>compute_transit_series,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>get_workspace_settings,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>list_charts,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">            </span>get_chart,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>])<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.run(tauri::generate_context!())<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">        </span>.expect(<span style="color:#d14">&#34;error while running tauri application&#34;</span>);<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></span></span></code></pre></div><h2 id="svelte-integration">Svelte Integration</h2>
+<h3 id="1-tauri-api-wrapper">1. Tauri API Wrapper</h3>
+<p>Create <code>src/lib/tauri-api.ts</code>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">import</span> { invoke } <span style="color:#000;font-weight:bold">from</span> <span style="color:#d14">&#39;@tauri-apps/api/tauri&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">interface</span> ComputeChartArgs {
+</span></span><span style="display:flex;"><span>  workspace_path: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  chart_id: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  include_physical?: <span style="color:#458;font-weight:bold">boolean</span>;
+</span></span><span style="display:flex;"><span>  include_topocentric?: <span style="color:#458;font-weight:bold">boolean</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">interface</span> PositionData {
+</span></span><span style="display:flex;"><span>  [objectId: <span style="color:#458;font-weight:bold">string</span>]<span style="color:#000;font-weight:bold">:</span> <span style="color:#458;font-weight:bold">number</span> <span style="color:#000;font-weight:bold">|</span> {
+</span></span><span style="display:flex;"><span>    longitude: <span style="color:#458;font-weight:bold">number</span>;
+</span></span><span style="display:flex;"><span>    distance?: <span style="color:#458;font-weight:bold">number</span>;
+</span></span><span style="display:flex;"><span>    declination?: <span style="color:#458;font-weight:bold">number</span>;
+</span></span><span style="display:flex;"><span>    right_ascension?: <span style="color:#458;font-weight:bold">number</span>;
+</span></span><span style="display:flex;"><span>    latitude?: <span style="color:#458;font-weight:bold">number</span>;
+</span></span><span style="display:flex;"><span>    altitude?: <span style="color:#458;font-weight:bold">number</span>;
+</span></span><span style="display:flex;"><span>    azimuth?: <span style="color:#458;font-weight:bold">number</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#998;font-style:italic">// ... other extended properties
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>  };
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">interface</span> AspectResult {
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">from</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  to: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">type</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  angle: <span style="color:#458;font-weight:bold">number</span>;
+</span></span><span style="display:flex;"><span>  orb: <span style="color:#458;font-weight:bold">number</span>;
+</span></span><span style="display:flex;"><span>  exact_angle: <span style="color:#458;font-weight:bold">number</span>;
+</span></span><span style="display:flex;"><span>  applying: <span style="color:#458;font-weight:bold">boolean</span>;
+</span></span><span style="display:flex;"><span>  separating: <span style="color:#458;font-weight:bold">boolean</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">interface</span> ComputeChartResult {
+</span></span><span style="display:flex;"><span>  positions: <span style="color:#458;font-weight:bold">PositionData</span>;
+</span></span><span style="display:flex;"><span>  aspects: <span style="color:#458;font-weight:bold">AspectResult</span>[];
+</span></span><span style="display:flex;"><span>  chart_id: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">async</span> <span style="color:#000;font-weight:bold">function</span> computeChart(args: <span style="color:#458;font-weight:bold">ComputeChartArgs</span>)<span style="color:#000;font-weight:bold">:</span> Promise&lt;<span style="color:#000080">ComputeChartResult</span>&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">return</span> <span style="color:#000;font-weight:bold">await</span> invoke&lt;<span style="color:#000080">ComputeChartResult</span>&gt;(<span style="color:#d14">&#39;compute_chart&#39;</span>, { args });
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">async</span> <span style="color:#000;font-weight:bold">function</span> computeTransitSeries(args<span style="color:#000;font-weight:bold">:</span> {
+</span></span><span style="display:flex;"><span>  workspace_path: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  source_chart_id: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  start_datetime: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  end_datetime: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  time_step: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  transiting_objects?: <span style="color:#458;font-weight:bold">string</span>[];
+</span></span><span style="display:flex;"><span>  transited_objects?: <span style="color:#458;font-weight:bold">string</span>[];
+</span></span><span style="display:flex;"><span>  aspect_types?: <span style="color:#458;font-weight:bold">string</span>[];
+</span></span><span style="display:flex;"><span>  include_physical?: <span style="color:#458;font-weight:bold">boolean</span>;
+</span></span><span style="display:flex;"><span>  include_topocentric?: <span style="color:#458;font-weight:bold">boolean</span>;
+</span></span><span style="display:flex;"><span>})<span style="color:#000;font-weight:bold">:</span> Promise&lt;<span style="color:#000080">any</span>&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">return</span> <span style="color:#000;font-weight:bold">await</span> invoke(<span style="color:#d14">&#39;compute_transit_series&#39;</span>, { args });
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">async</span> <span style="color:#000;font-weight:bold">function</span> getWorkspaceSettings(workspace_path: <span style="color:#458;font-weight:bold">string</span>)<span style="color:#000;font-weight:bold">:</span> Promise&lt;<span style="color:#000080">any</span>&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">return</span> <span style="color:#000;font-weight:bold">await</span> invoke(<span style="color:#d14">&#39;get_workspace_settings&#39;</span>, { args<span style="color:#000;font-weight:bold">:</span> { workspace_path } });
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">async</span> <span style="color:#000;font-weight:bold">function</span> listCharts(workspace_path: <span style="color:#458;font-weight:bold">string</span>)<span style="color:#000;font-weight:bold">:</span> Promise&lt;<span style="color:#000080">any</span>&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">return</span> <span style="color:#000;font-weight:bold">await</span> invoke(<span style="color:#d14">&#39;list_charts&#39;</span>, { args<span style="color:#000;font-weight:bold">:</span> { workspace_path } });
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">async</span> <span style="color:#000;font-weight:bold">function</span> getChart(workspace_path: <span style="color:#458;font-weight:bold">string</span>, chart_id: <span style="color:#458;font-weight:bold">string</span>)<span style="color:#000;font-weight:bold">:</span> Promise&lt;<span style="color:#000080">any</span>&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">return</span> <span style="color:#000;font-weight:bold">await</span> invoke(<span style="color:#d14">&#39;get_chart&#39;</span>, { args<span style="color:#000;font-weight:bold">:</span> { workspace_path, chart_id } });
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="2-duckdb-storage-integration">2. DuckDB Storage Integration</h3>
+<p>Create <code>src/lib/storage.ts</code>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">import</span> <span style="color:#000;font-weight:bold">*</span> <span style="color:#000;font-weight:bold">as</span> duckdb <span style="color:#000;font-weight:bold">from</span> <span style="color:#d14">&#39;@duckdb/duckdb-wasm&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">import</span> { computeChart } <span style="color:#000;font-weight:bold">from</span> <span style="color:#d14">&#39;./tauri-api&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">class</span> ChartStorage {
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">private</span> db: <span style="color:#458;font-weight:bold">duckdb.AsyncDuckDB</span> <span style="color:#000;font-weight:bold">|</span> <span style="color:#000;font-weight:bold">null</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">null</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">private</span> parquetPath: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">constructor</span>(parquetPath: <span style="color:#458;font-weight:bold">string</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">&#39;./data/charts.parquet&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">this</span>.parquetPath <span style="color:#000;font-weight:bold">=</span> parquetPath;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">async</span> initialize() {
+</span></span><span style="display:flex;"><span>    <span style="color:#998;font-style:italic">// Initialize DuckDB
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>    <span style="color:#000;font-weight:bold">const</span> JSDELIVR_BUNDLES <span style="color:#000;font-weight:bold">=</span> duckdb.getJsDelivrBundles();
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">const</span> bundle <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">await</span> duckdb.selectBundle(JSDELIVR_BUNDLES);
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">const</span> worker <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">await</span> duckdb.createWorker(bundle.mainWorker<span style="color:#000;font-weight:bold">!</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">const</span> logger <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">new</span> duckdb.ConsoleLogger();
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">this</span>.db <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">new</span> duckdb.AsyncDuckDB(logger, worker);
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">await</span> <span style="color:#000;font-weight:bold">this</span>.db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#998;font-style:italic">// Create table if it doesn&#39;t exist
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>    <span style="color:#000;font-weight:bold">await</span> <span style="color:#000;font-weight:bold">this</span>.db.registerFileURL(
+</span></span><span style="display:flex;"><span>      <span style="color:#d14">&#39;charts.parquet&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#000;font-weight:bold">this</span>.parquetPath,
+</span></span><span style="display:flex;"><span>      duckdb.DuckDBDataProtocol.HTTP,
+</span></span><span style="display:flex;"><span>      <span style="color:#000;font-weight:bold">false</span>
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#998;font-style:italic">// Create table schema
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>    <span style="color:#000;font-weight:bold">await</span> <span style="color:#000;font-weight:bold">this</span>.db.query(<span style="color:#d14">`
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">      CREATE TABLE IF NOT EXISTS chart_positions (
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        chart_id VARCHAR,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        datetime TIMESTAMP,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        object_id VARCHAR,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        longitude DOUBLE,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        distance DOUBLE,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        declination DOUBLE,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        right_ascension DOUBLE,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        latitude DOUBLE,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        altitude DOUBLE,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        azimuth DOUBLE,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        speed DOUBLE,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        retrograde BOOLEAN,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">        PRIMARY KEY (chart_id, datetime, object_id)
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">      )
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">    `</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">async</span> storeChartComputation(
+</span></span><span style="display:flex;"><span>    chartId: <span style="color:#458;font-weight:bold">string</span>,
+</span></span><span style="display:flex;"><span>    datetime: <span style="color:#458;font-weight:bold">Date</span>,
+</span></span><span style="display:flex;"><span>    positions: <span style="color:#458;font-weight:bold">PositionData</span>
+</span></span><span style="display:flex;"><span>  ) {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">if</span> (<span style="color:#000;font-weight:bold">!</span><span style="color:#000;font-weight:bold">this</span>.db) <span style="color:#000;font-weight:bold">throw</span> <span style="color:#000;font-weight:bold">new</span> <span style="color:#0086b3">Error</span>(<span style="color:#d14">&#39;Database not initialized&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#998;font-style:italic">// Convert positions to rows
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>    <span style="color:#000;font-weight:bold">const</span> rows: <span style="color:#458;font-weight:bold">any</span>[] <span style="color:#000;font-weight:bold">=</span> [];
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">for</span> (<span style="color:#000;font-weight:bold">const</span> [objectId, posData] <span style="color:#000;font-weight:bold">of</span> <span style="color:#0086b3">Object</span>.entries(positions)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#000;font-weight:bold">if</span> (<span style="color:#000;font-weight:bold">typeof</span> posData <span style="color:#000;font-weight:bold">===</span> <span style="color:#d14">&#39;number&#39;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#998;font-style:italic">// Simple longitude only
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>        rows.push({
+</span></span><span style="display:flex;"><span>          chart_id: <span style="color:#458;font-weight:bold">chartId</span>,
+</span></span><span style="display:flex;"><span>          datetime: <span style="color:#458;font-weight:bold">datetime.toISOString</span>(),
+</span></span><span style="display:flex;"><span>          object_id: <span style="color:#458;font-weight:bold">objectId</span>,
+</span></span><span style="display:flex;"><span>          longitude: <span style="color:#458;font-weight:bold">posData</span>,
+</span></span><span style="display:flex;"><span>          distance: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          declination: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          right_ascension: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          latitude: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          altitude: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          azimuth: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          speed: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          retrograde: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>      } <span style="color:#000;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#998;font-style:italic">// Extended format
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>        rows.push({
+</span></span><span style="display:flex;"><span>          chart_id: <span style="color:#458;font-weight:bold">chartId</span>,
+</span></span><span style="display:flex;"><span>          datetime: <span style="color:#458;font-weight:bold">datetime.toISOString</span>(),
+</span></span><span style="display:flex;"><span>          object_id: <span style="color:#458;font-weight:bold">objectId</span>,
+</span></span><span style="display:flex;"><span>          longitude: <span style="color:#458;font-weight:bold">posData.longitude</span>,
+</span></span><span style="display:flex;"><span>          distance: <span style="color:#458;font-weight:bold">posData.distance</span> <span style="color:#000;font-weight:bold">??</span> <span style="color:#000;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          declination: <span style="color:#458;font-weight:bold">posData.declination</span> <span style="color:#000;font-weight:bold">??</span> <span style="color:#000;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          right_ascension: <span style="color:#458;font-weight:bold">posData.right_ascension</span> <span style="color:#000;font-weight:bold">??</span> <span style="color:#000;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          latitude: <span style="color:#458;font-weight:bold">posData.latitude</span> <span style="color:#000;font-weight:bold">??</span> <span style="color:#000;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          altitude: <span style="color:#458;font-weight:bold">posData.altitude</span> <span style="color:#000;font-weight:bold">??</span> <span style="color:#000;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          azimuth: <span style="color:#458;font-weight:bold">posData.azimuth</span> <span style="color:#000;font-weight:bold">??</span> <span style="color:#000;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          speed: <span style="color:#458;font-weight:bold">posData.speed</span> <span style="color:#000;font-weight:bold">??</span> <span style="color:#000;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>          retrograde: <span style="color:#458;font-weight:bold">posData.retrograde</span> <span style="color:#000;font-weight:bold">??</span> <span style="color:#000;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#998;font-style:italic">// Insert into DuckDB
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>    <span style="color:#000;font-weight:bold">const</span> conn <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">await</span> <span style="color:#000;font-weight:bold">this</span>.db.connect();
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">const</span> stmt <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">await</span> conn.prepare(<span style="color:#d14">`
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">      INSERT OR REPLACE INTO chart_positions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">    `</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">for</span> (<span style="color:#000;font-weight:bold">const</span> row <span style="color:#000;font-weight:bold">of</span> rows) {
+</span></span><span style="display:flex;"><span>      <span style="color:#000;font-weight:bold">await</span> stmt.query([
+</span></span><span style="display:flex;"><span>        row.chart_id,
+</span></span><span style="display:flex;"><span>        row.datetime,
+</span></span><span style="display:flex;"><span>        row.object_id,
+</span></span><span style="display:flex;"><span>        row.longitude,
+</span></span><span style="display:flex;"><span>        row.distance,
+</span></span><span style="display:flex;"><span>        row.declination,
+</span></span><span style="display:flex;"><span>        row.right_ascension,
+</span></span><span style="display:flex;"><span>        row.latitude,
+</span></span><span style="display:flex;"><span>        row.altitude,
+</span></span><span style="display:flex;"><span>        row.azimuth,
+</span></span><span style="display:flex;"><span>        row.speed,
+</span></span><span style="display:flex;"><span>        row.retrograde,
+</span></span><span style="display:flex;"><span>      ]);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">await</span> conn.close();
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">async</span> queryChartPositions(
+</span></span><span style="display:flex;"><span>    chartId: <span style="color:#458;font-weight:bold">string</span>,
+</span></span><span style="display:flex;"><span>    startTime?: <span style="color:#458;font-weight:bold">Date</span>,
+</span></span><span style="display:flex;"><span>    endTime?: <span style="color:#458;font-weight:bold">Date</span>
+</span></span><span style="display:flex;"><span>  )<span style="color:#000;font-weight:bold">:</span> Promise&lt;<span style="color:#000080">any</span><span style="color:#a61717;background-color:#e3d2d2">[]</span>&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">if</span> (<span style="color:#000;font-weight:bold">!</span><span style="color:#000;font-weight:bold">this</span>.db) <span style="color:#000;font-weight:bold">throw</span> <span style="color:#000;font-weight:bold">new</span> <span style="color:#0086b3">Error</span>(<span style="color:#d14">&#39;Database not initialized&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">let</span> query <span style="color:#000;font-weight:bold">=</span> <span style="color:#d14">`
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">      SELECT * FROM chart_positions
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">      WHERE chart_id = ?
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">    `</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">const</span> params: <span style="color:#458;font-weight:bold">any</span>[] <span style="color:#000;font-weight:bold">=</span> [chartId];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">if</span> (startTime) {
+</span></span><span style="display:flex;"><span>      query <span style="color:#000;font-weight:bold">+=</span> <span style="color:#d14">&#39; AND datetime &gt;= ?&#39;</span>;
+</span></span><span style="display:flex;"><span>      params.push(startTime.toISOString());
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">if</span> (endTime) {
+</span></span><span style="display:flex;"><span>      query <span style="color:#000;font-weight:bold">+=</span> <span style="color:#d14">&#39; AND datetime &lt;= ?&#39;</span>;
+</span></span><span style="display:flex;"><span>      params.push(endTime.toISOString());
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    query <span style="color:#000;font-weight:bold">+=</span> <span style="color:#d14">&#39; ORDER BY datetime, object_id&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">const</span> conn <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">await</span> <span style="color:#000;font-weight:bold">this</span>.db.connect();
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">const</span> result <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">await</span> conn.query(query, params);
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">await</span> conn.close();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">return</span> result.toArray();
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">async</span> exportToParquet() {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">if</span> (<span style="color:#000;font-weight:bold">!</span><span style="color:#000;font-weight:bold">this</span>.db) <span style="color:#000;font-weight:bold">throw</span> <span style="color:#000;font-weight:bold">new</span> <span style="color:#0086b3">Error</span>(<span style="color:#d14">&#39;Database not initialized&#39;</span>);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">await</span> <span style="color:#000;font-weight:bold">this</span>.db.query(<span style="color:#d14">`
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">      COPY (SELECT * FROM chart_positions) 
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">      TO &#39;</span><span style="color:#d14">${</span><span style="color:#000;font-weight:bold">this</span>.parquetPath<span style="color:#d14">}</span><span style="color:#d14">&#39; (FORMAT PARQUET)
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">    `</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="3-svelte-store-for-chart-data">3. Svelte Store for Chart Data</h3>
+<p>Create <code>src/lib/stores/chartStore.ts</code>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">import</span> { writable, derived } <span style="color:#000;font-weight:bold">from</span> <span style="color:#d14">&#39;svelte/store&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">import</span> { computeChart } <span style="color:#000;font-weight:bold">from</span> <span style="color:#d14">&#39;../tauri-api&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">import</span> { ChartStorage } <span style="color:#000;font-weight:bold">from</span> <span style="color:#d14">&#39;../storage&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">interface</span> ChartState {
+</span></span><span style="display:flex;"><span>  chartId: <span style="color:#458;font-weight:bold">string</span> <span style="color:#000;font-weight:bold">|</span> <span style="color:#000;font-weight:bold">null</span>;
+</span></span><span style="display:flex;"><span>  positions: <span style="color:#458;font-weight:bold">PositionData</span> <span style="color:#000;font-weight:bold">|</span> <span style="color:#000;font-weight:bold">null</span>;
+</span></span><span style="display:flex;"><span>  aspects: <span style="color:#458;font-weight:bold">AspectResult</span>[] <span style="color:#000;font-weight:bold">|</span> <span style="color:#000;font-weight:bold">null</span>;
+</span></span><span style="display:flex;"><span>  loading: <span style="color:#458;font-weight:bold">boolean</span>;
+</span></span><span style="display:flex;"><span>  error: <span style="color:#458;font-weight:bold">string</span> <span style="color:#000;font-weight:bold">|</span> <span style="color:#000;font-weight:bold">null</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">const</span> chartStorage <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">new</span> ChartStorage();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">function</span> createChartStore() {
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">const</span> { subscribe, <span style="color:#000;font-weight:bold">set</span>, update } <span style="color:#000;font-weight:bold">=</span> writable&lt;<span style="color:#000080">ChartState</span>&gt;({
+</span></span><span style="display:flex;"><span>    chartId: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>    positions: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>    aspects: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>    loading: <span style="color:#458;font-weight:bold">false</span>,
+</span></span><span style="display:flex;"><span>    error: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">return</span> {
+</span></span><span style="display:flex;"><span>    subscribe,
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">async</span> loadChart(workspacePath: <span style="color:#458;font-weight:bold">string</span>, chartId: <span style="color:#458;font-weight:bold">string</span>) {
+</span></span><span style="display:flex;"><span>      update(state <span style="color:#000;font-weight:bold">=&gt;</span> ({ ...state, loading: <span style="color:#458;font-weight:bold">true</span>, error: <span style="color:#458;font-weight:bold">null</span> }));
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      <span style="color:#000;font-weight:bold">try</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#998;font-style:italic">// Check cache first
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>        <span style="color:#000;font-weight:bold">const</span> cached <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">await</span> chartStorage.queryChartPositions(chartId);
+</span></span><span style="display:flex;"><span>        <span style="color:#000;font-weight:bold">if</span> (cached.length <span style="color:#000;font-weight:bold">&gt;</span> <span style="color:#099">0</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#998;font-style:italic">// Reconstruct positions from cached data
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>          <span style="color:#000;font-weight:bold">const</span> positions: <span style="color:#458;font-weight:bold">PositionData</span> <span style="color:#000;font-weight:bold">=</span> {};
+</span></span><span style="display:flex;"><span>          <span style="color:#000;font-weight:bold">for</span> (<span style="color:#000;font-weight:bold">const</span> row <span style="color:#000;font-weight:bold">of</span> cached) {
+</span></span><span style="display:flex;"><span>            <span style="color:#000;font-weight:bold">if</span> (row.distance <span style="color:#000;font-weight:bold">!==</span> <span style="color:#000;font-weight:bold">null</span>) {
+</span></span><span style="display:flex;"><span>              <span style="color:#998;font-style:italic">// Extended format
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>              positions[row.object_id] <span style="color:#000;font-weight:bold">=</span> {
+</span></span><span style="display:flex;"><span>                longitude: <span style="color:#458;font-weight:bold">row.longitude</span>,
+</span></span><span style="display:flex;"><span>                distance: <span style="color:#458;font-weight:bold">row.distance</span>,
+</span></span><span style="display:flex;"><span>                declination: <span style="color:#458;font-weight:bold">row.declination</span>,
+</span></span><span style="display:flex;"><span>                right_ascension: <span style="color:#458;font-weight:bold">row.right_ascension</span>,
+</span></span><span style="display:flex;"><span>                latitude: <span style="color:#458;font-weight:bold">row.latitude</span>,
+</span></span><span style="display:flex;"><span>                altitude: <span style="color:#458;font-weight:bold">row.altitude</span>,
+</span></span><span style="display:flex;"><span>                azimuth: <span style="color:#458;font-weight:bold">row.azimuth</span>,
+</span></span><span style="display:flex;"><span>                speed: <span style="color:#458;font-weight:bold">row.speed</span>,
+</span></span><span style="display:flex;"><span>                retrograde: <span style="color:#458;font-weight:bold">row.retrograde</span>,
+</span></span><span style="display:flex;"><span>              };
+</span></span><span style="display:flex;"><span>            } <span style="color:#000;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>              <span style="color:#998;font-style:italic">// Simple format
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>              positions[row.object_id] <span style="color:#000;font-weight:bold">=</span> row.longitude;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          update(state <span style="color:#000;font-weight:bold">=&gt;</span> ({
+</span></span><span style="display:flex;"><span>            ...state,
+</span></span><span style="display:flex;"><span>            chartId,
+</span></span><span style="display:flex;"><span>            positions,
+</span></span><span style="display:flex;"><span>            loading: <span style="color:#458;font-weight:bold">false</span>,
+</span></span><span style="display:flex;"><span>          }));
+</span></span><span style="display:flex;"><span>          <span style="color:#000;font-weight:bold">return</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#998;font-style:italic">// Compute from Python sidecar
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>        <span style="color:#000;font-weight:bold">const</span> result <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">await</span> computeChart({
+</span></span><span style="display:flex;"><span>          workspace_path: <span style="color:#458;font-weight:bold">workspacePath</span>,
+</span></span><span style="display:flex;"><span>          chart_id: <span style="color:#458;font-weight:bold">chartId</span>,
+</span></span><span style="display:flex;"><span>          include_physical: <span style="color:#458;font-weight:bold">true</span>,
+</span></span><span style="display:flex;"><span>          include_topocentric: <span style="color:#458;font-weight:bold">true</span>,
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#998;font-style:italic">// Store in DuckDB
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>        <span style="color:#000;font-weight:bold">await</span> chartStorage.storeChartComputation(
+</span></span><span style="display:flex;"><span>          chartId,
+</span></span><span style="display:flex;"><span>          <span style="color:#000;font-weight:bold">new</span> <span style="color:#0086b3">Date</span>(),
+</span></span><span style="display:flex;"><span>          result.positions
+</span></span><span style="display:flex;"><span>        );
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        update(state <span style="color:#000;font-weight:bold">=&gt;</span> ({
+</span></span><span style="display:flex;"><span>          ...state,
+</span></span><span style="display:flex;"><span>          chartId,
+</span></span><span style="display:flex;"><span>          positions: <span style="color:#458;font-weight:bold">result.positions</span>,
+</span></span><span style="display:flex;"><span>          aspects: <span style="color:#458;font-weight:bold">result.aspects</span>,
+</span></span><span style="display:flex;"><span>          loading: <span style="color:#458;font-weight:bold">false</span>,
+</span></span><span style="display:flex;"><span>        }));
+</span></span><span style="display:flex;"><span>      } <span style="color:#000;font-weight:bold">catch</span> (error) {
+</span></span><span style="display:flex;"><span>        update(state <span style="color:#000;font-weight:bold">=&gt;</span> ({
+</span></span><span style="display:flex;"><span>          ...state,
+</span></span><span style="display:flex;"><span>          loading: <span style="color:#458;font-weight:bold">false</span>,
+</span></span><span style="display:flex;"><span>          error: <span style="color:#458;font-weight:bold">error</span> <span style="color:#000;font-weight:bold">instanceof</span> <span style="color:#0086b3">Error</span> <span style="color:#000;font-weight:bold">?</span> error.message <span style="color:#000;font-weight:bold">:</span> <span style="color:#d14">&#39;Unknown error&#39;</span>,
+</span></span><span style="display:flex;"><span>        }));
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    clear() {
+</span></span><span style="display:flex;"><span>      <span style="color:#000;font-weight:bold">set</span>({
+</span></span><span style="display:flex;"><span>        chartId: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>        positions: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>        aspects: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>        loading: <span style="color:#458;font-weight:bold">false</span>,
+</span></span><span style="display:flex;"><span>        error: <span style="color:#458;font-weight:bold">null</span>,
+</span></span><span style="display:flex;"><span>      });
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">const</span> chartStore <span style="color:#000;font-weight:bold">=</span> createChartStore();
+</span></span></code></pre></div><h3 id="4-svelte-component-example">4. Svelte Component Example</h3>
+<p>Create <code>src/lib/components/ChartViewer.svelte</code>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-svelte" data-lang="svelte"><span style="display:flex;"><span>&lt;<span style="color:#000080">script</span> <span style="color:#008080">lang</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">&#34;ts&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">import</span> { chartStore } <span style="color:#000;font-weight:bold">from</span> <span style="color:#d14">&#39;../stores/chartStore&#39;</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">import</span> { onMount } <span style="color:#000;font-weight:bold">from</span> <span style="color:#d14">&#39;svelte&#39;</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">let</span> workspacePath: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">export</span> <span style="color:#000;font-weight:bold">let</span> chartId: <span style="color:#458;font-weight:bold">string</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">let</span> positions: <span style="color:#458;font-weight:bold">PositionData</span> <span style="color:#000;font-weight:bold">|</span> <span style="color:#000;font-weight:bold">null</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">null</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">let</span> aspects: <span style="color:#458;font-weight:bold">AspectResult</span>[] <span style="color:#000;font-weight:bold">|</span> <span style="color:#000;font-weight:bold">null</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">null</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">let</span> loading <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">let</span> error: <span style="color:#458;font-weight:bold">string</span> <span style="color:#000;font-weight:bold">|</span> <span style="color:#000;font-weight:bold">null</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">null</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  $<span style="color:#000;font-weight:bold">:</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">const</span> unsubscribe <span style="color:#000;font-weight:bold">=</span> chartStore.subscribe(state <span style="color:#000;font-weight:bold">=&gt;</span> {
+</span></span><span style="display:flex;"><span>      positions <span style="color:#000;font-weight:bold">=</span> state.positions;
+</span></span><span style="display:flex;"><span>      aspects <span style="color:#000;font-weight:bold">=</span> state.aspects;
+</span></span><span style="display:flex;"><span>      loading <span style="color:#000;font-weight:bold">=</span> state.loading;
+</span></span><span style="display:flex;"><span>      error <span style="color:#000;font-weight:bold">=</span> state.error;
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">return</span> unsubscribe;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  onMount(() <span style="color:#000;font-weight:bold">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    chartStore.loadChart(workspacePath, chartId);
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#000080">script</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#000080">div</span> <span style="color:#008080">class</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">&#34;chart-viewer&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>  {<span style="color:#000;font-weight:bold">#if</span> loading}
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#000080">p</span>&gt;Loading chart...&lt;/<span style="color:#000080">p</span>&gt;
+</span></span><span style="display:flex;"><span>  {<span style="color:#000;font-weight:bold">:else</span> <span style="color:#000;font-weight:bold">if</span> error}
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#000080">p</span> <span style="color:#008080">class</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">&#34;error&#34;</span>&gt;Error: {error}&lt;/<span style="color:#000080">p</span>&gt;
+</span></span><span style="display:flex;"><span>  {<span style="color:#000;font-weight:bold">:else</span> <span style="color:#000;font-weight:bold">if</span> positions}
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#000080">h2</span>&gt;Chart: {chartId}&lt;/<span style="color:#000080">h2</span>&gt;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#000080">div</span> <span style="color:#008080">class</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">&#34;positions&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#000080">h3</span>&gt;Positions&lt;/<span style="color:#000080">h3</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#000080">table</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#000080">thead</span>&gt;
+</span></span><span style="display:flex;"><span>          &lt;<span style="color:#000080">tr</span>&gt;
+</span></span><span style="display:flex;"><span>            &lt;<span style="color:#000080">th</span>&gt;Object&lt;/<span style="color:#000080">th</span>&gt;
+</span></span><span style="display:flex;"><span>            &lt;<span style="color:#000080">th</span>&gt;Longitude&lt;/<span style="color:#000080">th</span>&gt;
+</span></span><span style="display:flex;"><span>            &lt;<span style="color:#000080">th</span>&gt;Distance (AU)&lt;/<span style="color:#000080">th</span>&gt;
+</span></span><span style="display:flex;"><span>            &lt;<span style="color:#000080">th</span>&gt;Declination&lt;/<span style="color:#000080">th</span>&gt;
+</span></span><span style="display:flex;"><span>            &lt;<span style="color:#000080">th</span>&gt;RA&lt;/<span style="color:#000080">th</span>&gt;
+</span></span><span style="display:flex;"><span>          &lt;/<span style="color:#000080">tr</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;/<span style="color:#000080">thead</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#000080">tbody</span>&gt;
+</span></span><span style="display:flex;"><span>          {<span style="color:#000;font-weight:bold">#each</span> <span style="color:#0086b3">Object</span>.entries(positions) <span style="color:#000;font-weight:bold">as</span> [objectId, posData]}
+</span></span><span style="display:flex;"><span>            &lt;<span style="color:#000080">tr</span>&gt;
+</span></span><span style="display:flex;"><span>              &lt;<span style="color:#000080">td</span>&gt;{objectId}&lt;/<span style="color:#000080">td</span>&gt;
+</span></span><span style="display:flex;"><span>              {<span style="color:#000;font-weight:bold">#if</span> <span style="color:#000;font-weight:bold">typeof</span> posData <span style="color:#000;font-weight:bold">===</span> <span style="color:#d14">&#39;number&#39;</span>}
+</span></span><span style="display:flex;"><span>                &lt;<span style="color:#000080">td</span>&gt;{posData.toFixed(<span style="color:#099">2</span>)}°&lt;/<span style="color:#000080">td</span>&gt;
+</span></span><span style="display:flex;"><span>                &lt;<span style="color:#000080">td</span>&gt;-&lt;/<span style="color:#000080">td</span>&gt;
+</span></span><span style="display:flex;"><span>                &lt;<span style="color:#000080">td</span>&gt;-&lt;/<span style="color:#000080">td</span>&gt;
+</span></span><span style="display:flex;"><span>                &lt;<span style="color:#000080">td</span>&gt;-&lt;/<span style="color:#000080">td</span>&gt;
+</span></span><span style="display:flex;"><span>              {<span style="color:#000;font-weight:bold">:</span><span style="color:#000;font-weight:bold">else</span>}
+</span></span><span style="display:flex;"><span>                &lt;<span style="color:#000080">td</span>&gt;{posData.longitude.toFixed(<span style="color:#099">2</span>)}°&lt;/<span style="color:#000080">td</span>&gt;
+</span></span><span style="display:flex;"><span>                &lt;<span style="color:#000080">td</span>&gt;{posData.distance<span style="color:#000;font-weight:bold">?</span>.toFixed(<span style="color:#099">4</span>) <span style="color:#000;font-weight:bold">??</span> <span style="color:#d14">&#39;-&#39;</span>}&lt;/<span style="color:#000080">td</span>&gt;
+</span></span><span style="display:flex;"><span>                &lt;<span style="color:#000080">td</span>&gt;{posData.declination<span style="color:#000;font-weight:bold">?</span>.toFixed(<span style="color:#099">2</span>) <span style="color:#000;font-weight:bold">??</span> <span style="color:#d14">&#39;-&#39;</span>}°&lt;/<span style="color:#000080">td</span>&gt;
+</span></span><span style="display:flex;"><span>                &lt;<span style="color:#000080">td</span>&gt;{posData.right_ascension<span style="color:#000;font-weight:bold">?</span>.toFixed(<span style="color:#099">2</span>) <span style="color:#000;font-weight:bold">??</span> <span style="color:#d14">&#39;-&#39;</span>}°&lt;/<span style="color:#000080">td</span>&gt;
+</span></span><span style="display:flex;"><span>              {<span style="color:#000;font-weight:bold">/if</span>}
+</span></span><span style="display:flex;"><span>            &lt;/<span style="color:#000080">tr</span>&gt;
+</span></span><span style="display:flex;"><span>          {<span style="color:#000;font-weight:bold">/each</span>}
+</span></span><span style="display:flex;"><span>        &lt;/<span style="color:#000080">tbody</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#000080">table</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#000080">div</span>&gt;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    {<span style="color:#000;font-weight:bold">#if</span> aspects <span style="color:#000;font-weight:bold">&amp;&amp;</span> aspects.length <span style="color:#000;font-weight:bold">&gt;</span> <span style="color:#099">0</span>}
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#000080">div</span> <span style="color:#008080">class</span><span style="color:#000;font-weight:bold">=</span><span style="color:#d14">&#34;aspects&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#000080">h3</span>&gt;Aspects&lt;/<span style="color:#000080">h3</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#000080">ul</span>&gt;
+</span></span><span style="display:flex;"><span>          {<span style="color:#000;font-weight:bold">#each</span> aspects <span style="color:#000;font-weight:bold">as</span> aspect}
+</span></span><span style="display:flex;"><span>            &lt;<span style="color:#000080">li</span>&gt;
+</span></span><span style="display:flex;"><span>              {aspect.<span style="color:#000;font-weight:bold">from</span>} {aspect.<span style="color:#000;font-weight:bold">type</span>} {aspect.to} 
+</span></span><span style="display:flex;"><span>              (angle: {aspect.angle.toFixed(<span style="color:#099">2</span>)}°, orb: {aspect.orb.toFixed(<span style="color:#099">2</span>)}°)
+</span></span><span style="display:flex;"><span>            &lt;/<span style="color:#000080">li</span>&gt;
+</span></span><span style="display:flex;"><span>          {<span style="color:#000;font-weight:bold">/each</span>}
+</span></span><span style="display:flex;"><span>        &lt;/<span style="color:#000080">ul</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#000080">div</span>&gt;
+</span></span><span style="display:flex;"><span>    {<span style="color:#000;font-weight:bold">/if</span>}
+</span></span><span style="display:flex;"><span>  {<span style="color:#000;font-weight:bold">/if</span>}
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#000080">div</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#000080">style</span>&gt;
+</span></span><span style="display:flex;"><span>  .<span style="color:#458;font-weight:bold">chart-viewer</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">padding</span>: <span style="color:#099">1</span><span style="color:#458;font-weight:bold">rem</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  .<span style="color:#458;font-weight:bold">error</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">color</span>: <span style="color:#000;font-weight:bold">red</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#000080">table</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">border-collapse</span>: <span style="color:#000;font-weight:bold">collapse</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">width</span>: <span style="color:#099">100</span><span style="color:#458;font-weight:bold">%</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#000080">th</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000080">td</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">border</span>: <span style="color:#099">1</span><span style="color:#458;font-weight:bold">px</span> <span style="color:#000;font-weight:bold">solid</span> <span style="color:#099">#ddd</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">padding</span>: <span style="color:#099">0.5</span><span style="color:#458;font-weight:bold">rem</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">text-align</span>: <span style="color:#000;font-weight:bold">left</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#000080">th</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">background-color</span>: <span style="color:#099">#f2f2f2</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#000080">style</span>&gt;
+</span></span></code></pre></div><h2 id="error-handling">Error Handling</h2>
+<p>The Python CLI returns errors in a consistent format:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#000080">&#34;error&#34;</span>: <span style="color:#d14">&#34;Error message&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#000080">&#34;type&#34;</span>: <span style="color:#d14">&#34;ErrorType&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Common error types:</p>
+<ul>
+<li><code>InvalidArgument</code>: Missing or invalid arguments</li>
+<li><code>ChartNotFound</code>: Chart ID not found in workspace</li>
+<li><code>ComputationError</code>: Error during computation</li>
+<li><code>LoadError</code>: Error loading workspace</li>
+<li><code>InvalidCommand</code>: Unknown command</li>
+</ul>
+<p>Handle errors in Svelte:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">try</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">const</span> result <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">await</span> computeChart(args);
+</span></span><span style="display:flex;"><span>  <span style="color:#998;font-style:italic">// Handle success
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>} <span style="color:#000;font-weight:bold">catch</span> (error) {
+</span></span><span style="display:flex;"><span>  <span style="color:#000;font-weight:bold">if</span> (error <span style="color:#000;font-weight:bold">instanceof</span> <span style="color:#0086b3">Error</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#998;font-style:italic">// Parse error JSON if available
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span>    <span style="color:#000;font-weight:bold">try</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#000;font-weight:bold">const</span> errorData <span style="color:#000;font-weight:bold">=</span> JSON.parse(error.message);
+</span></span><span style="display:flex;"><span>      console.error(<span style="color:#d14">`Error type: </span><span style="color:#d14">${</span>errorData.<span style="color:#000;font-weight:bold">type</span><span style="color:#d14">}</span><span style="color:#d14">, Message: </span><span style="color:#d14">${</span>errorData.error<span style="color:#d14">}</span><span style="color:#d14">`</span>);
+</span></span><span style="display:flex;"><span>    } <span style="color:#000;font-weight:bold">catch</span> {
+</span></span><span style="display:flex;"><span>      console.error(error.message);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="performance-considerations">Performance Considerations</h2>
+<ol>
+<li><strong>Caching</strong>: Always check DuckDB cache before calling Python sidecar</li>
+<li><strong>Batch Operations</strong>: For transit series, compute in batches and store incrementally</li>
+<li><strong>Lazy Loading</strong>: Only compute extended properties when needed</li>
+<li><strong>Background Processing</strong>: Use web workers for long-running computations</li>
+</ol>
+<h2 id="testing">Testing</h2>
+<p>Test the integration:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#998;font-style:italic">// src/lib/__tests__/tauri-api.test.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span><span style="color:#000;font-weight:bold">import</span> { computeChart } <span style="color:#000;font-weight:bold">from</span> <span style="color:#d14">&#39;../tauri-api&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>describe(<span style="color:#d14">&#39;Tauri API&#39;</span>, () <span style="color:#000;font-weight:bold">=&gt;</span> {
+</span></span><span style="display:flex;"><span>  it(<span style="color:#d14">&#39;should compute chart positions&#39;</span>, <span style="color:#000;font-weight:bold">async</span> () <span style="color:#000;font-weight:bold">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#000;font-weight:bold">const</span> result <span style="color:#000;font-weight:bold">=</span> <span style="color:#000;font-weight:bold">await</span> computeChart({
+</span></span><span style="display:flex;"><span>      workspace_path<span style="color:#000;font-weight:bold">:</span> <span style="color:#d14">&#39;/path/to/workspace.yaml&#39;</span>,
+</span></span><span style="display:flex;"><span>      chart_id<span style="color:#000;font-weight:bold">:</span> <span style="color:#d14">&#39;test-chart&#39;</span>,
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    expect(result.positions).toBeDefined();
+</span></span><span style="display:flex;"><span>    expect(result.aspects).toBeDefined();
+</span></span><span style="display:flex;"><span>    expect(result.chart_id).toBe(<span style="color:#d14">&#39;test-chart&#39;</span>);
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><h2 id="deployment">Deployment</h2>
+<ol>
+<li><strong>Bundle Python</strong>: Include Python sidecar in Tauri app bundle</li>
+<li><strong>Parquet Files</strong>: Store Parquet files in app data directory</li>
+<li><strong>Workspace Path</strong>: Use absolute paths for workspace.yaml</li>
+<li><strong>Error Logging</strong>: Log Python subprocess errors for debugging</li>
+</ol>
+<h2 id="next-steps">Next Steps</h2>
+<ul>
+<li>Implement transit series computation UI</li>
+<li>Add chart comparison features</li>
+<li>Implement time navigation controls</li>
+<li>Add export/import functionality for Parquet files</li>
+</ul>
+</section>
+  
+  <style>
+     
+    .prose {
+      color: #374151 !important;  
+    }
+    .prose p, .prose li, .prose td, .prose th {
+      color: #4b5563 !important;  
+    }
+    .prose h1 {
+      font-size: 2.5rem !important;
+      font-weight: 700 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.5rem;
+      color: #111827 !important;  
+    }
+    .prose h2 {
+      font-size: 2rem !important;
+      font-weight: 600 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 0.25rem;
+      color: #1f2937 !important;  
+    }
+    .prose h3 {
+      font-size: 1.5rem !important;
+      font-weight: 600 !important;
+      margin-top: 1.5rem !important;
+      margin-bottom: 0.75rem !important;
+      color: #374151 !important;  
+    }
+    .prose a {
+      color: #2563eb !important;  
+    }
+    .prose a:hover {
+      color: #1d4ed8 !important;  
+    }
+    .dark .prose {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose p, .dark .prose li, .dark .prose td, .dark .prose th {
+      color: #d1d5db !important;  
+    }
+    .dark .prose h1 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      color: #f9fafb !important;  
+    }
+    .dark .prose h2 {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      color: #f3f4f6 !important;  
+    }
+    .dark .prose h3 {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose a {
+      color: #60a5fa !important;  
+    }
+     
+    .prose h4 {
+      color: #b8860b !important;  
+    }
+    .prose ul li strong,
+    .prose ol li strong {
+      color: #b8860b !important;  
+    }
+    .dark .prose h4 {
+      color: #b8860b !important;  
+    }
+    .dark .prose ul li strong,
+    .dark .prose ol li strong {
+      color: #b8860b !important;  
+    }
+     
+    .prose code {
+      color: #92400e !important;  
+      background-color: #fef3c7 !important;  
+    }
+    .prose pre {
+      background-color: #1f2937 !important;  
+    }
+    .prose pre code {
+      color: #fbbf24 !important;  
+      background-color: transparent !important;
+    }
+    .dark .prose code {
+      color: #fbbf24 !important;  
+      background-color: rgba(251, 191, 36, 0.1) !important;  
+    }
+    .dark .prose pre {
+      background-color: #111827 !important;  
+    }
+    .dark .prose pre code {
+      color: #fbbf24 !important;  
+    }
+  </style>
+
+  
+</article></main><footer
+  class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
+>
+  <div class="mr-auto">&copy;2026
+    <a class="link" href="http://localhost:1313/function-wrapper/">Kefer Astrology API Documentation</a></div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
+    >powered by hugo️️</a
+  >️
+  <a
+    class="link"
+    href="https://github.com/nanxiaobei/hugo-paper"
+    rel="noopener"
+    target="_blank"
+    >hugo-paper</a
+  >
+</footer>
+</body>
+</html>

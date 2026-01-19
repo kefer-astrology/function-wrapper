@@ -26,7 +26,7 @@ Usage:
 
 ## Functions
 
-### `get_storage_path`
+## `get_storage_path`
 
 ```python
 get_storage_path(workspace_path: Union[str, pathlib._local.Path]) -> pathlib._local.Path

@@ -13,7 +13,7 @@ weight: 10
 
 ## Functions
 
-### `add_chart`
+## `add_chart`
 
 ```python
 add_chart(ws: module.models.Workspace, chart: module.models.ChartInstance, base_dir: Union[str, pathlib._local.Path]) -> str
@@ -40,7 +40,7 @@ Relative path to chart YAML file
 Prevents duplicates by checking existing charts. Removes computed_chart
     and ephemeral overrides before serialization.
 
-### `add_or_update_chart`
+## `add_or_update_chart`
 
 ```python
 add_or_update_chart(ws: module.models.Workspace, chart: module.models.ChartInstance, base_dir: Union[str, pathlib._local.Path]) -> str
@@ -48,7 +48,7 @@ add_or_update_chart(ws: module.models.Workspace, chart: module.models.ChartInsta
 
 Add a new chart or update an existing one by id or subject name; persist YAML and manifest.
 
-### `add_subject`
+## `add_subject`
 
 ```python
 add_subject(ws: module.models.Workspace, subject: module.models.ChartSubject, base_dir: Union[str, pathlib._local.Path]) -> str
@@ -74,7 +74,7 @@ Relative path (e.g., `subjects/john-doe.yml`) written to disk
 
 Caller should re-save the manifest via `save_workspace_modular`.
 
-### `build_workspace_from_sfs`
+## `build_workspace_from_sfs`
 
 ```python
 build_workspace_from_sfs(dir_path: Union[str, pathlib._local.Path], owner: str = 'local', ephemeris_name: str = 'local', ephemeris_backend: str = 'local') -> module.models.Workspace
@@ -104,7 +104,7 @@ Loads all .sfs files into AstroModel catalogs, selects the first model
     as active (if any), and initializes empty collections for charts, presets,
     layouts, and annotations.
 
-### `build_workspace_from_sfs_to_yaml`
+## `build_workspace_from_sfs_to_yaml`
 
 ```python
 build_workspace_from_sfs_to_yaml(dir_path: Union[str, pathlib._local.Path], out_path: Union[str, pathlib._local.Path], owner: str = 'local', ephemeris_name: str = 'local', ephemeris_backend: str = 'local') -> pathlib._local.Path
@@ -129,7 +129,7 @@ Build a Workspace from .sfs files and save it as YAML.
 
 Path to written YAML file
 
-### `get_all_aspect_definitions`
+## `get_all_aspect_definitions`
 
 ```python
 get_all_aspect_definitions(ws: Optional[ForwardRef('Workspace')] = None, model: Optional[module.models.AstroModel] = None) -> Dict[str, module.models.AspectDefinition]
@@ -149,7 +149,7 @@ Get all aspect definitions (defaults + custom from workspace/model YAML).
 Dictionary mapping aspect_id -&gt; AspectDefinition. Custom aspects from
     workspace/model override defaults with the same id.
 
-### `get_all_observable_objects`
+## `get_all_observable_objects`
 
 ```python
 get_all_observable_objects(ws: Optional[ForwardRef('Workspace')] = None, model: Optional[module.models.AstroModel] = None) -> Dict[str, module.models.BodyDefinition]
@@ -169,7 +169,7 @@ Get all observable objects (defaults + custom from workspace/model YAML).
 Dictionary mapping object_id -&gt; BodyDefinition. Custom objects from
     workspace/model override defaults with the same id.
 
-### `get_default_aspect_definitions`
+## `get_default_aspect_definitions`
 
 ```python
 get_default_aspect_definitions() -> Dict[str, module.models.AspectDefinition]
@@ -182,7 +182,7 @@ Get default aspect definitions.
 Dictionary mapping aspect_id -&gt; AspectDefinition for standard aspects
     (conjunction, opposition, trine, square, sextile, etc.)
 
-### `get_default_observable_objects`
+## `get_default_observable_objects`
 
 ```python
 get_default_observable_objects() -> Dict[str, module.models.BodyDefinition]
@@ -196,7 +196,7 @@ Dictionary mapping object_id -&gt; BodyDefinition for standard objects
     (planets, angles, lunar nodes, calculated points) that are commonly
     available in kerykeion and can be computed.
 
-### `init_workspace`
+## `init_workspace`
 
 ```python
 init_workspace(base_dir: Union[str, pathlib._local.Path], owner: str, active_model: str, default_ephemeris: Dict[str, str]) -> pathlib._local.Path
@@ -208,7 +208,7 @@ Initialize a new workspace directory structure and manifest.
 
 - Absolute path to the created `workspace.yaml` file.
 
-### `iter_charts`
+## `iter_charts`
 
 ```python
 iter_charts(ws: module.models.Workspace) -> Iterator[module.models.ChartInstance]
@@ -220,7 +220,7 @@ Yield charts from the Workspace (safe for None).
 
 - **ws**: Workspace to iterate charts from
 
-### `load_workspace`
+## `load_workspace`
 
 ```python
 load_workspace(workspace_path: str) -> module.models.Workspace
@@ -248,7 +248,7 @@ Paths referenced in the manifest (e.g., `charts/*.yml`) are resolved
 
 ⚠️ FileNotFoundError: If workspace file does not exist
 
-### `load_workspace_from_dir`
+## `load_workspace_from_dir`
 
 ```python
 load_workspace_from_dir(base_dir: Union[str, pathlib._local.Path]) -> module.models.Workspace
@@ -270,7 +270,7 @@ Workspace instance loaded from manifest
 
 ⚠️ FileNotFoundError: If directory or workspace.yaml does not exist
 
-### `populate_workspace_models`
+## `populate_workspace_models`
 
 ```python
 populate_workspace_models(ws: Any, dir_path: Union[str, pathlib._local.Path]) -> Dict[str, module.models.AstroModel]
@@ -295,7 +295,7 @@ Dictionary of loaded models
 If ws.active_model is not set and any models were loaded,
     sets it to the first key.
 
-### `prune_workspace_manifest`
+## `prune_workspace_manifest`
 
 ```python
 prune_workspace_manifest(base_dir: Union[str, pathlib._local.Path]) -> Dict[str, List[str]]
@@ -303,7 +303,7 @@ prune_workspace_manifest(base_dir: Union[str, pathlib._local.Path]) -> Dict[str,
 
 Prune workspace.yaml to remove references to modular files that no longer exist.
 
-### `recompute_all`
+## `recompute_all`
 
 ```python
 recompute_all(ws: module.models.Workspace) -> Dict[str, Dict[str, float]]
@@ -321,7 +321,7 @@ Compute positions for all charts in a workspace.
 Dictionary mapping chart_id -&gt; positions dict. Charts that fail to
     compute will have empty dict as value.
 
-### `remove_chart`
+## `remove_chart`
 
 ```python
 remove_chart(ws: module.models.Workspace, chart_id: str) -> bool
@@ -340,7 +340,7 @@ Remove a chart from the Workspace in-memory by its id.
 
 True if chart was found and removed, False otherwise
 
-### `remove_chart_by_id`
+## `remove_chart_by_id`
 
 ```python
 remove_chart_by_id(ws: module.models.Workspace, chart_id: str, base_dir: Union[str, pathlib._local.Path]) -> bool
@@ -348,7 +348,7 @@ remove_chart_by_id(ws: module.models.Workspace, chart_id: str, base_dir: Union[s
 
 Remove a chart by id and persist the manifest. Returns True if removed.
 
-### `save_workspace_flat`
+## `save_workspace_flat`
 
 ```python
 save_workspace_flat(workspace: module.models.Workspace, path: str, format: str = 'yaml') -> None
@@ -369,7 +369,7 @@ Save the entire Workspace as a single flat file (debug/export use).
 
 ⚠️ ValueError: If format is not "yaml" or "json"
 
-### `save_workspace_modular`
+## `save_workspace_modular`
 
 ```python
 save_workspace_modular(workspace: module.models.Workspace, base_dir: Union[str, pathlib._local.Path]) -> pathlib._local.Path
@@ -381,7 +381,7 @@ Persist a Workspace into modular YAML files and update `workspace.yaml`.
 
 - Absolute path to the updated `workspace.yaml`.
 
-### `scan_workspace_changes`
+## `scan_workspace_changes`
 
 ```python
 scan_workspace_changes(base_dir: Union[str, pathlib._local.Path]) -> Dict[str, Dict[str, List[str]]]
@@ -395,7 +395,7 @@ Scan the workspace directory for drift relative to the manifest.
     'subjects': {'new_on_disk': [...], 'missing_on_disk': [...]} }
   where item names are basenames (e.g., `john-doe.yml`).
 
-### `summarize_chart`
+## `summarize_chart`
 
 ```python
 summarize_chart(chart: module.models.ChartInstance) -> Dict[str, Union[str, List[str]]]
@@ -413,7 +413,7 @@ Return a lightweight summary dict for a chart.
 Dictionary with keys: id, name, event_time, location, engine,
     zodiac_type, house_system, tags
 
-### `sync_workspace`
+## `sync_workspace`
 
 ```python
 sync_workspace(workspace_path: Union[str, pathlib._local.Path], auto_import: bool = True, auto_remove: bool = False) -> Dict[str, Any]
@@ -439,7 +439,7 @@ Dict with sync results:
     - 'removed_charts': List of chart references removed (if auto_remove=True)
     - 'removed_subjects': List of subject references removed (if auto_remove=True)
 
-### `update_chart`
+## `update_chart`
 
 ```python
 update_chart(ws: module.models.Workspace, chart_id: str, updater: Callable[[module.models.ChartInstance], module.models.ChartInstance]) -> bool
@@ -460,7 +460,7 @@ Update a chart in-memory by id using a caller-provided updater.
 
 True if chart was found and updated, False otherwise
 
-### `validate_workspace`
+## `validate_workspace`
 
 ```python
 validate_workspace(ws: Any) -> List[str]
@@ -488,7 +488,7 @@ Checks:
     - Each ChartInstance.config aspect_orbs keys exist in the active model aspects
     - Layout chart references resolve to existing chart IDs
 
-### `validation_report`
+## `validation_report`
 
 ```python
 validation_report(ws: Any) -> str

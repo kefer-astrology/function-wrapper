@@ -1,34 +1,3 @@
----
-title: "Kefer Astrology API Documentation"
-description: "Complete API documentation for Kefer Astrology function-wrapper"
-weight: 1
-mermaid: true
----
-
-Welcome to the auto-generated API documentation for the Kefer Astrology function-wrapper project.
-
-## Documentation Structure
-
-- **[Models Overview](models.mmd)** - Mermaid class diagram showing all dataclasses and their relationships
-- **[Enums Overview](enums)** - Complete list of all enumerations and their members
-- **[User Interfaces](ui_streamlit)** - UI implementations:
-  - [Streamlit UI](ui_streamlit) - Web-based interface for interactive chart creation
-  - [Kivy UI](ui_kivy) - Desktop application for native chart rendering
-- **[Module Documentation](auto/)** - Detailed API documentation for each module:
-  - [cli](auto/cli) - Command-line interface
-  - [models](auto/models) - Data models and types
-  - [services](auto/services) - Core service functions
-  - [storage](auto/storage) - Storage management
-  - [utils](auto/utils) - Utility functions
-  - [workspace](auto/workspace) - Workspace management
-  - [z_visual](auto/z_visual) - Visualization utilities
-
-## Model Class Diagram
-
-The following diagram shows the relationships between all dataclasses in the models module:
-
-```mermaid
-%%{init: {'theme':'default', 'classDiagram': {'direction':'TB'}}}%%
 classDiagram
 
 
@@ -333,5 +302,3 @@ Workspace --> WorkspaceDefaults
 WorkspaceDefaults --> ElementColorSettings
 WorkspaceDefaults --> Location
 WorkspaceDefaults --> RadixPointColorSettings
-```
-

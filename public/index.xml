@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kefer Astrology API Documentation</title>
+    <link>http://localhost:1313/function-wrapper/</link>
+    <description>Recent content on Kefer Astrology API Documentation</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="http://localhost:1313/function-wrapper/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Streamlit UI</title>
+      <link>http://localhost:1313/function-wrapper/ui_streamlit/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/ui_streamlit/</guid>
+      <description>Streamlit UI The Streamlit UI provides a web-based interface for creating and visualizing astrological charts.&#xA;How to Run Prerequisites Install Streamlit and required dependencies:&#xA;pip install -r requirements/streamlit.txt Starting the Application Run the Streamlit interface:&#xA;python -m module --streamlit Or directly:&#xA;streamlit run module/ui_streamlit.py Features Interactive chart creation Real-time position calculations Aspect visualization Workspace management Chart export capabilities Configuration The Streamlit UI uses the workspace configuration from workspace.yaml. You can customize settings through the UI&amp;rsquo;s advanced options panel.</description>
+    </item>
+    <item>
+      <title>Kivy UI</title>
+      <link>http://localhost:1313/function-wrapper/ui_kivy/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/ui_kivy/</guid>
+      <description>Kivy UI The Kivy UI provides a native desktop application for astrological chart visualization with embedded interactive charts.&#xA;How to Run Prerequisites Install Kivy and required dependencies:&#xA;pip install -r requirements/kivy.txt For embedded interactive Plotly charts, install the WebView widget:&#xA;pip install kivy-garden garden install kivy_garden.webview Starting the Application Run the Kivy interface:&#xA;python -m module --kivy Features Native desktop application Embedded interactive Plotly charts (with WebView) JPL engine toggle Standardized Radix chart renderer Cross-platform support (Windows, macOS, Linux) Configuration Default JPL ephemeris file: source/de421.</description>
+    </item>
+    <item>
+      <title>cli Module</title>
+      <link>http://localhost:1313/function-wrapper/auto/cli/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/auto/cli/</guid>
+      <description>cli module CLI interface for Tauri frontend integration.&#xA;This module provides a JSON-based command interface that can be called from the Tauri application via subprocess. All commands read JSON from stdin or command-line arguments and output JSON to stdout.&#xA;Usage: python -m module.cli &amp;lt;command&amp;gt; [args_json]&#xA;Commands:&#xA;compute_chart: Compute positions and aspects for a chart compute_transit_series: Compute transit series for a time range get_workspace_settings: Get workspace settings and defaults list_charts: List all charts in workspace get_chart: Get chart details by ID sync_workspace: Synchronize workspace manifest with files on disk export_parquet: Export stored positions to Parquet files Storage:</description>
+    </item>
+    <item>
+      <title>models Module</title>
+      <link>http://localhost:1313/function-wrapper/auto/models/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/auto/models/</guid>
+      <description>models module Classes class Annotation Annotation(title: str, content: str, created: Optional[datetime.datetime], author: str)&#xA;Dataclass fields title: str content: str created: Optional author: str class Aspect Aspect(type: str, source_id: str, target_id: str, angle: float, orb: float)&#xA;Dataclass fields type: str source_id: str target_id: str angle: float orb: float class AspectContext (str, Enum) Contexts where an aspect can be used.&#xA;class AspectDefinition AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], color: Optional[str] = None, importance: Optional[int] = None, line_style: Optional[str] = None, line_width: Optional[float] = None, show_label: Optional[bool] = None, valid_contexts: Optional[List[module.</description>
+    </item>
+    <item>
+      <title>services Module</title>
+      <link>http://localhost:1313/function-wrapper/auto/services/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/auto/services/</guid>
+      <description>services module Functions build_chart_instance build_chart_instance(name: str, dt_str: str, loc_text: str, mode: module.models.ChartMode, ws: Optional[module.models.Workspace] = None, ephemeris_path: Optional[str] = None) -&amp;gt; module.models.ChartInstance Build a ChartInstance using workspace defaults when provided.&#xA;Resolves engine and house system from ws if available. Uses utils.prepare_horoscope to produce a fully-typed ChartInstance. build_radix_figure_for_chart build_radix_figure_for_chart(chart: module.models.ChartInstance, engine_override: Optional[module.models.EngineType] = None, ephemeris_path_override: Optional[str] = None, ws: Optional[ForwardRef(&amp;#39;Workspace&amp;#39;)] = None) -&amp;gt; Any Extract positions from a ChartInstance&amp;rsquo;s computed_chart and return a Plotly Figure ready to render.</description>
+    </item>
+    <item>
+      <title>storage Module</title>
+      <link>http://localhost:1313/function-wrapper/auto/storage/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/auto/storage/</guid>
+      <description>storage module DuckDB and Parquet storage helpers for computed astrological data.&#xA;This module provides optional storage functionality for Python to write computed positions and aspects directly to DuckDB/Parquet, avoiding large JSON transfers for batch operations like transit series.&#xA;Usage: from module.storage import DuckDBStorage&#xA;storage = DuckDBStorage(&#39;/path/to/workspace/data/workspace.db&#39;) storage.store_positions(chart_id, datetime, positions, engine=&#39;jpl&#39;) storage.store_aspects(relation_id, datetime, aspects) Functions get_storage_path get_storage_path(workspace_path: Union[str, pathlib._local.Path]) -&amp;gt; pathlib._local.Path Get DuckDB storage path for a workspace.&#xA;Parameters workspace_path: Path to workspace.</description>
+    </item>
+    <item>
+      <title>utils Module</title>
+      <link>http://localhost:1313/function-wrapper/auto/utils/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/auto/utils/</guid>
+      <description>utils module Functions combine_date_time combine_date_time(input_date: datetime.date, input_time: datetime.time) -&amp;gt; datetime.datetime Combine a date and time into a naive datetime (no timezone).&#xA;Parameters input_date: Date object&#xA;input_time: Time object&#xA;Returns Naive datetime combining date and time&#xA;compute_vernal_equinox_offset compute_vernal_equinox_offset(year: int, eph, observer, ts) -&amp;gt; float Compute the vernal equinox offset for tropical astrology adjustment.&#xA;Parameters year: The year to compute the vernal equinox for&#xA;eph: Skyfield ephemeris object&#xA;observer: Skyfield Topos observer object</description>
+    </item>
+    <item>
+      <title>workspace Module</title>
+      <link>http://localhost:1313/function-wrapper/auto/workspace/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/auto/workspace/</guid>
+      <description>workspace module Functions add_chart add_chart(ws: module.models.Workspace, chart: module.models.ChartInstance, base_dir: Union[str, pathlib._local.Path]) -&amp;gt; str Add a chart to a Workspace and write its YAML file.&#xA;Parameters ws: Workspace to add chart to&#xA;chart: ChartInstance to add&#xA;base_dir: Base directory for workspace files&#xA;Returns Relative path to chart YAML file&#xA;Notes Prevents duplicates by checking existing charts. Removes computed_chart and ephemeral overrides before serialization.&#xA;add_or_update_chart add_or_update_chart(ws: module.models.Workspace, chart: module.models.ChartInstance, base_dir: Union[str, pathlib._local.Path]) -&amp;gt; str Add a new chart or update an existing one by id or subject name; persist YAML and manifest.</description>
+    </item>
+    <item>
+      <title>z_visual Module</title>
+      <link>http://localhost:1313/function-wrapper/auto/z_visual/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/auto/z_visual/</guid>
+      <description>z_visual module Functions build_radix_figure build_radix_figure(positions: dict) -&amp;gt; plotly.graph_objs._figure.Figure Build a standardized polar (radix) chart figure from planet positions in degrees [0,360). positions: mapping of planet name (lowercase or mixed) -&amp;gt; ecliptic longitude in degrees&#xA;display_3d display_3d(categories: list, values_degrees: list, labels: list) -&amp;gt; None Render a simple Matplotlib 3D scatter plot for objects at given angles.&#xA;display_radial display_radial(categories: list, values_degrees: list, labels: list) -&amp;gt; None Quick Matplotlib radial scatter demo for given categories and degrees.</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://localhost:1313/function-wrapper/architecture/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/architecture/</guid>
+      <description>🔷 Vrstvy dle zodpovědnosti 🔹 Category 🌞 Horoscope 📊 Chart 🗂️ Workspace 🧱 Key Objects HoroscopeCelestialBodyAspectHouse ChartSubjectChartInstanceChartConfigChartPreset WorkspaceEphemerisSourceModelOverridesAnnotation ⚙️ Core Functions compute_horoscope(...)calculate_aspects(...)calculate_positions(...) load_astro_model(...)used in compute_horoscope(...) load_workspace(...)save_workspace_flat(...)merge_model_with_overrides(...) ✨ Features Immutable snapshotEngine-specific (Western, Vedic, etc.)Supports derived charts (e.g., progressed)Custom points via overrides Preset-driven configSupports ChartMode (NATAL, TRANSIT, etc.)Custom display and ephemeris override Modular YAML structurePer-user model customizationAnnotations, media, layouts Schéma editor</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://localhost:1313/function-wrapper/cli_api_reference/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/cli_api_reference/</guid>
+      <description>CLI API Reference Overview The Python sidecar provides a JSON-based CLI interface for the Tauri frontend. All commands accept JSON arguments and return JSON results.&#xA;Usage python -m module.cli &amp;lt;command&amp;gt; [args_json] Or with JSON from stdin:&#xA;echo &amp;#39;{&amp;#34;workspace_path&amp;#34;: &amp;#34;/path/to/workspace.yaml&amp;#34;, &amp;#34;chart_id&amp;#34;: &amp;#34;my-chart&amp;#34;}&amp;#39; | python -m module.cli compute_chart Commands 1. compute_chart Compute positions and aspects for a chart.&#xA;Arguments:&#xA;{ &amp;#34;workspace_path&amp;#34;: &amp;#34;/path/to/workspace.yaml&amp;#34;, &amp;#34;chart_id&amp;#34;: &amp;#34;chart-id&amp;#34;, &amp;#34;include_physical&amp;#34;: false, // Optional: Include extended physical properties (JPL only) &amp;#34;include_topocentric&amp;#34;: false // Optional: Include altitude/azimuth (JPL with location) } Response:</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://localhost:1313/function-wrapper/enums/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/enums/</guid>
+      <description>Enum Overview This document lists all enumerations defined in module.models.&#xA;Enum Description Members AspectContext Contexts where an aspect can be used. CHART, TRANSIT, DIRECTION Ayanamsa Ayanamsa enumeration LAHIRI, RAMAN, KRISHNAMURTI, FAGAN_BRADLEY, DE_LUCE, USER_DEFINED ChartMode ChartMode enumeration NATAL, EVENT, HORARY, COMPOSITE Element The four classical elements. FIRE, EARTH, AIR, WATER EngineType Engine enumeration SWISSEPH, JYOTISH, JPL, CUSTOM HouseSystem House enumeration PLACIDUS, WHOLE_SIGN, CAMPANUS, KOCH, EQUAL, REGIOMONTANUS, VEHL, PORPHYRY, ALCABITIUS LayoutStyle Layout enumeration SINGLE, TIMELINE_OVERLAY, DUAL_WHEEL, COMPARISON ObjectType Type of observable object in the chart.</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://localhost:1313/function-wrapper/readme/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/readme/</guid>
+      <description>Documentation This directory contains documentation for using the Kefer Astrology sidecar module.&#xA;User Documentation API References CLI_API_REFERENCE.md - Complete CLI command reference TAURI_SVELTE_INTEGRATION.md - How to integrate with Tauri + Svelte frontend STORAGE_STRATEGY.md - When and how to use Python vs Rust storage Auto-Generated API Docs auto/ - Module documentation generated from docstrings auto/cli.md - CLI module API auto/storage.md - Storage module API auto/services.md - Services module API auto/workspace.md - Workspace module API etc.</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://localhost:1313/function-wrapper/storage_strategy/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/storage_strategy/</guid>
+      <description>Storage Strategy: Python vs Rust Overview The architecture supports hybrid storage where both Python and Rust can write to DuckDB/Parquet. This document explains when to use each approach.&#xA;Architecture Decision Based on the prompt files (ARCHITECTURE_PROPOSAL.md, DISCUSSION_SUMMARY.md), the architecture supports:&#xA;Python storage helpers (optional) - For batch operations Rust storage (primary) - For frontend-driven operations When to Use Python Storage ✅ Use Python Storage For: Large Batch Operations&#xA;Transit series with many time points (&amp;gt;10) Revolution series computation Background computation jobs Bulk data export/import Performance Optimization</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://localhost:1313/function-wrapper/tauri_svelte_integration/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/tauri_svelte_integration/</guid>
+      <description>Tauri + Svelte Frontend Integration Guide Overview This guide describes how to integrate the Python astrological computation sidecar with a Tauri + Svelte frontend application. The Python backend handles heavy computational tasks (position calculations, aspect detection, transit series), while the frontend manages UI, state, and data storage using DuckDB with Parquet files.&#xA;Architecture ┌─────────────────────────────────────────────────────────────┐ │ Tauri + Svelte Frontend │ │ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ │ │ │ UI Layer │ │ State Store │ │ DuckDB/ │ │ │ │ (Svelte) │ │ (Svelte) │ │ Parquet │ │ │ └──────┬───────┘ └──────┬───────┘ └──────┬───────┘ │ │ │ │ │ │ │ └─────────────────┴──────────────────┘ │ │ │ │ │ ┌───────▼────────┐ │ │ │ Tauri Commands │ │ │ │ (Rust Layer) │ │ │ └───────┬────────┘ │ └────────────────────────────┼─────────────────────────────────┘ │ │ subprocess │ JSON over stdout │ ┌────────────────────────────▼─────────────────────────────────┐ │ Python Sidecar (Computation Engine) │ │ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ │ │ │ CLI API │ │ Services │ │ Workspace │ │ │ │ (module.</description>
+    </item>
+    <item>
+      <title></title>
+      <link>http://localhost:1313/function-wrapper/testing_guide/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/function-wrapper/testing_guide/</guid>
+      <description>Testing Guide Overview This guide covers testing strategies for the Kefer Astrology sidecar module, including CLI handlers, storage functionality, and core computation services.&#xA;Test Structure tests/ ├── __init__.py ├── test_cli.py # CLI command handlers ├── test_storage.py # DuckDB storage (NEW) ├── test_workspace_flow.py # Workspace operations ├── test_dates_places.py # Date/location parsing ├── test_locations.py # Location handling ├── test_starfisher.py # Starfisher integration ├── test_polar.py # Polar coordinates └── test_docs.py # Documentation generation Running Tests All Tests python -m unittest discover tests Specific Test Suite python -m unittest tests.</description>
+    </item>
+  </channel>
+</rss>

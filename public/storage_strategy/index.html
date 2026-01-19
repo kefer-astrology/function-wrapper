@@ -1,0 +1,783 @@
+<!doctype html>
+
+
+
+
+
+
+
+<html
+  class="not-ready lg:text-base"
+  style="--bg:#faf8f1"
+  lang="en-us"
+  dir="ltr"
+><head><script src="/function-wrapper/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=function-wrapper/livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title> - Kefer Astrology API Documentation</title>
+
+  
+  <meta name="theme-color" />
+
+  <meta name="description" content="Storage Strategy: Python vs Rust Overview The architecture supports hybrid storage where both Python and Rust can write to DuckDB/Parquet. This document explains when to use each approach.
+Architecture Decision Based on the prompt files (ARCHITECTURE_PROPOSAL.md, DISCUSSION_SUMMARY.md), the architecture supports:
+Python storage helpers (optional) - For batch operations Rust storage (primary) - For frontend-driven operations When to Use Python Storage ✅ Use Python Storage For: Large Batch Operations
+Transit series with many time points (&gt;10) Revolution series computation Background computation jobs Bulk data export/import Performance Optimization" />
+  <meta name="author" content="Kefer Astrology API Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/function-wrapper/main.min.aa6ea02b0eefe7db1bff5f6c623c536c742cbb74f94dbd38d2d905a87001ac2e.css" integrity="sha256-qm6gKw7v59sb/19sYjxTbHQsu3T5Tb040tkFqHABrC4=" />
+
+  
+  <link rel="preload" as="image" href="http://localhost:1313/function-wrapper/theme.png" />
+
+  
+
+  
+
+  <script
+    defer
+    src="http://localhost:1313/function-wrapper/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+
+  
+  <link
+    rel="icon"
+    href="http://localhost:1313/function-wrapper/favicon.ico"
+  />
+  <link
+    rel="apple-touch-icon"
+    href="http://localhost:1313/function-wrapper/apple-touch-icon.png"
+  />
+
+  <meta name="generator" content="Hugo 0.128.0">
+</head>
+<body
+    class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
+  >
+    
+<div class="sticky top-0 z-50 w-full border-b border-gray-700 shadow-sm backdrop-blur-sm" style="background-color: #1a1a1a !important; position: sticky; top: 0;">
+  <div class="mx-auto flex items-center px-8" style="max-width: 90% !important; gap: 2rem; min-height: 6rem; padding-top: 1.5rem; padding-bottom: 1.5rem;">
+    <div class="flex items-center" style="flex: 3;">
+      <a
+        class="text-2xl font-medium no-underline text-white"
+        href="http://localhost:1313/function-wrapper/"
+        >Kefer Astrology API Documentation</a
+      >
+      <div
+        class="btn-dark text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right] invert"
+        role="button"
+        aria-label="Dark"
+      ></div>
+    </div>
+    <div style="flex: 2;">
+<div class="relative">
+  <input 
+    type="text" 
+    id="search-input" 
+    placeholder="Search documentation..." 
+    class="w-full px-4 py-2 rounded-lg border text-sm"
+    style="background-color: #000000 !important; color: #b8860b !important; border-color: #b8860b !important;"
+  />
+  <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 hidden" style="background-color: #1a1a1a !important; border-color: #4a4a4a !important;"></div>
+</div>
+
+<style>
+  #search-input {
+    background-color: #000000 !important;
+    color: #b8860b !important;
+    border-color: #b8860b !important;
+  }
+  #search-input::placeholder {
+    color: #b8860b !important;
+    opacity: 0.7;
+  }
+  #search-input:focus {
+    border-color: #b8860b !important;
+    ring-color: #b8860b !important;
+  }
+</style>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  
+  if (!searchInput) return;
+  
+  
+  let globalSearchIndex = [];
+  const basePath = '/function-wrapper';
+  
+  
+  function buildSearchIndex() {
+    const allLinks = Array.from(document.querySelectorAll('a[href]'));
+    const indexMap = new Map();
+    
+    allLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      if (normalized && !normalized.includes('#') && !normalized.includes('http')) {
+        const title = link.textContent.trim();
+        if (title && !indexMap.has(normalized)) {
+          indexMap.set(normalized, {
+            title: title,
+            url: normalized,
+            keywords: (title + ' ' + normalized).toLowerCase()
+          });
+        }
+      }
+    });
+    
+    globalSearchIndex = Array.from(indexMap.values());
+  }
+  
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildSearchIndex);
+  } else {
+    buildSearchIndex();
+  }
+  
+  
+  function normalizeUrl(href) {
+    if (!href || href.startsWith('http') || href.startsWith('#')) {
+      return null;
+    }
+    const basePath = '/function-wrapper';
+    let normalized = href.trim();
+    
+    
+    if (normalized.endsWith('.md')) {
+      normalized = normalized.slice(0, -3);
+    }
+    
+    
+    if (!normalized.startsWith('/')) {
+      
+      const currentPath = window.location.pathname;
+      
+      const relativePath = currentPath.startsWith(basePath) 
+        ? currentPath.slice(basePath.length) 
+        : currentPath;
+      
+      const currentDir = relativePath.split('/').slice(0, -1).filter(p => p).join('/');
+      
+      if (currentDir) {
+        normalized = '/' + currentDir + '/' + normalized;
+      } else {
+        normalized = '/' + normalized;
+      }
+    }
+    
+    
+    if (normalized.startsWith('/') && !normalized.startsWith(basePath)) {
+      normalized = basePath + normalized;
+    }
+    
+    
+    normalized = normalized.replace(/\/+/g, '/');
+    
+    
+    if (normalized !== basePath && normalized !== basePath + '/' && normalized.endsWith('/')) {
+      normalized = normalized.slice(0, -1);
+    }
+    
+    return normalized;
+  }
+  
+  
+  const pageIndex = new Map();
+  const allLinks = Array.from(document.querySelectorAll('a[href]'));
+  
+  allLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    const normalized = normalizeUrl(href);
+    if (normalized) {
+      const text = link.textContent.trim();
+      const linkText = text.toLowerCase();
+      
+      pageIndex.set(normalized, {
+        title: text || normalized.split('/').pop(),
+        searchText: linkText,
+        href: normalized
+      });
+    }
+  });
+  
+  
+  const currentPath = window.location.pathname;
+  pageIndex.set(currentPath, {
+    title: document.title || 'Current Page',
+    searchText: document.body.textContent.toLowerCase(),
+    href: currentPath
+  });
+  
+  
+  searchInput.addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 1) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+    
+    const results = [];
+    
+    const queryWords = query.split(' ').filter(w => w.length > 0);
+    const seenUrls = new Set();
+    const seenResults = new Set(); 
+    
+    
+    if (globalSearchIndex.length > 0) {
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query) 
+        );
+        
+        if (matches && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title,
+            url: page.url,
+            text: page.title + ' - Documentation page (click to search this page)',
+            priority: 0 
+          });
+        }
+      });
+    }
+    
+    
+    pageIndex.forEach((pageInfo, url) => {
+      
+      const urlSegments = url.toLowerCase().split('/').filter(s => s.length > 0);
+      const searchableText = (pageInfo.searchText + ' ' + pageInfo.title.toLowerCase() + ' ' + urlSegments.join(' ')).toLowerCase();
+      
+      const matches = queryWords.every(word => 
+        searchableText.includes(word) || 
+        urlSegments.some(seg => seg.includes(word))
+      );
+      
+      if (matches && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        results.push({
+          title: pageInfo.title,
+          url: url,
+          text: pageInfo.title + ' - Documentation page',
+          priority: 1 
+        });
+      }
+    });
+    
+    
+    allLinks.forEach(link => {
+      const linkText = link.textContent.toLowerCase();
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      
+      if (normalized) {
+        
+        const urlSegments = normalized.toLowerCase().split('/').filter(s => s.length > 0);
+        const searchableText = (linkText + ' ' + urlSegments.join(' ')).toLowerCase();
+        
+        const matches = queryWords.every(word => 
+          searchableText.includes(word) || 
+          urlSegments.some(seg => seg.includes(word))
+        );
+        
+        if (matches && !seenUrls.has(normalized)) {
+          seenUrls.add(normalized);
+          results.push({
+            title: link.textContent.trim() || normalized.split('/').pop().replace(/-/g, ' '),
+            url: normalized,
+            text: link.textContent.trim() || 'Documentation page',
+            priority: 1 
+          });
+        }
+      }
+    });
+    
+    
+    
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, code, pre, dt, dd, td, th, strong, em, b').forEach(el => {
+      const text = el.textContent.toLowerCase();
+      
+      const matches = queryWords.length > 0 && (
+        queryWords.every(word => text.includes(word)) || 
+        text.includes(query) 
+      );
+      
+      if (matches && el.textContent.trim() && el.textContent.trim().length > 1) {
+        
+        let pageUrl = currentPath;
+        let pageTitle = document.title || 'Documentation';
+        
+        
+        const parent = el.closest('article, section, li, ul, ol, table, dl');
+        if (parent) {
+          const nearbyLink = parent.querySelector('a[href*="/auto/"], a[href*="/enums"], a[href*="/ui_"], a[href*="/models"]');
+          if (nearbyLink) {
+            const normalized = normalizeUrl(nearbyLink.getAttribute('href'));
+            if (normalized) {
+              pageUrl = normalized;
+              pageTitle = nearbyLink.textContent.trim() || pageTitle;
+            }
+          }
+        }
+        
+        
+        if (el.tagName && el.tagName.match(/^H[1-6]$/)) {
+          pageTitle = el.textContent.trim();
+        }
+        
+        
+        let snippet = el.textContent.trim();
+        if (snippet.length > 200) {
+          
+          const queryLower = query.toLowerCase();
+          const index = snippet.toLowerCase().indexOf(queryLower);
+          if (index > 0) {
+            const start = Math.max(0, index - 50);
+            snippet = '...' + snippet.substring(start, start + 150) + '...';
+          } else {
+            snippet = snippet.substring(0, 150) + '...';
+          }
+        }
+        
+        const resultKey = pageUrl + '|' + pageTitle;
+        
+        if (!seenResults.has(resultKey)) {
+          seenResults.add(resultKey);
+          results.push({
+            title: pageTitle,
+            url: pageUrl,
+            text: snippet,
+            priority: 2 
+          });
+        }
+      }
+    });
+    
+    
+    const bodyText = document.body.textContent.toLowerCase();
+    const bodyMatches = queryWords.length > 0 && (
+      queryWords.every(word => bodyText.includes(word)) || 
+      bodyText.includes(query) 
+    );
+    
+    if (bodyMatches) {
+      
+      const resultKey = currentPath + '|' + (document.title || 'Current Page');
+      if (!seenResults.has(resultKey)) {
+        seenResults.add(resultKey);
+        
+        const queryLower = query.toLowerCase();
+        const index = bodyText.indexOf(queryLower);
+        if (index >= 0) {
+          const fullText = document.body.textContent;
+          const snippetStart = Math.max(0, index - 100);
+          const snippetEnd = Math.min(fullText.length, index + query.length + 100);
+          const snippet = '...' + fullText.substring(snippetStart, snippetEnd).trim() + '...';
+          
+          results.push({
+            title: document.title || 'Current Page',
+            url: currentPath,
+            text: snippet,
+            priority: 3 
+          });
+        }
+      }
+    }
+    
+    
+    results.sort((a, b) => (a.priority || 2) - (b.priority || 2));
+    
+    
+    if (results.length > 0) {
+      const resultsHtml = results.slice(0, 10).map((r, idx) => {
+        
+        const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' + 
+          r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' + 
+          safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+      }).join('');
+      
+      searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+      
+      
+      searchResults.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.location.href = url;
+          }
+        });
+      });
+      
+      searchResults.classList.remove('hidden');
+    } else {
+      searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+      searchResults.classList.remove('hidden');
+    }
+  });
+  
+  
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      searchResults.classList.add('hidden');
+      searchInput.value = '';
+    }
+  });
+})();
+</script>
+</div>
+  </div>
+</div>
+
+<script>
+  
+  const htmlClass = document.documentElement.classList;
+  const btnDark = document.querySelector('.btn-dark');
+  if (btnDark) {
+    btnDark.addEventListener('click', () => {
+      const isDark = localStorage.getItem('dark') !== 'true';
+      localStorage.setItem('dark', isDark);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', isDark ? "rgb(0 0 0 / 85%)" : '#faf8f1');
+      }
+    });
+  }
+  
+  
+  const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  const darkVal = localStorage.getItem('dark');
+  if (darkVal === 'true' || (!darkVal && darkScheme.matches)) {
+    htmlClass.add('dark');
+  }
+</script>
+<main
+      class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
+      style="max-width: 90% !important;"
+    ><article class="pt-6">
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="storage-strategy-python-vs-rust">Storage Strategy: Python vs Rust</h1>
+<h2 id="overview">Overview</h2>
+<p>The architecture supports <strong>hybrid storage</strong> where both Python and Rust can write to DuckDB/Parquet. This document explains when to use each approach.</p>
+<h2 id="architecture-decision">Architecture Decision</h2>
+<p>Based on the prompt files (<code>ARCHITECTURE_PROPOSAL.md</code>, <code>DISCUSSION_SUMMARY.md</code>), the architecture supports:</p>
+<ol>
+<li><strong>Python storage helpers</strong> (optional) - For batch operations</li>
+<li><strong>Rust storage</strong> (primary) - For frontend-driven operations</li>
+</ol>
+<h2 id="when-to-use-python-storage">When to Use Python Storage</h2>
+<h3 id="-use-python-storage-for">✅ Use Python Storage For:</h3>
+<ol>
+<li>
+<p><strong>Large Batch Operations</strong></p>
+<ul>
+<li>Transit series with many time points (&gt;10)</li>
+<li>Revolution series computation</li>
+<li>Background computation jobs</li>
+<li>Bulk data export/import</li>
+</ul>
+</li>
+<li>
+<p><strong>Performance Optimization</strong></p>
+<ul>
+<li>Avoid transferring large JSON payloads</li>
+<li>Direct database writes from computation loop</li>
+<li>Reduce memory usage in Rust layer</li>
+</ul>
+</li>
+<li>
+<p><strong>Standalone Python Scripts</strong></p>
+<ul>
+<li>Data migration scripts</li>
+<li>Batch computation scripts</li>
+<li>Data analysis scripts</li>
+</ul>
+</li>
+</ol>
+<h3 id="example-transit-series">Example: Transit Series</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#998;font-style:italic"># Python computes and stores directly</span>
+</span></span><span style="display:flex;"><span>storage <span style="color:#000;font-weight:bold">=</span> DuckDBStorage(<span style="color:#d14">&#39;/path/to/workspace.db&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">for</span> timepoint <span style="color:#000;font-weight:bold">in</span> time_range:
+</span></span><span style="display:flex;"><span>    positions <span style="color:#000;font-weight:bold">=</span> compute_positions(<span style="color:#000;font-weight:bold">...</span>)
+</span></span><span style="display:flex;"><span>    aspects <span style="color:#000;font-weight:bold">=</span> compute_aspects(<span style="color:#000;font-weight:bold">...</span>)
+</span></span><span style="display:flex;"><span>    storage<span style="color:#000;font-weight:bold">.</span>store_positions(chart_id, timepoint, positions)
+</span></span><span style="display:flex;"><span>    storage<span style="color:#000;font-weight:bold">.</span>store_aspects(relation_id, timepoint, aspects)
+</span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"># No JSON transfer needed!</span>
+</span></span></code></pre></div><h2 id="when-to-use-rust-storage">When to Use Rust Storage</h2>
+<h3 id="-use-rust-storage-for">✅ Use Rust Storage For:</h3>
+<ol>
+<li>
+<p><strong>Frontend-Driven Operations</strong></p>
+<ul>
+<li>Single chart computations</li>
+<li>User-initiated queries</li>
+<li>Real-time updates</li>
+</ul>
+</li>
+<li>
+<p><strong>Small Data Sets</strong></p>
+<ul>
+<li>&lt;10 time points</li>
+<li>Single chart positions</li>
+<li>Quick lookups</li>
+</ul>
+</li>
+<li>
+<p><strong>Frontend Integration</strong></p>
+<ul>
+<li>Direct Svelte store updates</li>
+<li>UI state management</li>
+<li>Query optimization</li>
+</ul>
+</li>
+</ol>
+<h3 id="example-single-chart">Example: Single Chart</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#998;font-style:italic">// Rust receives JSON, stores in DuckDB
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>result<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>compute_chart(args).<span style="color:#000;font-weight:bold">await</span><span style="color:#000;font-weight:bold">?</span>;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span>storage.store_positions(result.positions)<span style="color:#000;font-weight:bold">?</span>;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span><span style="color:#998;font-style:italic">// Frontend can query immediately
+</span></span></span></code></pre></div><h2 id="storage-path-convention">Storage Path Convention</h2>
+<p>Both Python and Rust use the same storage path:</p>
+<pre tabindex="0"><code>workspace/
+├── workspace.yaml
+├── data/
+│   └── workspace.db    # Shared DuckDB database
+└── data/
+    └── positions/      # Parquet files (optional)
+        └── chart_*.parquet
+</code></pre><p>Python helper function:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">from</span> <span style="color:#555">module.storage</span> <span style="color:#000;font-weight:bold">import</span> get_storage_path
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>db_path <span style="color:#000;font-weight:bold">=</span> get_storage_path(<span style="color:#d14">&#39;/path/to/workspace.yaml&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"># Returns: /path/to/workspace/data/workspace.db</span>
+</span></span></code></pre></div><h2 id="cli-integration">CLI Integration</h2>
+<p>The CLI supports optional storage via <code>store_in_db</code> flag:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#998;font-style:italic"># Store results in DuckDB</span>
+</span></span><span style="display:flex;"><span>python -m module.cli compute_chart <span style="color:#d14">&#39;{
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">  &#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">  &#34;chart_id&#34;: &#34;my-chart&#34;,
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">  &#34;store_in_db&#34;: true
+</span></span></span><span style="display:flex;"><span><span style="color:#d14">}&#39;</span>
+</span></span></code></pre></div><p>For transit series, storage is automatically used for large batches (&gt;10 time points).</p>
+<h2 id="schema-compatibility">Schema Compatibility</h2>
+<p>Both Python and Rust use the <strong>same DuckDB schema</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">CREATE</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">TABLE</span><span style="color:#bbb"> </span>computed_positions<span style="color:#bbb"> </span>(<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>chart_id<span style="color:#bbb"> </span><span style="color:#0086b3">TEXT</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">NOT</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">NULL</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>datetime<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">TIMESTAMP</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">NOT</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">NULL</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>object_id<span style="color:#bbb"> </span><span style="color:#0086b3">TEXT</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">NOT</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">NULL</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span>longitude<span style="color:#bbb"> </span><span style="color:#0086b3">REAL</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">NOT</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">NULL</span>,<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb">    </span><span style="color:#998;font-style:italic">-- ... extended properties
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#000;font-weight:bold">PRIMARY</span><span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">KEY</span><span style="color:#bbb"> </span>(chart_id,<span style="color:#bbb"> </span>datetime,<span style="color:#bbb"> </span>object_id)<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span>);<span style="color:#bbb">
+</span></span></span></code></pre></div><p>This ensures:</p>
+<ul>
+<li>✅ No data conflicts</li>
+<li>✅ Consistent queries</li>
+<li>✅ Shared indexes</li>
+</ul>
+<h2 id="performance-comparison">Performance Comparison</h2>
+<h3 id="python-storage-batch">Python Storage (Batch)</h3>
+<ul>
+<li><strong>Pros</strong>: Direct writes, no JSON overhead, efficient loops</li>
+<li><strong>Cons</strong>: Requires Python runtime, less frontend control</li>
+<li><strong>Use</strong>: Transit series, bulk operations</li>
+</ul>
+<h3 id="rust-storage-interactive">Rust Storage (Interactive)</h3>
+<ul>
+<li><strong>Pros</strong>: Frontend control, immediate queries, type safety</li>
+<li><strong>Cons</strong>: JSON transfer overhead, multiple round-trips</li>
+<li><strong>Use</strong>: Single charts, real-time updates</li>
+</ul>
+<h2 id="best-practices">Best Practices</h2>
+<ol>
+<li>
+<p><strong>Batch Operations</strong>: Use Python storage</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#998;font-style:italic"># Transit series: Python stores directly</span>
+</span></span><span style="display:flex;"><span>storage <span style="color:#000;font-weight:bold">=</span> DuckDBStorage(db_path)
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">for</span> timepoint <span style="color:#000;font-weight:bold">in</span> time_range:
+</span></span><span style="display:flex;"><span>    <span style="color:#998;font-style:italic"># Compute and store in one loop</span>
+</span></span></code></pre></div></li>
+<li>
+<p><strong>Interactive Operations</strong>: Use Rust storage</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#998;font-style:italic">// Single chart: Rust receives JSON, stores
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>result<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>compute_chart(args).<span style="color:#000;font-weight:bold">await</span><span style="color:#000;font-weight:bold">?</span>;<span style="color:#bbb">
+</span></span></span><span style="display:flex;"><span><span style="color:#bbb"></span>storage.store(result)<span style="color:#000;font-weight:bold">?</span>;<span style="color:#bbb">
+</span></span></span></code></pre></div></li>
+<li>
+<p><strong>Hybrid Approach</strong>: Python computes, Rust queries</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#998;font-style:italic"># Python: Background job stores data</span>
+</span></span><span style="display:flex;"><span>storage<span style="color:#000;font-weight:bold">.</span>store_positions(<span style="color:#000;font-weight:bold">...</span>)
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#998;font-style:italic">// Rust: Frontend queries stored data
+</span></span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"></span><span style="color:#000;font-weight:bold">let</span><span style="color:#bbb"> </span>positions<span style="color:#bbb"> </span><span style="color:#000;font-weight:bold">=</span><span style="color:#bbb"> </span>storage.query_positions(<span style="color:#000;font-weight:bold">..</span>.)<span style="color:#000;font-weight:bold">?</span>;<span style="color:#bbb">
+</span></span></span></code></pre></div></li>
+</ol>
+<h2 id="migration-path">Migration Path</h2>
+<ol>
+<li><strong>Phase 1</strong>: Rust storage only (current)</li>
+<li><strong>Phase 2</strong>: Add Python storage helpers (optional)</li>
+<li><strong>Phase 3</strong>: Use Python for batch operations</li>
+<li><strong>Phase 4</strong>: Optimize based on usage patterns</li>
+</ol>
+<h2 id="dependencies">Dependencies</h2>
+<h3 id="python-storage">Python Storage</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install duckdb pyarrow
+</span></span></code></pre></div><h3 id="rust-storage">Rust Storage</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-toml" data-lang="toml"><span style="display:flex;"><span>[dependencies]
+</span></span><span style="display:flex;"><span>duckdb = <span style="color:#d14">&#34;0.10&#34;</span>
+</span></span></code></pre></div><p>Both are optional - the system works with either or both.</p>
+<h2 id="example-transit-series-with-python-storage">Example: Transit Series with Python Storage</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#000;font-weight:bold">from</span> <span style="color:#555">module.cli</span> <span style="color:#000;font-weight:bold">import</span> cmd_compute_transit_series
+</span></span><span style="display:flex;"><span><span style="color:#000;font-weight:bold">from</span> <span style="color:#555">module.storage</span> <span style="color:#000;font-weight:bold">import</span> DuckDBStorage, get_storage_path
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>args <span style="color:#000;font-weight:bold">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#d14">&#34;workspace_path&#34;</span>: <span style="color:#d14">&#34;/path/to/workspace.yaml&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#d14">&#34;source_chart_id&#34;</span>: <span style="color:#d14">&#34;natal-chart&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#d14">&#34;start_datetime&#34;</span>: <span style="color:#d14">&#34;2024-01-01T00:00:00&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#d14">&#34;end_datetime&#34;</span>: <span style="color:#d14">&#34;2024-12-31T23:59:59&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#d14">&#34;time_step&#34;</span>: <span style="color:#d14">&#34;1 hour&#34;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"># CLI automatically uses storage for large batches</span>
+</span></span><span style="display:flex;"><span>result <span style="color:#000;font-weight:bold">=</span> cmd_compute_transit_series(args)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"># Results are stored in DuckDB</span>
+</span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"># Frontend can query directly:</span>
+</span></span><span style="display:flex;"><span><span style="color:#998;font-style:italic"># SELECT * FROM computed_positions WHERE chart_id = &#39;transit_natal-chart_...&#39;</span>
+</span></span></code></pre></div><h2 id="summary">Summary</h2>
+<ul>
+<li><strong>Python storage</strong>: Optional, recommended for batch operations</li>
+<li><strong>Rust storage</strong>: Primary, recommended for interactive operations</li>
+<li><strong>Shared schema</strong>: Both use same DuckDB schema</li>
+<li><strong>Automatic selection</strong>: CLI chooses storage based on operation size</li>
+<li><strong>Performance</strong>: Python storage avoids JSON overhead for large batches</li>
+</ul>
+</section>
+  
+  <style>
+     
+    .prose {
+      color: #374151 !important;  
+    }
+    .prose p, .prose li, .prose td, .prose th {
+      color: #4b5563 !important;  
+    }
+    .prose h1 {
+      font-size: 2.5rem !important;
+      font-weight: 700 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.5rem;
+      color: #111827 !important;  
+    }
+    .prose h2 {
+      font-size: 2rem !important;
+      font-weight: 600 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 0.25rem;
+      color: #1f2937 !important;  
+    }
+    .prose h3 {
+      font-size: 1.5rem !important;
+      font-weight: 600 !important;
+      margin-top: 1.5rem !important;
+      margin-bottom: 0.75rem !important;
+      color: #374151 !important;  
+    }
+    .prose a {
+      color: #2563eb !important;  
+    }
+    .prose a:hover {
+      color: #1d4ed8 !important;  
+    }
+    .dark .prose {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose p, .dark .prose li, .dark .prose td, .dark .prose th {
+      color: #d1d5db !important;  
+    }
+    .dark .prose h1 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      color: #f9fafb !important;  
+    }
+    .dark .prose h2 {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      color: #f3f4f6 !important;  
+    }
+    .dark .prose h3 {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose a {
+      color: #60a5fa !important;  
+    }
+     
+    .prose h4 {
+      color: #b8860b !important;  
+    }
+    .prose ul li strong,
+    .prose ol li strong {
+      color: #b8860b !important;  
+    }
+    .dark .prose h4 {
+      color: #b8860b !important;  
+    }
+    .dark .prose ul li strong,
+    .dark .prose ol li strong {
+      color: #b8860b !important;  
+    }
+     
+    .prose code {
+      color: #92400e !important;  
+      background-color: #fef3c7 !important;  
+    }
+    .prose pre {
+      background-color: #1f2937 !important;  
+    }
+    .prose pre code {
+      color: #fbbf24 !important;  
+      background-color: transparent !important;
+    }
+    .dark .prose code {
+      color: #fbbf24 !important;  
+      background-color: rgba(251, 191, 36, 0.1) !important;  
+    }
+    .dark .prose pre {
+      background-color: #111827 !important;  
+    }
+    .dark .prose pre code {
+      color: #fbbf24 !important;  
+    }
+  </style>
+
+  
+</article></main><footer
+  class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
+>
+  <div class="mr-auto">&copy;2026
+    <a class="link" href="http://localhost:1313/function-wrapper/">Kefer Astrology API Documentation</a></div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
+    >powered by hugo️️</a
+  >️
+  <a
+    class="link"
+    href="https://github.com/nanxiaobei/hugo-paper"
+    rel="noopener"
+    target="_blank"
+    >hugo-paper</a
+  >
+</footer>
+</body>
+</html>
