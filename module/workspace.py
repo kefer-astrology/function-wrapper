@@ -565,20 +565,22 @@ def get_all_aspect_definitions(ws: Optional['Workspace'] = None, model: Optional
 # ──────────────────────────────
 
 def _ensure_dir(p: Path) -> None:
-    """Ensure directory exists, creating parent directories if needed.
-    
-    Args:
-        p: Path to directory to ensure exists
-        
-    Raises:
-        ValueError: If path contains traversal attempts or is invalid
+    """Ensure directory exists, creating parent directories if needed."""
+    p.mkdir(parents=True, exist_ok=True)
+
+
+def _resolve_workspace_dir(base_dir: Union[str, Path]) -> Path:
+    """Resolve a workspace directory safely.
+
+    - Absolute paths are normalized.
+    - Relative paths are resolved under the current working directory and
+      rejected if they attempt to escape it.
     """
-    # Resolve path to normalize and prevent path traversal
-    resolved = p.resolve()
-    # Check for path traversal attempts in resolved path
-    if ".." in resolved.parts:
-        raise ValueError(f"Invalid path: path traversal detected in {p}")
-    resolved.mkdir(parents=True, exist_ok=True)
+    base_path = Path(base_dir).expanduser()
+    if base_path.is_absolute():
+        return base_path.resolve()
+    cwd = Path.cwd().resolve()
+    return resolve_under_base(cwd, base_path)
 
 
 def _safe_filename(name: str) -> str:
@@ -629,9 +631,7 @@ def init_workspace(base_dir: Union[str, Path], owner: str, active_model: str, de
     - Absolute path to the created `workspace.yaml` file.
     """
     # Validate and resolve base directory to prevent path traversal
-    base = Path(base_dir).resolve()
-    if ".." in base.parts:
-        raise ValueError(f"Invalid base directory: path traversal detected in {base_dir}")
+    base = _resolve_workspace_dir(base_dir)
     _ensure_dir(base)
     # subdirs
     subjects_dir = base / "subjects"
