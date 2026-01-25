@@ -481,7 +481,7 @@ def generate_module_markdown(name: str, mod, add_frontmatter: bool = False) -> s
     if add_frontmatter:
         lines.append("---\n")
         lines.append(f"title: {name} Module\n")
-        lines.append(f"description: API documentation for {name} module\n")
+        lines.append(f"description: documentation for {name} module\n")
         lines.append("weight: 10\n")
         lines.append("---\n\n")
     
@@ -544,7 +544,7 @@ def generate_module_markdown(name: str, mod, add_frontmatter: bool = False) -> s
     return "\n".join(lines).rstrip() + "\n"
 
 
-def write_all(out_dir: Path | str = "docs/auto", add_frontmatter: bool = False) -> List[Path]:
+def write_all(out_dir: Path | str = "docs/site/content/auto", add_frontmatter: bool = False) -> List[Path]:
     """Write all module documentation to files.
     
     Args:
@@ -574,7 +574,11 @@ def main(argv: List[str] | None = None) -> int:
     os.environ.setdefault("KIVY_NO_ARGS", "1")
     
     parser = argparse.ArgumentParser(description="Export Markdown docs for selected modules")
-    parser.add_argument("--out", default="docs/auto", help="Output directory (default: docs/auto)")
+    parser.add_argument(
+        "--out",
+        default="docs/site/content/auto",
+        help="Output directory (default: docs/site/content/auto)",
+    )
     parser.add_argument("--hugo", action="store_true", help="Add Hugo frontmatter to generated files")
     args = parser.parse_args(argv)
     written = write_all(args.out, add_frontmatter=args.hugo)

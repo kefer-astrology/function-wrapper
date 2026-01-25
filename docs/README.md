@@ -4,44 +4,55 @@ This directory contains documentation for using the Kefer Astrology sidecar modu
 
 ## User Documentation
 
-### API References
-- **`CLI_API_REFERENCE.md`** - Complete CLI command reference
-- **`TAURI_SVELTE_INTEGRATION.md`** - How to integrate with Tauri + Svelte frontend
-- **`STORAGE_STRATEGY.md`** - When and how to use Python vs Rust storage
+### References
+- **`cli_reference.md`** - Complete CLI command reference
+- **`installation.md`** - Environment setup and venv strategy
+- **`architecture.md`** - System architecture (includes storage responsibilities)
 
-### Auto-Generated API Docs
+### Auto-Generated Docs
 - **`auto/`** - Module documentation generated from docstrings
-  - `auto/cli.md` - CLI module API
-  - `auto/storage.md` - Storage module API
-  - `auto/services.md` - Services module API
-  - `auto/workspace.md` - Workspace module API
+  - `auto/cli.md` - CLI module
+  - `auto/storage.md` - Storage module
+  - `auto/services.md` - Services module
+  - `auto/workspace.md` - Workspace module
   - etc.
 
 ## Developer Documentation
 
-- **`TESTING_GUIDE.md`** - How to write and run tests
 - **`architecture.md`** - System architecture overview
-- **`models.mmd`** - Mermaid class diagram
 - **`enums.md`** - Enumeration reference
+- **`models.mmd`** - Mermaid class diagram
+- **`installation.md`** - Environment setup and doc generation
+- **`testing_guide.md`** - How to write and run tests
 
 ## Generating Documentation
 
-### Auto-Generate API Docs
+### Auto-Generate Docs
 ```bash
 make docs
 ```
 
 This generates:
-- `docs/auto/*.md` - Module API documentation from docstrings
-- `docs/models.mmd` - Class diagram
-- `docs/enums.md` - Enum reference
+- `docs/site/content/auto/*.md` - Module API documentation from docstrings
+- `docs/site/content/models.mmd` - Class diagram
+- `docs/site/content/enums.md` - Enum reference
+
+### Serve Docs Locally (Hugo)
+```bash
+hugo server --source docs/site --config hugo.toml --baseURL http://localhost:1313/ --appendPort=false
+```
+
+Hugo sources live under `docs/site/` and the built site is written to `docs/` via `--destination docs`.
+Full setup steps are in `installation.md` under "Generating Documentation".
 
 ### Manual Documentation
 User guides and integration docs are maintained manually in this directory.
 
+When linking images from content pages, prefer `../example.png` so links resolve at the site root during local and hosted builds.
+
 ## Quick Links
 
-- **For Tauri Integration**: See `TAURI_SVELTE_INTEGRATION.md`
-- **For CLI Usage**: See `CLI_API_REFERENCE.md`
-- **For Storage**: See `STORAGE_STRATEGY.md`
-- **For API Reference**: See `auto/` directory
+- **For Installation**: See `installation.md`
+- **For CLI Usage**: See `cli_reference.md`
+- **For Storage**: See `architecture.md`
+- **For Reference**: See `auto/` directory

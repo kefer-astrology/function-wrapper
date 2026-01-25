@@ -1,0 +1,21 @@
+baseURL = 'https://kefer-astrology.github.io/function-wrapper/'
+languageCode = 'en-us'
+title = 'Kefer Astrology Documentation'
+theme = 'hugo-paper'
+
+[params]
+  description = "Complete documentation for Kefer Astrology function-wrapper"
+  disablePostNavigation = true  # Disable post navigation for documentation
+
+[outputs]
+  home = ["html", "rss", "json"]
+  
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true  # Allow raw HTML in markdown (needed for code blocks)
+  [markup.highlight]
+    style = "github"
+    codeFences = true
+
+# Hugo sources live under docs/site; build output is written to docs/ via CLI.

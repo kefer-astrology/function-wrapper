@@ -158,7 +158,7 @@ def generate_mermaid() -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def write_mermaid(path: Path | str = "docs/models.mmd") -> Path:
+def write_mermaid(path: Path | str = "docs/site/content/models.mmd") -> Path:
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
     content = generate_mermaid()
@@ -191,7 +191,7 @@ def generate_enum_overview_markdown() -> str:
     return "".join(lines)
 
 
-def write_enum_overview(path: Path | str = "docs/enums.md") -> Path:
+def write_enum_overview(path: Path | str = "docs/site/content/enums.md") -> Path:
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
     content = generate_enum_overview_markdown()
@@ -202,7 +202,7 @@ def write_enum_overview(path: Path | str = "docs/enums.md") -> Path:
 def main(argv: Optional[List[str]] = None) -> int:
     import argparse
     parser = argparse.ArgumentParser(description="Generate Mermaid classDiagram from models")
-    parser.add_argument("--out", default="docs/models.mmd", help="Output file path")
+    parser.add_argument("--out", default="docs/site/content/models.mmd", help="Output file path")
     parser.add_argument("--enums-out", default=None, help="Optional: write enum overview markdown to this path")
     args = parser.parse_args(argv)
     p = write_mermaid(args.out)

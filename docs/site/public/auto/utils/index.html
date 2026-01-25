@@ -1,0 +1,1049 @@
+<!doctype html>
+
+
+
+
+
+
+
+<html
+  class="not-ready lg:text-base"
+  style="--bg:#faf8f1"
+  lang="en-us"
+  dir="ltr"
+><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>utils Module - Kefer Astrology Documentation</title>
+
+  
+  <meta name="theme-color" />
+
+  <meta name="description" content="utils module
+Functions
+combine_date_time
+combine_date_time(input_date: datetime.date, input_time: datetime.time) -&gt; datetime.datetime
+Combine a date and time into a naive datetime (no timezone).
+Parameters
+
+
+input_date: Date object
+
+
+input_time: Time object
+
+
+Returns
+Naive datetime combining date and time
+compute_vernal_equinox_offset
+compute_vernal_equinox_offset(year: int, eph, observer, ts) -&gt; float
+Compute the vernal equinox offset for tropical astrology adjustment.
+Parameters
+
+
+year: The year to compute the vernal equinox for
+
+
+eph: Skyfield ephemeris object
+
+
+observer: Skyfield Topos observer object
+
+
+ts: Skyfield timescale object" />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.4d6e4063acd5362e811e595b8dda7b07c6d8d9afb1f0c67fd37159fb016bec64.css" integrity="sha256-TW5AY6zVNi6BHllbjdp7B8bY2a&#43;x8MZ/03FZ&#43;wFr7GQ=" />
+
+  
+  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
+
+  
+
+  
+
+  <script
+    defer
+    src="http://localhost:1313/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+
+  
+  <link
+    rel="icon"
+    href="http://localhost:1313/favicon.ico"
+  />
+  <link
+    rel="apple-touch-icon"
+    href="http://localhost:1313/apple-touch-icon.png"
+  />
+
+  <meta name="generator" content="Hugo 0.154.2">
+</head>
+<body
+    class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
+  >
+    
+<div class="sticky top-0 z-50 w-full border-b border-gray-700 shadow-sm backdrop-blur-sm" style="background-color: #1a1a1a !important; position: sticky; top: 0;">
+  <div class="mx-auto flex items-center px-8" style="max-width: 90% !important; gap: 2rem; min-height: 6rem; padding-top: 1.5rem; padding-bottom: 1.5rem;">
+    <div class="flex items-center" style="flex: 3;">
+      <a
+        class="text-2xl font-medium no-underline text-white"
+        href="http://localhost:1313/"
+        >Kefer Astrology Documentation</a
+      >
+      <div
+        class="btn-dark text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right] invert"
+        role="button"
+        aria-label="Dark"
+      ></div>
+    </div>
+    <div style="flex: 2;">
+<div class="relative">
+  <input 
+    type="text" 
+    id="search-input" 
+    placeholder="Search documentation..." 
+    class="w-full px-4 py-2 rounded-lg border text-sm"
+    style="background-color: #000000 !important; color: #b8860b !important; border-color: #b8860b !important;"
+  />
+  <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 hidden" style="background-color: #1a1a1a !important; border-color: #4a4a4a !important;"></div>
+</div>
+
+<style>
+  #search-input {
+    background-color: #000000 !important;
+    color: #b8860b !important;
+    border-color: #b8860b !important;
+  }
+  #search-input::placeholder {
+    color: #b8860b !important;
+    opacity: 0.7;
+  }
+  #search-input:focus {
+    border-color: #b8860b !important;
+    ring-color: #b8860b !important;
+  }
+</style>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  
+  if (!searchInput) return;
+  
+  
+  let globalSearchIndex = [];
+  const basePath = '\/';
+  const basePathNormalized = basePath.endsWith('/') && basePath.length > 1
+    ? basePath.slice(0, -1)
+    : basePath;
+  const indexUrl = basePathNormalized === '/' ? '/index.json' : basePathNormalized + '/index.json';
+  
+  
+  function buildSearchIndex() {
+    const allLinks = Array.from(document.querySelectorAll('a[href]'));
+    const indexMap = new Map();
+    
+    allLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      if (normalized && !normalized.includes('#') && !normalized.includes('http')) {
+        const title = link.textContent.trim();
+        if (title && !indexMap.has(normalized)) {
+          indexMap.set(normalized, {
+            title: title,
+            url: normalized,
+            keywords: (title + ' ' + normalized).toLowerCase()
+          });
+        }
+      }
+    });
+    
+    globalSearchIndex = Array.from(indexMap.values());
+  }
+
+  async function loadSearchIndex() {
+    try {
+      const response = await fetch(indexUrl, { cache: 'no-store' });
+      if (!response.ok) return;
+      const pages = await response.json();
+      if (!Array.isArray(pages)) return;
+      globalSearchIndex = pages.map(page => {
+        const title = (page.title || '').toString();
+        const url = (page.url || '').toString();
+        const content = (page.content || '').toString();
+        return {
+          title,
+          url,
+          content,
+          keywords: (title + ' ' + url + ' ' + content).toLowerCase()
+        };
+      });
+    } catch (err) {
+      
+    }
+  }
+  
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      buildSearchIndex();
+      loadSearchIndex();
+    });
+  } else {
+    buildSearchIndex();
+    loadSearchIndex();
+  }
+  
+  
+  function normalizeUrl(href) {
+    if (!href || href.startsWith('http') || href.startsWith('#')) {
+      return null;
+    }
+    let normalized = href.trim();
+    
+    
+    if (normalized.endsWith('.md')) {
+      normalized = normalized.slice(0, -3);
+    }
+    
+    
+    if (!normalized.startsWith('/')) {
+      
+      const currentPath = window.location.pathname;
+      
+      const relativePath = currentPath.startsWith(basePath) 
+        ? currentPath.slice(basePath.length) 
+        : currentPath;
+      
+      const currentDir = relativePath.split('/').slice(0, -1).filter(p => p).join('/');
+      
+      if (currentDir) {
+        normalized = '/' + currentDir + '/' + normalized;
+      } else {
+        normalized = '/' + normalized;
+      }
+    }
+    
+    
+    if (normalized.startsWith('/') && !normalized.startsWith(basePathNormalized)) {
+      normalized = basePathNormalized + normalized;
+    }
+    
+    
+    normalized = normalized.replace(/\/+/g, '/');
+    
+    
+    if (normalized !== basePathNormalized && normalized !== basePathNormalized + '/' && normalized.endsWith('/')) {
+      normalized = normalized.slice(0, -1);
+    }
+    
+    return normalized;
+  }
+
+  function buildSnippet(text, query) {
+    if (!text) return '';
+    const lower = text.toLowerCase();
+    const q = query.toLowerCase();
+    const index = lower.indexOf(q);
+    if (index < 0) {
+      return text.length > 160 ? text.slice(0, 160) + '...' : text;
+    }
+    const start = Math.max(0, index - 60);
+    const end = Math.min(text.length, index + q.length + 120);
+    const prefix = start > 0 ? '...' : '';
+    const suffix = end < text.length ? '...' : '';
+    return prefix + text.slice(start, end).trim() + suffix;
+  }
+  
+  
+  const pageIndex = new Map();
+  const allLinks = Array.from(document.querySelectorAll('a[href]'));
+  
+  allLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    const normalized = normalizeUrl(href);
+    if (normalized) {
+      const text = link.textContent.trim();
+      const linkText = text.toLowerCase();
+      
+      pageIndex.set(normalized, {
+        title: text || normalized.split('/').pop(),
+        searchText: linkText,
+        href: normalized
+      });
+    }
+  });
+  
+  
+  const currentPath = window.location.pathname;
+  pageIndex.set(currentPath, {
+    title: document.title || 'Current Page',
+    searchText: document.body.textContent.toLowerCase(),
+    href: currentPath
+  });
+  
+  
+  searchInput.addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 1) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+
+    if (globalSearchIndex.length > 0) {
+      const results = [];
+      const seenUrls = new Set();
+      const queryWords = query.split(' ').filter(w => w.length > 0);
+
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query)
+        );
+
+        if (matches && page.url && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title || page.url.split('/').pop(),
+            url: page.url,
+            text: buildSnippet(page.content || page.title || '', query),
+            priority: 0
+          });
+        }
+      });
+
+      if (results.length > 0) {
+        const resultsHtml = results.slice(0, 10).map((r, idx) => {
+          const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' +
+            r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' +
+            safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+        }).join('');
+
+        searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+
+        searchResults.querySelectorAll('.search-result-item').forEach(item => {
+          item.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+              window.location.href = url;
+            }
+          });
+        });
+
+        searchResults.classList.remove('hidden');
+      } else {
+        searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+        searchResults.classList.remove('hidden');
+      }
+      return;
+    }
+
+    const results = [];
+    
+    const queryWords = query.split(' ').filter(w => w.length > 0);
+    const seenUrls = new Set();
+    const seenResults = new Set(); 
+    
+    
+    if (globalSearchIndex.length > 0) {
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query) 
+        );
+        
+        if (matches && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title,
+            url: page.url,
+            text: page.title + ' - Documentation page (click to search this page)',
+            priority: 0 
+          });
+        }
+      });
+    }
+    
+    
+    pageIndex.forEach((pageInfo, url) => {
+      
+      const urlSegments = url.toLowerCase().split('/').filter(s => s.length > 0);
+      const searchableText = (pageInfo.searchText + ' ' + pageInfo.title.toLowerCase() + ' ' + urlSegments.join(' ')).toLowerCase();
+      
+      const matches = queryWords.every(word => 
+        searchableText.includes(word) || 
+        urlSegments.some(seg => seg.includes(word))
+      );
+      
+      if (matches && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        results.push({
+          title: pageInfo.title,
+          url: url,
+          text: pageInfo.title + ' - Documentation page',
+          priority: 1 
+        });
+      }
+    });
+    
+    
+    allLinks.forEach(link => {
+      const linkText = link.textContent.toLowerCase();
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      
+      if (normalized) {
+        
+        const urlSegments = normalized.toLowerCase().split('/').filter(s => s.length > 0);
+        const searchableText = (linkText + ' ' + urlSegments.join(' ')).toLowerCase();
+        
+        const matches = queryWords.every(word => 
+          searchableText.includes(word) || 
+          urlSegments.some(seg => seg.includes(word))
+        );
+        
+        if (matches && !seenUrls.has(normalized)) {
+          seenUrls.add(normalized);
+          results.push({
+            title: link.textContent.trim() || normalized.split('/').pop().replace(/-/g, ' '),
+            url: normalized,
+            text: link.textContent.trim() || 'Documentation page',
+            priority: 1 
+          });
+        }
+      }
+    });
+    
+    
+    
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, code, pre, dt, dd, td, th, strong, em, b').forEach(el => {
+      const text = el.textContent.toLowerCase();
+      
+      const matches = queryWords.length > 0 && (
+        queryWords.every(word => text.includes(word)) || 
+        text.includes(query) 
+      );
+      
+      if (matches && el.textContent.trim() && el.textContent.trim().length > 1) {
+        
+        let pageUrl = currentPath;
+        let pageTitle = document.title || 'Documentation';
+        
+        
+        const parent = el.closest('article, section, li, ul, ol, table, dl');
+        if (parent) {
+          const nearbyLink = parent.querySelector('a[href*="/auto/"], a[href*="/enums"], a[href*="/ui_"], a[href*="/models"]');
+          if (nearbyLink) {
+            const normalized = normalizeUrl(nearbyLink.getAttribute('href'));
+            if (normalized) {
+              pageUrl = normalized;
+              pageTitle = nearbyLink.textContent.trim() || pageTitle;
+            }
+          }
+        }
+        
+        
+        if (el.tagName && el.tagName.match(/^H[1-6]$/)) {
+          pageTitle = el.textContent.trim();
+        }
+        
+        
+        let snippet = el.textContent.trim();
+        if (snippet.length > 200) {
+          
+          const queryLower = query.toLowerCase();
+          const index = snippet.toLowerCase().indexOf(queryLower);
+          if (index > 0) {
+            const start = Math.max(0, index - 50);
+            snippet = '...' + snippet.substring(start, start + 150) + '...';
+          } else {
+            snippet = snippet.substring(0, 150) + '...';
+          }
+        }
+        
+        const resultKey = pageUrl + '|' + pageTitle;
+        
+        if (!seenResults.has(resultKey)) {
+          seenResults.add(resultKey);
+          results.push({
+            title: pageTitle,
+            url: pageUrl,
+            text: snippet,
+            priority: 2 
+          });
+        }
+      }
+    });
+    
+    
+    const bodyText = document.body.textContent.toLowerCase();
+    const bodyMatches = queryWords.length > 0 && (
+      queryWords.every(word => bodyText.includes(word)) || 
+      bodyText.includes(query) 
+    );
+    
+    if (bodyMatches) {
+      
+      const resultKey = currentPath + '|' + (document.title || 'Current Page');
+      if (!seenResults.has(resultKey)) {
+        seenResults.add(resultKey);
+        
+        const queryLower = query.toLowerCase();
+        const index = bodyText.indexOf(queryLower);
+        if (index >= 0) {
+          const fullText = document.body.textContent;
+          const snippetStart = Math.max(0, index - 100);
+          const snippetEnd = Math.min(fullText.length, index + query.length + 100);
+          const snippet = '...' + fullText.substring(snippetStart, snippetEnd).trim() + '...';
+          
+          results.push({
+            title: document.title || 'Current Page',
+            url: currentPath,
+            text: snippet,
+            priority: 3 
+          });
+        }
+      }
+    }
+    
+    
+    results.sort((a, b) => (a.priority || 2) - (b.priority || 2));
+    
+    
+    if (results.length > 0) {
+      const resultsHtml = results.slice(0, 10).map((r, idx) => {
+        
+        const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' + 
+          r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' + 
+          safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+      }).join('');
+      
+      searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+      
+      
+      searchResults.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.location.href = url;
+          }
+        });
+      });
+      
+      searchResults.classList.remove('hidden');
+    } else {
+      searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+      searchResults.classList.remove('hidden');
+    }
+  });
+  
+  
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      searchResults.classList.add('hidden');
+      searchInput.value = '';
+    }
+  });
+})();
+</script>
+</div>
+  </div>
+</div>
+
+<script>
+  
+  const htmlClass = document.documentElement.classList;
+  const btnDark = document.querySelector('.btn-dark');
+  if (btnDark) {
+    btnDark.addEventListener('click', () => {
+      const isDark = localStorage.getItem('dark') !== 'true';
+      localStorage.setItem('dark', isDark);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', isDark ? "rgb(0 0 0 / 85%)" : '#faf8f1');
+      }
+    });
+  }
+  
+  
+  const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  const darkVal = localStorage.getItem('dark');
+  if (darkVal === 'true' || (!darkVal && darkScheme.matches)) {
+    htmlClass.add('dark');
+  }
+</script>
+<main
+      class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
+      style="max-width: 90% !important;"
+    ><article class="pt-6">
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="utils-module"><code>utils</code> module</h1>
+<h2 id="functions">Functions</h2>
+<h2 id="combine_date_time"><code>combine_date_time</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>combine_date_time<span style="color:#1f2328">(</span>input_date<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>date<span style="color:#1f2328">,</span> input_time<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>time<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
+</span></span></code></pre></div><p>Combine a date and time into a naive datetime (no timezone).</p>
+<h4 id="parameters">Parameters</h4>
+<ul>
+<li>
+<p><strong>input_date</strong>: Date object</p>
+</li>
+<li>
+<p><strong>input_time</strong>: Time object</p>
+</li>
+</ul>
+<h4 id="returns">Returns</h4>
+<p>Naive datetime combining date and time</p>
+<h2 id="compute_vernal_equinox_offset"><code>compute_vernal_equinox_offset</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>compute_vernal_equinox_offset<span style="color:#1f2328">(</span>year<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span><span style="color:#1f2328">,</span> eph<span style="color:#1f2328">,</span> observer<span style="color:#1f2328">,</span> ts<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">float</span>
+</span></span></code></pre></div><p>Compute the vernal equinox offset for tropical astrology adjustment.</p>
+<h4 id="parameters-1">Parameters</h4>
+<ul>
+<li>
+<p><strong>year</strong>: The year to compute the vernal equinox for</p>
+</li>
+<li>
+<p><strong>eph</strong>: Skyfield ephemeris object</p>
+</li>
+<li>
+<p><strong>observer</strong>: Skyfield Topos observer object</p>
+</li>
+<li>
+<p><strong>ts</strong>: Skyfield timescale object</p>
+</li>
+</ul>
+<h4 id="returns-1">Returns</h4>
+<p>The ecliptic longitude offset in degrees [0, 360)</p>
+<h2 id="default_ephemeris_path"><code>default_ephemeris_path</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>default_ephemeris_path<span style="color:#1f2328">()</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">str</span>
+</span></span></code></pre></div><p>Return the default path to the local JPL ephemeris file.</p>
+<h4 id="returns-2">Returns</h4>
+<p>Absolute path to de421.bsp file in source/ directory</p>
+<h2 id="ensure_aware"><code>ensure_aware</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>ensure_aware<span style="color:#1f2328">(</span>dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> tz_name<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
+</span></span></code></pre></div><p>Return a timezone-aware datetime.</p>
+<h4 id="parameters-2">Parameters</h4>
+<ul>
+<li>
+<p><strong>dt</strong>: Datetime to make timezone-aware</p>
+</li>
+<li>
+<p><strong>tz_name</strong>: Optional timezone name for localization, defaults to UTC</p>
+</li>
+</ul>
+<h4 id="returns-3">Returns</h4>
+<p>Timezone-aware datetime. If dt is already aware, returns unchanged.
+If tz_name provided, localizes to that timezone. Otherwise uses UTC.</p>
+<h2 id="expand_range"><code>expand_range</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>expand_range<span style="color:#1f2328">(</span>center<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> days<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>DateRange
+</span></span></code></pre></div><p>Create a DateRange centered on a datetime extending days on both sides.</p>
+<h4 id="parameters-3">Parameters</h4>
+<ul>
+<li>
+<p><strong>center</strong>: Center datetime for the range</p>
+</li>
+<li>
+<p><strong>days</strong>: Number of days to extend on each side</p>
+</li>
+</ul>
+<h4 id="returns-4">Returns</h4>
+<p>DateRange from (center - days) to (center + days)</p>
+<h2 id="export_chart_yaml"><code>export_chart_yaml</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>export_chart_yaml<span style="color:#1f2328">(</span>chart<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance<span style="color:#1f2328">,</span> dest_dir<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">str</span>
+</span></span></code></pre></div><p>Export a ChartInstance as YAML into dest_dir.</p>
+<h4 id="parameters-4">Parameters</h4>
+<ul>
+<li>
+<p><strong>chart</strong>: ChartInstance to export</p>
+</li>
+<li>
+<p><strong>dest_dir</strong>: Destination directory for YAML file</p>
+</li>
+</ul>
+<h4 id="returns-5">Returns</h4>
+<p>Absolute file path to exported YAML file</p>
+<h2 id="export_workspace_yaml"><code>export_workspace_yaml</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>export_workspace_yaml<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> dest_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
+</span></span></code></pre></div><p>Export a Workspace as YAML to dest_path.</p>
+<h4 id="parameters-5">Parameters</h4>
+<ul>
+<li>
+<p><strong>ws</strong>: Workspace instance to export</p>
+</li>
+<li>
+<p><strong>dest_path</strong>: Destination file path</p>
+</li>
+</ul>
+<h4 id="returns-6">Returns</h4>
+<p>Resolved Path to exported YAML file</p>
+<h4 id="notes">Notes</h4>
+<p>Uses the local serializer to convert dataclasses, enums, and datetimes
+to primitives. Ensures parent directory exists.</p>
+<h2 id="find_vernal_equinox_datetime"><code>find_vernal_equinox_datetime</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>find_vernal_equinox_datetime<span style="color:#1f2328">(</span>year<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
+</span></span></code></pre></div><p>Find the approximate datetime of the vernal equinox for a given year.</p>
+<h4 id="parameters-6">Parameters</h4>
+<ul>
+<li><strong>year</strong>: The year to find the vernal equinox for</li>
+</ul>
+<h4 id="returns-7">Returns</h4>
+<p>A timezone-aware UTC datetime for the approximate vernal equinox</p>
+<h2 id="import_chart_yaml"><code>import_chart_yaml</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>import_chart_yaml<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance
+</span></span></code></pre></div><p>Read a chart YAML file from disk and parse into a ChartInstance.</p>
+<h4 id="parameters-7">Parameters</h4>
+<ul>
+<li><strong>path</strong>: Path to chart YAML file</li>
+</ul>
+<h4 id="returns-8">Returns</h4>
+<p>ChartInstance parsed from YAML file</p>
+<h2 id="in_range"><code>in_range</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>in_range<span style="color:#1f2328">(</span>dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> dr<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>DateRange<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">bool</span>
+</span></span></code></pre></div><p>Check if datetime lies within the inclusive DateRange.</p>
+<h4 id="parameters-8">Parameters</h4>
+<ul>
+<li>
+<p><strong>dt</strong>: Datetime to check</p>
+</li>
+<li>
+<p><strong>dr</strong>: DateRange with start and end datetimes</p>
+</li>
+</ul>
+<h4 id="returns-9">Returns</h4>
+<p>True if dt is within [start, end] (inclusive), False otherwise</p>
+<h2 id="load_sfs_models_from_dir"><code>load_sfs_models_from_dir</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>load_sfs_models_from_dir<span style="color:#1f2328">(</span>dir_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AstroModel<span style="color:#1f2328">]</span>
+</span></span></code></pre></div><p>Scan a directory for StarFisher .sfs files and build AstroModel catalogs.</p>
+<h4 id="parameters-9">Parameters</h4>
+<ul>
+<li><strong>dir_path</strong>: Directory path to scan for .sfs files</li>
+</ul>
+<h4 id="returns-10">Returns</h4>
+<p>Dictionary mapping model name (from file stem or parsed model.name) to AstroModel.
+Files that cannot be decoded or parsed are skipped.</p>
+<h2 id="location_equals"><code>location_equals</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>location_equals<span style="color:#1f2328">(</span>loc1<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location<span style="color:#1f2328">,</span> loc2<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">bool</span>
+</span></span></code></pre></div><p>Check approximate equality of two Location objects.</p>
+<h4 id="parameters-10">Parameters</h4>
+<ul>
+<li>
+<p><strong>loc1</strong>: First location to compare</p>
+</li>
+<li>
+<p><strong>loc2</strong>: Second location to compare</p>
+</li>
+</ul>
+<h4 id="returns-11">Returns</h4>
+<p>True if locations are approximately equal, False otherwise</p>
+<h2 id="location_from_coords"><code>location_from_coords</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>location_from_coords<span style="color:#1f2328">(</span>lat<span style="color:#1f2328">:</span> <span style="color:#6639ba">float</span><span style="color:#1f2328">,</span> lon<span style="color:#1f2328">:</span> <span style="color:#6639ba">float</span><span style="color:#1f2328">,</span> name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;&#39;</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location
+</span></span></code></pre></div><p>Build a Location from raw coordinates, inferring timezone via TimezoneFinder.</p>
+<h4 id="parameters-11">Parameters</h4>
+<ul>
+<li>
+<p><strong>lat</strong>: Latitude in degrees</p>
+</li>
+<li>
+<p><strong>lon</strong>: Longitude in degrees</p>
+</li>
+<li>
+<p><strong>name</strong>: Optional location name, defaults to coordinate string</p>
+</li>
+</ul>
+<h4 id="returns-12">Returns</h4>
+<p>Location instance with inferred timezone</p>
+<h2 id="now_utc"><code>now_utc</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>now_utc<span style="color:#1f2328">()</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
+</span></span></code></pre></div><p>Return current time as a timezone-aware UTC datetime.</p>
+<h2 id="parse_chart_yaml"><code>parse_chart_yaml</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>parse_chart_yaml<span style="color:#1f2328">(</span>data<span style="color:#1f2328">:</span> <span style="color:#6639ba">dict</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance
+</span></span></code></pre></div><p>Construct a ChartInstance from a YAML-mapped dict with safe coercions.</p>
+<h4 id="parameters-12">Parameters</h4>
+<ul>
+<li><strong>data</strong>: Dictionary containing chart data (subject, config, id, tags)</li>
+</ul>
+<h4 id="returns-13">Returns</h4>
+<p>ChartInstance with parsed subject and config</p>
+<h4 id="notes-1">Notes</h4>
+<p>Removes &lsquo;computed_chart&rsquo; if present (it&rsquo;s recomputable and shouldn&rsquo;t be loaded from YAML)</p>
+<h4 id="warnings">Warnings</h4>
+<p>⚠️ ValueError: If subject data is invalid</p>
+<h2 id="parse_sfs_content"><code>parse_sfs_content</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>parse_sfs_content<span style="color:#1f2328">(</span>content<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> Tuple<span style="color:#1f2328">[</span>module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AstroModel<span style="color:#1f2328">,</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> Any<span style="color:#1f2328">]]</span>
+</span></span></code></pre></div><p>Parse the content of a StarFisher .sfs file and map to AstroModel.</p>
+<h4 id="parameters-13">Parameters</h4>
+<ul>
+<li><strong>content</strong>: String content of the .sfs file</li>
+</ul>
+<h4 id="returns-14">Returns</h4>
+<p>Tuple of (AstroModel, display_config_dict) where display_config_dict
+contains display-related settings from the .sfs file</p>
+<h2 id="parse_yaml_content"><code>parse_yaml_content</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>parse_yaml_content<span style="color:#1f2328">(</span>data<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> <span style="color:#6639ba">bytes</span><span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">dict</span>
+</span></span></code></pre></div><p>Parse YAML from a string or bytes and return a dict.</p>
+<h4 id="parameters-14">Parameters</h4>
+<ul>
+<li><strong>data</strong>: YAML content as string or bytes</li>
+</ul>
+<h4 id="returns-15">Returns</h4>
+<p>Parsed YAML as dictionary, or empty dict if empty/invalid</p>
+<h4 id="notes-2">Notes</h4>
+<p>Useful for handling uploaded files or in-memory YAML content uniformly.</p>
+<h2 id="prepare_horoscope"><code>prepare_horoscope</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>prepare_horoscope<span style="color:#1f2328">(</span>name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;&#39;</span><span style="color:#1f2328">,</span> dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> loc<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> engine<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span>module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>EngineType<span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> ephemeris_path<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> zodiac<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ZodiacType <span style="color:#0550ae">=</span> <span style="color:#0550ae">&lt;</span>ZodiacType<span style="color:#0550ae">.</span>TROPICAL<span style="color:#1f2328">:</span> <span style="color:#0a3069">&#39;Tropical&#39;</span><span style="color:#0550ae">&gt;</span><span style="color:#1f2328">,</span> house<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>HouseSystem <span style="color:#0550ae">=</span> <span style="color:#0550ae">&lt;</span>HouseSystem<span style="color:#0550ae">.</span>PLACIDUS<span style="color:#1f2328">:</span> <span style="color:#0a3069">&#39;Placidus&#39;</span><span style="color:#0550ae">&gt;</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance
+</span></span></code></pre></div><p>Create a ChartInstance with basic configuration.</p>
+<h4 id="parameters-15">Parameters</h4>
+<ul>
+<li>
+<p><strong>name</strong>: Chart subject name</p>
+</li>
+<li>
+<p><strong>dt</strong>: Event datetime</p>
+</li>
+<li>
+<p><strong>loc</strong>: Location for the chart</p>
+</li>
+<li>
+<p><strong>engine</strong>: Optional computation engine</p>
+</li>
+<li>
+<p><strong>ephemeris_path</strong>: Optional path to ephemeris file</p>
+</li>
+<li>
+<p><strong>zodiac</strong>: Zodiac type, defaults to TROPICAL</p>
+</li>
+<li>
+<p><strong>house</strong>: House system, defaults to PLACIDUS</p>
+</li>
+</ul>
+<h4 id="returns-16">Returns</h4>
+<p>ChartInstance with configured ChartSubject and ChartConfig</p>
+<h2 id="read_yaml_file"><code>read_yaml_file</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>read_yaml_file<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">dict</span>
+</span></span></code></pre></div><p>Read a YAML file and return a dict.</p>
+<h4 id="parameters-16">Parameters</h4>
+<ul>
+<li><strong>path</strong>: Path to YAML file</li>
+</ul>
+<h4 id="returns-17">Returns</h4>
+<p>Parsed YAML content as dictionary, or empty dict if file is empty</p>
+<h4 id="notes-3">Notes</h4>
+<p>This is a thin wrapper around yaml.safe_load that always returns a dict.</p>
+<h2 id="resolve_under_base"><code>resolve_under_base</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>resolve_under_base<span style="color:#1f2328">(</span>base<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> rel_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
+</span></span></code></pre></div><p>Resolve rel_path against base and ensure the result stays within base.</p>
+<h4 id="parameters-17">Parameters</h4>
+<ul>
+<li>
+<p><strong>base</strong>: Base directory path</p>
+</li>
+<li>
+<p><strong>rel_path</strong>: Relative path to resolve</p>
+</li>
+</ul>
+<h4 id="returns-18">Returns</h4>
+<p>Resolved Path that is contained within base</p>
+<h4 id="warnings-1">Warnings</h4>
+<p>⚠️ ValueError: If path is absolute or attempts directory traversal outside base</p>
+<h2 id="resolve_user_path"><code>resolve_user_path</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>resolve_user_path<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> <span style="color:#0550ae">*</span><span style="color:#1f2328">,</span> base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">,</span> NoneType<span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
+</span></span></code></pre></div><p>Resolve a user-provided path safely.</p>
+<h2 id="to_timezone"><code>to_timezone</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>to_timezone<span style="color:#1f2328">(</span>dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> tz_name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
+</span></span></code></pre></div><p>Convert a timezone-aware datetime to the target timezone by name.</p>
+<h4 id="parameters-18">Parameters</h4>
+<ul>
+<li>
+<p><strong>dt</strong>: Timezone-aware datetime to convert</p>
+</li>
+<li>
+<p><strong>tz_name</strong>: Target timezone name (e.g., &ldquo;UTC&rdquo;, &ldquo;Europe/Prague&rdquo;)</p>
+</li>
+</ul>
+<h4 id="returns-19">Returns</h4>
+<p>Datetime converted to target timezone</p>
+<h2 id="write_json_file"><code>write_json_file</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>write_json_file<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> data<span style="color:#1f2328">:</span> <span style="color:#6639ba">dict</span><span style="color:#1f2328">,</span> <span style="color:#0550ae">*</span><span style="color:#1f2328">,</span> indent<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span> <span style="color:#0550ae">=</span> <span style="color:#0550ae">2</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#cf222e">None</span>
+</span></span></code></pre></div><p>Write a dict to a JSON file.</p>
+<h4 id="parameters-19">Parameters</h4>
+<ul>
+<li>
+<p><strong>path</strong>: Destination file path</p>
+</li>
+<li>
+<p><strong>data</strong>: JSON-serializable data</p>
+</li>
+<li>
+<p><strong>indent</strong>: Indentation level, defaults to 2</p>
+</li>
+</ul>
+<h4 id="notes-4">Notes</h4>
+<p>Ensures parent directory exists before writing.</p>
+<h2 id="write_yaml_file"><code>write_yaml_file</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>write_yaml_file<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> data<span style="color:#1f2328">:</span> <span style="color:#6639ba">dict</span><span style="color:#1f2328">,</span> <span style="color:#0550ae">*</span><span style="color:#1f2328">,</span> sort_keys<span style="color:#1f2328">:</span> <span style="color:#6639ba">bool</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">False</span><span style="color:#1f2328">,</span> allow_unicode<span style="color:#1f2328">:</span> <span style="color:#6639ba">bool</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">True</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#cf222e">None</span>
+</span></span></code></pre></div><p>Write a dict to a YAML file using yaml.safe_dump.</p>
+<h4 id="parameters-20">Parameters</h4>
+<ul>
+<li>
+<p><strong>path</strong>: Destination file path</p>
+</li>
+<li>
+<p><strong>data</strong>: Dictionary to write</p>
+</li>
+<li>
+<p><strong>sort_keys</strong>: Whether to sort keys in output, defaults to False</p>
+</li>
+<li>
+<p><strong>allow_unicode</strong>: Whether to allow unicode characters, defaults to True</p>
+</li>
+</ul>
+<h4 id="notes-5">Notes</h4>
+<p>Ensures parent directory exists. Callers should pass already-serialized
+primitives (e.g., via a to_primitive function) if the input data contains
+dataclasses, enums, or datetime objects.</p>
+<h2 id="classes">Classes</h2>
+<h3 id="class-actual">class <code>Actual</code></h3>
+<p>Universal holder for either a place or time object.
+Useful for normalizing user input and controlling shiftable dimensions in astrology.</p>
+<h4 id="methods">Methods</h4>
+<ul>
+<li>
+<p><code>add_time(self, delta: Union[int, datetime.timedelta, str]) -&gt; None</code></p>
+</li>
+<li>
+<p><code>assign_timezone(self, tz: Optional[str] = None) -&gt; None</code></p>
+</li>
+<li>
+<p><code>to_model_location(self) -&gt; Optional[module.models.Location]</code></p>
+</li>
+</ul>
+</section>
+  
+  <style>
+     
+    .prose {
+      color: #374151 !important;  
+    }
+    .prose p, .prose li, .prose td, .prose th {
+      color: #4b5563 !important;  
+    }
+    .prose h1 {
+      font-size: 2.5rem !important;
+      font-weight: 700 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.5rem;
+      color: #111827 !important;  
+    }
+    .prose h2 {
+      font-size: 2rem !important;
+      font-weight: 600 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 0.25rem;
+      color: #1f2937 !important;  
+    }
+    .prose h3 {
+      font-size: 1.5rem !important;
+      font-weight: 600 !important;
+      margin-top: 1.5rem !important;
+      margin-bottom: 0.75rem !important;
+      color: #374151 !important;  
+    }
+    .prose a {
+      color: #2563eb !important;  
+    }
+    .prose a:hover {
+      color: #1d4ed8 !important;  
+    }
+    .dark .prose {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose p, .dark .prose li, .dark .prose td, .dark .prose th {
+      color: #d1d5db !important;  
+    }
+    .dark .prose h1 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      color: #f9fafb !important;  
+    }
+    .dark .prose h2 {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      color: #f3f4f6 !important;  
+    }
+    .dark .prose h3 {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose a {
+      color: #60a5fa !important;  
+    }
+     
+    .prose h4 {
+      color: #b8860b !important;  
+    }
+    .prose ul li strong,
+    .prose ol li strong {
+      color: #b8860b !important;  
+    }
+    .dark .prose h4 {
+      color: #b8860b !important;  
+    }
+    .dark .prose ul li strong,
+    .dark .prose ol li strong {
+      color: #b8860b !important;  
+    }
+     
+    .prose code {
+      color: #92400e !important;  
+      background-color: #fef3c7 !important;  
+    }
+    .prose pre {
+      background-color: #1f2937 !important;  
+    }
+    .prose pre code {
+      color: #fbbf24 !important;  
+      background-color: transparent !important;
+    }
+    .dark .prose code {
+      color: #fbbf24 !important;  
+      background-color: rgba(251, 191, 36, 0.1) !important;  
+    }
+    .dark .prose pre {
+      background-color: #111827 !important;  
+    }
+    .dark .prose pre code {
+      color: #fbbf24 !important;  
+    }
+  </style>
+
+  
+</article></main><footer
+  class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
+>
+  <div class="mr-auto">&copy;2026
+    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
+    >powered by hugo️️</a
+  >️
+  <a
+    class="link"
+    href="https://github.com/nanxiaobei/hugo-paper"
+    rel="noopener"
+    target="_blank"
+    >hugo-paper</a
+  >
+</footer>
+</body>
+</html>

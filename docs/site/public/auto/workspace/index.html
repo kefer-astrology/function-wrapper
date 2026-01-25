@@ -1,0 +1,1031 @@
+<!doctype html>
+
+
+
+
+
+
+
+<html
+  class="not-ready lg:text-base"
+  style="--bg:#faf8f1"
+  lang="en-us"
+  dir="ltr"
+><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>workspace Module - Kefer Astrology Documentation</title>
+
+  
+  <meta name="theme-color" />
+
+  <meta name="description" content="workspace module
+Functions
+add_chart
+add_chart(ws: module.models.Workspace, chart: module.models.ChartInstance, base_dir: Union[str, pathlib._local.Path]) -&gt; str
+Add a chart to a Workspace and write its YAML file.
+Parameters
+
+
+ws: Workspace to add chart to
+
+
+chart: ChartInstance to add
+
+
+base_dir: Base directory for workspace files
+
+
+Returns
+Relative path to chart YAML file
+Notes
+Prevents duplicates by checking existing charts. Removes computed_chart
+and ephemeral overrides before serialization.
+add_or_update_chart
+add_or_update_chart(ws: module.models.Workspace, chart: module.models.ChartInstance, base_dir: Union[str, pathlib._local.Path]) -&gt; str
+Add a new chart or update an existing one by id or subject name; persist YAML and manifest." />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.4d6e4063acd5362e811e595b8dda7b07c6d8d9afb1f0c67fd37159fb016bec64.css" integrity="sha256-TW5AY6zVNi6BHllbjdp7B8bY2a&#43;x8MZ/03FZ&#43;wFr7GQ=" />
+
+  
+  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
+
+  
+
+  
+
+  <script
+    defer
+    src="http://localhost:1313/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+
+  
+  <link
+    rel="icon"
+    href="http://localhost:1313/favicon.ico"
+  />
+  <link
+    rel="apple-touch-icon"
+    href="http://localhost:1313/apple-touch-icon.png"
+  />
+
+  <meta name="generator" content="Hugo 0.154.2">
+</head>
+<body
+    class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
+  >
+    
+<div class="sticky top-0 z-50 w-full border-b border-gray-700 shadow-sm backdrop-blur-sm" style="background-color: #1a1a1a !important; position: sticky; top: 0;">
+  <div class="mx-auto flex items-center px-8" style="max-width: 90% !important; gap: 2rem; min-height: 6rem; padding-top: 1.5rem; padding-bottom: 1.5rem;">
+    <div class="flex items-center" style="flex: 3;">
+      <a
+        class="text-2xl font-medium no-underline text-white"
+        href="http://localhost:1313/"
+        >Kefer Astrology Documentation</a
+      >
+      <div
+        class="btn-dark text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right] invert"
+        role="button"
+        aria-label="Dark"
+      ></div>
+    </div>
+    <div style="flex: 2;">
+<div class="relative">
+  <input 
+    type="text" 
+    id="search-input" 
+    placeholder="Search documentation..." 
+    class="w-full px-4 py-2 rounded-lg border text-sm"
+    style="background-color: #000000 !important; color: #b8860b !important; border-color: #b8860b !important;"
+  />
+  <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 hidden" style="background-color: #1a1a1a !important; border-color: #4a4a4a !important;"></div>
+</div>
+
+<style>
+  #search-input {
+    background-color: #000000 !important;
+    color: #b8860b !important;
+    border-color: #b8860b !important;
+  }
+  #search-input::placeholder {
+    color: #b8860b !important;
+    opacity: 0.7;
+  }
+  #search-input:focus {
+    border-color: #b8860b !important;
+    ring-color: #b8860b !important;
+  }
+</style>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  
+  if (!searchInput) return;
+  
+  
+  let globalSearchIndex = [];
+  const basePath = '\/';
+  const basePathNormalized = basePath.endsWith('/') && basePath.length > 1
+    ? basePath.slice(0, -1)
+    : basePath;
+  const indexUrl = basePathNormalized === '/' ? '/index.json' : basePathNormalized + '/index.json';
+  
+  
+  function buildSearchIndex() {
+    const allLinks = Array.from(document.querySelectorAll('a[href]'));
+    const indexMap = new Map();
+    
+    allLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      if (normalized && !normalized.includes('#') && !normalized.includes('http')) {
+        const title = link.textContent.trim();
+        if (title && !indexMap.has(normalized)) {
+          indexMap.set(normalized, {
+            title: title,
+            url: normalized,
+            keywords: (title + ' ' + normalized).toLowerCase()
+          });
+        }
+      }
+    });
+    
+    globalSearchIndex = Array.from(indexMap.values());
+  }
+
+  async function loadSearchIndex() {
+    try {
+      const response = await fetch(indexUrl, { cache: 'no-store' });
+      if (!response.ok) return;
+      const pages = await response.json();
+      if (!Array.isArray(pages)) return;
+      globalSearchIndex = pages.map(page => {
+        const title = (page.title || '').toString();
+        const url = (page.url || '').toString();
+        const content = (page.content || '').toString();
+        return {
+          title,
+          url,
+          content,
+          keywords: (title + ' ' + url + ' ' + content).toLowerCase()
+        };
+      });
+    } catch (err) {
+      
+    }
+  }
+  
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      buildSearchIndex();
+      loadSearchIndex();
+    });
+  } else {
+    buildSearchIndex();
+    loadSearchIndex();
+  }
+  
+  
+  function normalizeUrl(href) {
+    if (!href || href.startsWith('http') || href.startsWith('#')) {
+      return null;
+    }
+    let normalized = href.trim();
+    
+    
+    if (normalized.endsWith('.md')) {
+      normalized = normalized.slice(0, -3);
+    }
+    
+    
+    if (!normalized.startsWith('/')) {
+      
+      const currentPath = window.location.pathname;
+      
+      const relativePath = currentPath.startsWith(basePath) 
+        ? currentPath.slice(basePath.length) 
+        : currentPath;
+      
+      const currentDir = relativePath.split('/').slice(0, -1).filter(p => p).join('/');
+      
+      if (currentDir) {
+        normalized = '/' + currentDir + '/' + normalized;
+      } else {
+        normalized = '/' + normalized;
+      }
+    }
+    
+    
+    if (normalized.startsWith('/') && !normalized.startsWith(basePathNormalized)) {
+      normalized = basePathNormalized + normalized;
+    }
+    
+    
+    normalized = normalized.replace(/\/+/g, '/');
+    
+    
+    if (normalized !== basePathNormalized && normalized !== basePathNormalized + '/' && normalized.endsWith('/')) {
+      normalized = normalized.slice(0, -1);
+    }
+    
+    return normalized;
+  }
+
+  function buildSnippet(text, query) {
+    if (!text) return '';
+    const lower = text.toLowerCase();
+    const q = query.toLowerCase();
+    const index = lower.indexOf(q);
+    if (index < 0) {
+      return text.length > 160 ? text.slice(0, 160) + '...' : text;
+    }
+    const start = Math.max(0, index - 60);
+    const end = Math.min(text.length, index + q.length + 120);
+    const prefix = start > 0 ? '...' : '';
+    const suffix = end < text.length ? '...' : '';
+    return prefix + text.slice(start, end).trim() + suffix;
+  }
+  
+  
+  const pageIndex = new Map();
+  const allLinks = Array.from(document.querySelectorAll('a[href]'));
+  
+  allLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    const normalized = normalizeUrl(href);
+    if (normalized) {
+      const text = link.textContent.trim();
+      const linkText = text.toLowerCase();
+      
+      pageIndex.set(normalized, {
+        title: text || normalized.split('/').pop(),
+        searchText: linkText,
+        href: normalized
+      });
+    }
+  });
+  
+  
+  const currentPath = window.location.pathname;
+  pageIndex.set(currentPath, {
+    title: document.title || 'Current Page',
+    searchText: document.body.textContent.toLowerCase(),
+    href: currentPath
+  });
+  
+  
+  searchInput.addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 1) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+
+    if (globalSearchIndex.length > 0) {
+      const results = [];
+      const seenUrls = new Set();
+      const queryWords = query.split(' ').filter(w => w.length > 0);
+
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query)
+        );
+
+        if (matches && page.url && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title || page.url.split('/').pop(),
+            url: page.url,
+            text: buildSnippet(page.content || page.title || '', query),
+            priority: 0
+          });
+        }
+      });
+
+      if (results.length > 0) {
+        const resultsHtml = results.slice(0, 10).map((r, idx) => {
+          const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' +
+            r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' +
+            safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+        }).join('');
+
+        searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+
+        searchResults.querySelectorAll('.search-result-item').forEach(item => {
+          item.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+              window.location.href = url;
+            }
+          });
+        });
+
+        searchResults.classList.remove('hidden');
+      } else {
+        searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+        searchResults.classList.remove('hidden');
+      }
+      return;
+    }
+
+    const results = [];
+    
+    const queryWords = query.split(' ').filter(w => w.length > 0);
+    const seenUrls = new Set();
+    const seenResults = new Set(); 
+    
+    
+    if (globalSearchIndex.length > 0) {
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query) 
+        );
+        
+        if (matches && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title,
+            url: page.url,
+            text: page.title + ' - Documentation page (click to search this page)',
+            priority: 0 
+          });
+        }
+      });
+    }
+    
+    
+    pageIndex.forEach((pageInfo, url) => {
+      
+      const urlSegments = url.toLowerCase().split('/').filter(s => s.length > 0);
+      const searchableText = (pageInfo.searchText + ' ' + pageInfo.title.toLowerCase() + ' ' + urlSegments.join(' ')).toLowerCase();
+      
+      const matches = queryWords.every(word => 
+        searchableText.includes(word) || 
+        urlSegments.some(seg => seg.includes(word))
+      );
+      
+      if (matches && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        results.push({
+          title: pageInfo.title,
+          url: url,
+          text: pageInfo.title + ' - Documentation page',
+          priority: 1 
+        });
+      }
+    });
+    
+    
+    allLinks.forEach(link => {
+      const linkText = link.textContent.toLowerCase();
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      
+      if (normalized) {
+        
+        const urlSegments = normalized.toLowerCase().split('/').filter(s => s.length > 0);
+        const searchableText = (linkText + ' ' + urlSegments.join(' ')).toLowerCase();
+        
+        const matches = queryWords.every(word => 
+          searchableText.includes(word) || 
+          urlSegments.some(seg => seg.includes(word))
+        );
+        
+        if (matches && !seenUrls.has(normalized)) {
+          seenUrls.add(normalized);
+          results.push({
+            title: link.textContent.trim() || normalized.split('/').pop().replace(/-/g, ' '),
+            url: normalized,
+            text: link.textContent.trim() || 'Documentation page',
+            priority: 1 
+          });
+        }
+      }
+    });
+    
+    
+    
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, code, pre, dt, dd, td, th, strong, em, b').forEach(el => {
+      const text = el.textContent.toLowerCase();
+      
+      const matches = queryWords.length > 0 && (
+        queryWords.every(word => text.includes(word)) || 
+        text.includes(query) 
+      );
+      
+      if (matches && el.textContent.trim() && el.textContent.trim().length > 1) {
+        
+        let pageUrl = currentPath;
+        let pageTitle = document.title || 'Documentation';
+        
+        
+        const parent = el.closest('article, section, li, ul, ol, table, dl');
+        if (parent) {
+          const nearbyLink = parent.querySelector('a[href*="/auto/"], a[href*="/enums"], a[href*="/ui_"], a[href*="/models"]');
+          if (nearbyLink) {
+            const normalized = normalizeUrl(nearbyLink.getAttribute('href'));
+            if (normalized) {
+              pageUrl = normalized;
+              pageTitle = nearbyLink.textContent.trim() || pageTitle;
+            }
+          }
+        }
+        
+        
+        if (el.tagName && el.tagName.match(/^H[1-6]$/)) {
+          pageTitle = el.textContent.trim();
+        }
+        
+        
+        let snippet = el.textContent.trim();
+        if (snippet.length > 200) {
+          
+          const queryLower = query.toLowerCase();
+          const index = snippet.toLowerCase().indexOf(queryLower);
+          if (index > 0) {
+            const start = Math.max(0, index - 50);
+            snippet = '...' + snippet.substring(start, start + 150) + '...';
+          } else {
+            snippet = snippet.substring(0, 150) + '...';
+          }
+        }
+        
+        const resultKey = pageUrl + '|' + pageTitle;
+        
+        if (!seenResults.has(resultKey)) {
+          seenResults.add(resultKey);
+          results.push({
+            title: pageTitle,
+            url: pageUrl,
+            text: snippet,
+            priority: 2 
+          });
+        }
+      }
+    });
+    
+    
+    const bodyText = document.body.textContent.toLowerCase();
+    const bodyMatches = queryWords.length > 0 && (
+      queryWords.every(word => bodyText.includes(word)) || 
+      bodyText.includes(query) 
+    );
+    
+    if (bodyMatches) {
+      
+      const resultKey = currentPath + '|' + (document.title || 'Current Page');
+      if (!seenResults.has(resultKey)) {
+        seenResults.add(resultKey);
+        
+        const queryLower = query.toLowerCase();
+        const index = bodyText.indexOf(queryLower);
+        if (index >= 0) {
+          const fullText = document.body.textContent;
+          const snippetStart = Math.max(0, index - 100);
+          const snippetEnd = Math.min(fullText.length, index + query.length + 100);
+          const snippet = '...' + fullText.substring(snippetStart, snippetEnd).trim() + '...';
+          
+          results.push({
+            title: document.title || 'Current Page',
+            url: currentPath,
+            text: snippet,
+            priority: 3 
+          });
+        }
+      }
+    }
+    
+    
+    results.sort((a, b) => (a.priority || 2) - (b.priority || 2));
+    
+    
+    if (results.length > 0) {
+      const resultsHtml = results.slice(0, 10).map((r, idx) => {
+        
+        const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' + 
+          r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' + 
+          safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+      }).join('');
+      
+      searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+      
+      
+      searchResults.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.location.href = url;
+          }
+        });
+      });
+      
+      searchResults.classList.remove('hidden');
+    } else {
+      searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+      searchResults.classList.remove('hidden');
+    }
+  });
+  
+  
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      searchResults.classList.add('hidden');
+      searchInput.value = '';
+    }
+  });
+})();
+</script>
+</div>
+  </div>
+</div>
+
+<script>
+  
+  const htmlClass = document.documentElement.classList;
+  const btnDark = document.querySelector('.btn-dark');
+  if (btnDark) {
+    btnDark.addEventListener('click', () => {
+      const isDark = localStorage.getItem('dark') !== 'true';
+      localStorage.setItem('dark', isDark);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', isDark ? "rgb(0 0 0 / 85%)" : '#faf8f1');
+      }
+    });
+  }
+  
+  
+  const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  const darkVal = localStorage.getItem('dark');
+  if (darkVal === 'true' || (!darkVal && darkScheme.matches)) {
+    htmlClass.add('dark');
+  }
+</script>
+<main
+      class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
+      style="max-width: 90% !important;"
+    ><article class="pt-6">
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="workspace-module"><code>workspace</code> module</h1>
+<h2 id="functions">Functions</h2>
+<h2 id="add_chart"><code>add_chart</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>add_chart<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> chart<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance<span style="color:#1f2328">,</span> base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">str</span>
+</span></span></code></pre></div><p>Add a chart to a Workspace and write its YAML file.</p>
+<h4 id="parameters">Parameters</h4>
+<ul>
+<li>
+<p><strong>ws</strong>: Workspace to add chart to</p>
+</li>
+<li>
+<p><strong>chart</strong>: ChartInstance to add</p>
+</li>
+<li>
+<p><strong>base_dir</strong>: Base directory for workspace files</p>
+</li>
+</ul>
+<h4 id="returns">Returns</h4>
+<p>Relative path to chart YAML file</p>
+<h4 id="notes">Notes</h4>
+<p>Prevents duplicates by checking existing charts. Removes computed_chart
+and ephemeral overrides before serialization.</p>
+<h2 id="add_or_update_chart"><code>add_or_update_chart</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>add_or_update_chart<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> chart<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance<span style="color:#1f2328">,</span> base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">str</span>
+</span></span></code></pre></div><p>Add a new chart or update an existing one by id or subject name; persist YAML and manifest.</p>
+<h2 id="add_subject"><code>add_subject</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>add_subject<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> subject<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartSubject<span style="color:#1f2328">,</span> base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">str</span>
+</span></span></code></pre></div><p>Add a subject to a Workspace and write its YAML file.</p>
+<h4 id="parameters-1">Parameters</h4>
+<ul>
+<li>
+<p><strong>ws</strong>: Workspace to add subject to</p>
+</li>
+<li>
+<p><strong>subject</strong>: ChartSubject instance to add</p>
+</li>
+<li>
+<p><strong>base_dir</strong>: Base directory for workspace files</p>
+</li>
+</ul>
+<h4 id="returns-1">Returns</h4>
+<p>Relative path (e.g., <code>subjects/john-doe.yml</code>) written to disk</p>
+<h4 id="notes-1">Notes</h4>
+<p>Caller should re-save the manifest via <code>save_workspace_modular</code>.</p>
+<h2 id="build_workspace_from_sfs"><code>build_workspace_from_sfs</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>build_workspace_from_sfs<span style="color:#1f2328">(</span>dir_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> owner<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;local&#39;</span><span style="color:#1f2328">,</span> ephemeris_name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;local&#39;</span><span style="color:#1f2328">,</span> ephemeris_backend<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;local&#39;</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace
+</span></span></code></pre></div><p>Create a new Workspace from a directory of .sfs model files.</p>
+<h4 id="parameters-2">Parameters</h4>
+<ul>
+<li>
+<p><strong>dir_path</strong>: Directory path containing .sfs files</p>
+</li>
+<li>
+<p><strong>owner</strong>: Workspace owner identifier, defaults to &ldquo;local&rdquo;</p>
+</li>
+<li>
+<p><strong>ephemeris_name</strong>: Ephemeris name, defaults to &ldquo;local&rdquo;</p>
+</li>
+<li>
+<p><strong>ephemeris_backend</strong>: Ephemeris backend, defaults to &ldquo;local&rdquo;</p>
+</li>
+</ul>
+<h4 id="returns-2">Returns</h4>
+<p>Workspace instance with loaded models and empty collections</p>
+<h4 id="notes-2">Notes</h4>
+<p>Loads all .sfs files into AstroModel catalogs, selects the first model
+as active (if any), and initializes empty collections for charts, presets,
+layouts, and annotations.</p>
+<h2 id="build_workspace_from_sfs_to_yaml"><code>build_workspace_from_sfs_to_yaml</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>build_workspace_from_sfs_to_yaml<span style="color:#1f2328">(</span>dir_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> out_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> owner<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;local&#39;</span><span style="color:#1f2328">,</span> ephemeris_name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;local&#39;</span><span style="color:#1f2328">,</span> ephemeris_backend<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;local&#39;</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
+</span></span></code></pre></div><p>Build a Workspace from .sfs files and save it as YAML.</p>
+<h4 id="parameters-3">Parameters</h4>
+<ul>
+<li>
+<p><strong>dir_path</strong>: Directory containing .sfs files</p>
+</li>
+<li>
+<p><strong>out_path</strong>: Output YAML file path</p>
+</li>
+<li>
+<p><strong>owner</strong>: Workspace owner identifier, defaults to &ldquo;local&rdquo;</p>
+</li>
+<li>
+<p><strong>ephemeris_name</strong>: Ephemeris name, defaults to &ldquo;local&rdquo;</p>
+</li>
+<li>
+<p><strong>ephemeris_backend</strong>: Ephemeris backend, defaults to &ldquo;local&rdquo;</p>
+</li>
+</ul>
+<h4 id="returns-3">Returns</h4>
+<p>Path to written YAML file</p>
+<h2 id="get_all_aspect_definitions"><code>get_all_aspect_definitions</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>get_all_aspect_definitions<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span>ForwardRef<span style="color:#1f2328">(</span><span style="color:#0a3069">&#39;Workspace&#39;</span><span style="color:#1f2328">)]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> model<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span>module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AstroModel<span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AspectDefinition<span style="color:#1f2328">]</span>
+</span></span></code></pre></div><p>Get all aspect definitions (defaults + custom from workspace/model YAML).</p>
+<h4 id="parameters-4">Parameters</h4>
+<ul>
+<li>
+<p><strong>ws</strong>: Optional Workspace to load custom aspects from</p>
+</li>
+<li>
+<p><strong>model</strong>: Optional AstroModel to get aspect definitions from</p>
+</li>
+</ul>
+<h4 id="returns-4">Returns</h4>
+<p>Dictionary mapping aspect_id -&gt; AspectDefinition. Custom aspects from
+workspace/model override defaults with the same id.</p>
+<h2 id="get_all_observable_objects"><code>get_all_observable_objects</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>get_all_observable_objects<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span>ForwardRef<span style="color:#1f2328">(</span><span style="color:#0a3069">&#39;Workspace&#39;</span><span style="color:#1f2328">)]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> model<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span>module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AstroModel<span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>BodyDefinition<span style="color:#1f2328">]</span>
+</span></span></code></pre></div><p>Get all observable objects (defaults + custom from workspace/model YAML).</p>
+<h4 id="parameters-5">Parameters</h4>
+<ul>
+<li>
+<p><strong>ws</strong>: Optional Workspace to load custom objects from</p>
+</li>
+<li>
+<p><strong>model</strong>: Optional AstroModel to get body definitions from</p>
+</li>
+</ul>
+<h4 id="returns-5">Returns</h4>
+<p>Dictionary mapping object_id -&gt; BodyDefinition. Custom objects from
+workspace/model override defaults with the same id.</p>
+<h2 id="get_default_aspect_definitions"><code>get_default_aspect_definitions</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>get_default_aspect_definitions<span style="color:#1f2328">()</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AspectDefinition<span style="color:#1f2328">]</span>
+</span></span></code></pre></div><p>Get default aspect definitions.</p>
+<h4 id="returns-6">Returns</h4>
+<p>Dictionary mapping aspect_id -&gt; AspectDefinition for standard aspects
+(conjunction, opposition, trine, square, sextile, etc.)</p>
+<h2 id="get_default_observable_objects"><code>get_default_observable_objects</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>get_default_observable_objects<span style="color:#1f2328">()</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>BodyDefinition<span style="color:#1f2328">]</span>
+</span></span></code></pre></div><p>Get default observable object definitions.</p>
+<h4 id="returns-7">Returns</h4>
+<p>Dictionary mapping object_id -&gt; BodyDefinition for standard objects
+(planets, angles, lunar nodes, calculated points) that are commonly
+available in kerykeion and can be computed.</p>
+<h2 id="init_workspace"><code>init_workspace</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>init_workspace<span style="color:#1f2328">(</span>base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> owner<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> active_model<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> default_ephemeris<span style="color:#1f2328">:</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
+</span></span></code></pre></div><p>Initialize a new workspace directory structure and manifest.</p>
+<h4 id="returns-8">Returns</h4>
+<ul>
+<li>Absolute path to the created <code>workspace.yaml</code> file.</li>
+</ul>
+<h2 id="iter_charts"><code>iter_charts</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>iter_charts<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> Iterator<span style="color:#1f2328">[</span>module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance<span style="color:#1f2328">]</span>
+</span></span></code></pre></div><p>Yield charts from the Workspace (safe for None).</p>
+<h4 id="parameters-6">Parameters</h4>
+<ul>
+<li><strong>ws</strong>: Workspace to iterate charts from</li>
+</ul>
+<h2 id="load_workspace"><code>load_workspace</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>load_workspace<span style="color:#1f2328">(</span>workspace_path<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace
+</span></span></code></pre></div><p>Load a modular workspace from a manifest YAML file.</p>
+<h4 id="parameters-7">Parameters</h4>
+<ul>
+<li><strong>workspace_path</strong>: Absolute or relative path to <code>workspace.yaml</code>.</li>
+</ul>
+<h4 id="returns-9">Returns</h4>
+<p>Workspace dataclass assembled from the manifest and referenced parts.</p>
+<h4 id="notes-3">Notes</h4>
+<p>Paths referenced in the manifest (e.g., <code>charts/*.yml</code>) are resolved
+relative to the manifest directory and validated for containment.</p>
+<h4 id="warnings">Warnings</h4>
+<p>⚠️ FileNotFoundError: If workspace file does not exist</p>
+<h2 id="load_workspace_from_dir"><code>load_workspace_from_dir</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>load_workspace_from_dir<span style="color:#1f2328">(</span>base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace
+</span></span></code></pre></div><p>Load a workspace given its base directory.</p>
+<h4 id="parameters-8">Parameters</h4>
+<ul>
+<li><strong>base_dir</strong>: Directory containing <code>workspace.yaml</code> manifest</li>
+</ul>
+<h4 id="returns-10">Returns</h4>
+<p>Workspace instance loaded from manifest</p>
+<h4 id="warnings-1">Warnings</h4>
+<p>⚠️ FileNotFoundError: If directory or workspace.yaml does not exist</p>
+<h2 id="populate_workspace_models"><code>populate_workspace_models</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>populate_workspace_models<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> Any<span style="color:#1f2328">,</span> dir_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AstroModel<span style="color:#1f2328">]</span>
+</span></span></code></pre></div><p>Load .sfs models from a directory and assign them to workspace.</p>
+<h4 id="parameters-9">Parameters</h4>
+<ul>
+<li>
+<p><strong>ws</strong>: Workspace instance to populate models into</p>
+</li>
+<li>
+<p><strong>dir_path</strong>: Directory path to scan for .sfs files</p>
+</li>
+</ul>
+<h4 id="returns-11">Returns</h4>
+<p>Dictionary of loaded models</p>
+<h4 id="notes-4">Notes</h4>
+<p>If ws.active_model is not set and any models were loaded,
+sets it to the first key.</p>
+<h2 id="prune_workspace_manifest"><code>prune_workspace_manifest</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>prune_workspace_manifest<span style="color:#1f2328">(</span>base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> List<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">]]</span>
+</span></span></code></pre></div><p>Prune workspace.yaml to remove references to modular files that no longer exist.</p>
+<h2 id="recompute_all"><code>recompute_all</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>recompute_all<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> <span style="color:#6639ba">float</span><span style="color:#1f2328">]]</span>
+</span></span></code></pre></div><p>Compute positions for all charts in a workspace.</p>
+<h4 id="parameters-10">Parameters</h4>
+<ul>
+<li><strong>ws</strong>: Workspace containing charts to recompute</li>
+</ul>
+<h4 id="returns-12">Returns</h4>
+<p>Dictionary mapping chart_id -&gt; positions dict. Charts that fail to
+compute will have empty dict as value.</p>
+<h2 id="remove_chart"><code>remove_chart</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>remove_chart<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> chart_id<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">bool</span>
+</span></span></code></pre></div><p>Remove a chart from the Workspace in-memory by its id.</p>
+<h4 id="parameters-11">Parameters</h4>
+<ul>
+<li>
+<p><strong>ws</strong>: Workspace containing the chart</p>
+</li>
+<li>
+<p><strong>chart_id</strong>: ID of chart to remove</p>
+</li>
+</ul>
+<h4 id="returns-13">Returns</h4>
+<p>True if chart was found and removed, False otherwise</p>
+<h2 id="remove_chart_by_id"><code>remove_chart_by_id</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>remove_chart_by_id<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> chart_id<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">bool</span>
+</span></span></code></pre></div><p>Remove a chart by id and persist the manifest. Returns True if removed.</p>
+<h2 id="save_workspace_flat"><code>save_workspace_flat</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>save_workspace_flat<span style="color:#1f2328">(</span>workspace<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> path<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> <span style="color:#6639ba">format</span><span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;yaml&#39;</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#cf222e">None</span>
+</span></span></code></pre></div><p>Save the entire Workspace as a single flat file (debug/export use).</p>
+<h4 id="parameters-12">Parameters</h4>
+<ul>
+<li>
+<p><strong>workspace</strong>: Workspace instance to serialize</p>
+</li>
+<li>
+<p><strong>path</strong>: Destination file path (YAML or JSON)</p>
+</li>
+<li>
+<p><strong>format</strong>: &ldquo;yaml&rdquo; or &ldquo;json&rdquo;, defaults to &ldquo;yaml&rdquo;</p>
+</li>
+</ul>
+<h4 id="warnings-2">Warnings</h4>
+<p>⚠️ ValueError: If format is not &ldquo;yaml&rdquo; or &ldquo;json&rdquo;</p>
+<h2 id="save_workspace_modular"><code>save_workspace_modular</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>save_workspace_modular<span style="color:#1f2328">(</span>workspace<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
+</span></span></code></pre></div><p>Persist a Workspace into modular YAML files and update <code>workspace.yaml</code>.</p>
+<h4 id="returns-14">Returns</h4>
+<ul>
+<li>Absolute path to the updated <code>workspace.yaml</code>.</li>
+</ul>
+<h2 id="scan_workspace_changes"><code>scan_workspace_changes</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>scan_workspace_changes<span style="color:#1f2328">(</span>base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> List<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">]]]</span>
+</span></span></code></pre></div><p>Scan the workspace directory for drift relative to the manifest.</p>
+<h4 id="returns-15">Returns</h4>
+<ul>
+<li>{ &lsquo;charts&rsquo;: {&rsquo;new_on_disk&rsquo;: [&hellip;], &lsquo;missing_on_disk&rsquo;: [&hellip;]},
+&lsquo;subjects&rsquo;: {&rsquo;new_on_disk&rsquo;: [&hellip;], &lsquo;missing_on_disk&rsquo;: [&hellip;]} }
+where item names are basenames (e.g., <code>john-doe.yml</code>).</li>
+</ul>
+<h2 id="summarize_chart"><code>summarize_chart</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>summarize_chart<span style="color:#1f2328">(</span>chart<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> List<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">]]]</span>
+</span></span></code></pre></div><p>Return a lightweight summary dict for a chart.</p>
+<h4 id="parameters-13">Parameters</h4>
+<ul>
+<li><strong>chart</strong>: ChartInstance to summarize</li>
+</ul>
+<h4 id="returns-16">Returns</h4>
+<p>Dictionary with keys: id, name, event_time, location, engine,
+zodiac_type, house_system, tags</p>
+<h2 id="sync_workspace"><code>sync_workspace</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>sync_workspace<span style="color:#1f2328">(</span>workspace_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> auto_import<span style="color:#1f2328">:</span> <span style="color:#6639ba">bool</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">True</span><span style="color:#1f2328">,</span> auto_remove<span style="color:#1f2328">:</span> <span style="color:#6639ba">bool</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">False</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> Any<span style="color:#1f2328">]</span>
+</span></span></code></pre></div><p>Synchronize workspace manifest with files on disk.</p>
+<h4 id="parameters-14">Parameters</h4>
+<ul>
+<li>
+<p><strong>workspace_path</strong>: Path to workspace.yaml</p>
+</li>
+<li>
+<p><strong>auto_import</strong>: If True, automatically import new charts/subjects found on disk</p>
+</li>
+<li>
+<p><strong>auto_remove</strong>: If True, remove references to missing files from manifest</p>
+</li>
+</ul>
+<h4 id="returns-17">Returns</h4>
+<p>Dict with sync results:
+- &lsquo;changes&rsquo;: Dict from scan_workspace_changes()
+- &lsquo;imported_charts&rsquo;: List of chart IDs imported
+- &lsquo;imported_subjects&rsquo;: List of subject IDs imported
+- &lsquo;removed_charts&rsquo;: List of chart references removed (if auto_remove=True)
+- &lsquo;removed_subjects&rsquo;: List of subject references removed (if auto_remove=True)</p>
+<h2 id="update_chart"><code>update_chart</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>update_chart<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> chart_id<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> updater<span style="color:#1f2328">:</span> Callable<span style="color:#1f2328">[[</span>module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance<span style="color:#1f2328">],</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">bool</span>
+</span></span></code></pre></div><p>Update a chart in-memory by id using a caller-provided updater.</p>
+<h4 id="parameters-15">Parameters</h4>
+<ul>
+<li>
+<p><strong>ws</strong>: Workspace containing the chart</p>
+</li>
+<li>
+<p><strong>chart_id</strong>: ID of chart to update</p>
+</li>
+<li>
+<p><strong>updater</strong>: Function that takes ChartInstance and returns updated ChartInstance</p>
+</li>
+</ul>
+<h4 id="returns-18">Returns</h4>
+<p>True if chart was found and updated, False otherwise</p>
+<h2 id="validate_workspace"><code>validate_workspace</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>validate_workspace<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> Any<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> List<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">]</span>
+</span></span></code></pre></div><p>Validate workspace consistency and return a list of human-readable issues.</p>
+<h4 id="parameters-16">Parameters</h4>
+<ul>
+<li><strong>ws</strong>: Workspace instance to validate</li>
+</ul>
+<h4 id="returns-19">Returns</h4>
+<p>List of human-readable issue strings (empty if no issues found)</p>
+<h4 id="notes-5">Notes</h4>
+<p>Checks:
+- Active model presence and resolution
+- WorkspaceDefaults default_bodies/default_aspects exist in the active model
+- Top-level ws.aspects exist in the active model
+- Each ChartInstance.config included_points exist in the active model bodies
+- Each ChartInstance.config aspect_orbs keys exist in the active model aspects
+- Layout chart references resolve to existing chart IDs</p>
+<h2 id="validation_report"><code>validation_report</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>validation_report<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> Any<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">str</span>
+</span></span></code></pre></div><p>Return a multi-line text report from validate_workspace().</p>
+<h4 id="parameters-17">Parameters</h4>
+<ul>
+<li><strong>ws</strong>: Workspace instance to validate</li>
+</ul>
+<h4 id="returns-20">Returns</h4>
+<p>Multi-line text report of validation issues, or success message</p>
+</section>
+  
+  <style>
+     
+    .prose {
+      color: #374151 !important;  
+    }
+    .prose p, .prose li, .prose td, .prose th {
+      color: #4b5563 !important;  
+    }
+    .prose h1 {
+      font-size: 2.5rem !important;
+      font-weight: 700 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.5rem;
+      color: #111827 !important;  
+    }
+    .prose h2 {
+      font-size: 2rem !important;
+      font-weight: 600 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 0.25rem;
+      color: #1f2937 !important;  
+    }
+    .prose h3 {
+      font-size: 1.5rem !important;
+      font-weight: 600 !important;
+      margin-top: 1.5rem !important;
+      margin-bottom: 0.75rem !important;
+      color: #374151 !important;  
+    }
+    .prose a {
+      color: #2563eb !important;  
+    }
+    .prose a:hover {
+      color: #1d4ed8 !important;  
+    }
+    .dark .prose {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose p, .dark .prose li, .dark .prose td, .dark .prose th {
+      color: #d1d5db !important;  
+    }
+    .dark .prose h1 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      color: #f9fafb !important;  
+    }
+    .dark .prose h2 {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      color: #f3f4f6 !important;  
+    }
+    .dark .prose h3 {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose a {
+      color: #60a5fa !important;  
+    }
+     
+    .prose h4 {
+      color: #b8860b !important;  
+    }
+    .prose ul li strong,
+    .prose ol li strong {
+      color: #b8860b !important;  
+    }
+    .dark .prose h4 {
+      color: #b8860b !important;  
+    }
+    .dark .prose ul li strong,
+    .dark .prose ol li strong {
+      color: #b8860b !important;  
+    }
+     
+    .prose code {
+      color: #92400e !important;  
+      background-color: #fef3c7 !important;  
+    }
+    .prose pre {
+      background-color: #1f2937 !important;  
+    }
+    .prose pre code {
+      color: #fbbf24 !important;  
+      background-color: transparent !important;
+    }
+    .dark .prose code {
+      color: #fbbf24 !important;  
+      background-color: rgba(251, 191, 36, 0.1) !important;  
+    }
+    .dark .prose pre {
+      background-color: #111827 !important;  
+    }
+    .dark .prose pre code {
+      color: #fbbf24 !important;  
+    }
+  </style>
+
+  
+</article></main><footer
+  class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
+>
+  <div class="mr-auto">&copy;2026
+    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
+    >powered by hugo️️</a
+  >️
+  <a
+    class="link"
+    href="https://github.com/nanxiaobei/hugo-paper"
+    rel="noopener"
+    target="_blank"
+    >hugo-paper</a
+  >
+</footer>
+</body>
+</html>
