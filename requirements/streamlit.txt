@@ -113,6 +113,7 @@ packaging==25.0
     #   plotly
     #   pytest
     #   streamlit
+    #   wheel
 pandas==2.3.3
     # via
     #   -r requirements/base.in
@@ -230,8 +231,10 @@ urllib3==2.6.3
     #   requests-cache
 watchdog==6.0.0
     # via streamlit
-wheel==0.45.1
-    # via pip-tools
+wheel==0.46.3
+    # via
+    #   -r requirements/base.in
+    #   pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
