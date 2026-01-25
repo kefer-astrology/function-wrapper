@@ -47,6 +47,7 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
           KIVY_NO_ARGS: "1"
+          DOCS_SKIP_KIVY: "1"
         working-directory: ${{ github.workspace }}
         run: |
           venv-docs/bin/python -m devtools.docs_export --out docs/site/content/auto --hugo

@@ -61,8 +61,9 @@ jobs:
         working-directory: docs/site
         run: |
           # Clean previous build output but keep Hugo sources in docs/site
-          find ../docs -mindepth 1 -maxdepth 1 ! -name site -exec rm -rf {} +
-          hugo --config hugo.toml --minify --destination ../docs
+          mkdir -p ..
+          find .. -mindepth 1 -maxdepth 1 ! -name site -exec rm -rf {} +
+          hugo --config hugo.toml --minify --destination ..
         env:
           HUGO_ENVIRONMENT: production
       

@@ -40,6 +40,10 @@ def _load_target_modules() -> List[ModuleSpec]:
     # Skip ui_kivy in CI environments where X server is not available
     # It will be handled gracefully by the import error handling below
     dependency_order = ["models", "utils", "z_visual", "services", "workspace", "cli", "storage", "ui_streamlit", "ui_kivy"]
+    # Avoid importing Kivy in headless CI environments.
+    # This prevents X11/libmtdev errors during docs generation.
+    if os.environ.get("DOCS_SKIP_KIVY") or os.environ.get("GITHUB_ACTIONS"):
+        dependency_order = [name for name in dependency_order if name != "ui_kivy"]
     
     # Helper to create a stub module
     def _create_stub_module(module_name):
