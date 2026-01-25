@@ -5,11 +5,13 @@ import unittest
 from devtools.diagram_export import generate_mermaid, generate_enum_overview_markdown
 
 
-DOCS_PATH = Path(__file__).resolve().parents[1] / "docs" / "models.mmd"
-ENUMS_PATH = Path(__file__).resolve().parents[1] / "docs" / "enums.md"
+DOCS_PATH = Path(__file__).resolve().parents[1] / "docs" / "site" / "content" / "models.mmd"
+ENUMS_PATH = Path(__file__).resolve().parents[1] / "docs" / "site" / "content" / "enums.md"
 
 
-def unified_diff(a: str, b: str, fromfile: str = "generated", tofile: str = "docs/models.mmd") -> str:
+def unified_diff(
+    a: str, b: str, fromfile: str = "generated", tofile: str = "docs/site/content/models.mmd"
+) -> str:
     return "".join(
         difflib.unified_diff(
             a.splitlines(keepends=True),
@@ -26,7 +28,8 @@ class TestDocs(unittest.TestCase):
 
         if not DOCS_PATH.exists():
             self.skipTest(
-                f"No docs/models.mmd existed; generate it via: 'python -m devtools.diagram_export --out {DOCS_PATH}'"
+                "No docs/site/content/models.mmd existed; generate it via: "
+                f"'python -m devtools.diagram_export --out {DOCS_PATH}'"
             )
 
         expected = DOCS_PATH.read_text(encoding="utf-8")
@@ -34,7 +37,8 @@ class TestDocs(unittest.TestCase):
             diff = unified_diff(generated, expected)
             self.fail(
                 "Mermaid class diagram out of sync with models.\n"
-                "Regenerate with: python -m devtools.diagram_export --out docs/models.mmd\n\n" + diff
+                "Regenerate with: python -m devtools.diagram_export --out docs/site/content/models.mmd\n\n"
+                + diff
             )
 
     def test_enum_overview_matches_docs(self):
@@ -42,12 +46,15 @@ class TestDocs(unittest.TestCase):
 
         if not ENUMS_PATH.exists():
             self.skipTest(
-                f"No docs/enums.md existed; generate it via: 'python -m devtools.diagram_export --enums-out {ENUMS_PATH}'"
+                "No docs/site/content/enums.md existed; generate it via: "
+                f"'python -m devtools.diagram_export --enums-out {ENUMS_PATH}'"
             )
 
         expected = ENUMS_PATH.read_text(encoding="utf-8")
         if generated != expected:
-            diff = unified_diff(generated, expected, fromfile="generated", tofile="docs/enums.md")
+            diff = unified_diff(
+                generated, expected, fromfile="generated", tofile="docs/site/content/enums.md"
+            )
             self.fail(
                 "Enum overview out of sync with models.\n"
                 f"Regenerate with: python -m devtools.diagram_export --enums-out {ENUMS_PATH}\n\n" + diff

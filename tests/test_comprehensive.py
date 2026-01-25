@@ -35,17 +35,20 @@ except ImportError:
     DuckDBStorage = None
     get_storage_path = None
 try:
-    from module.cli import cmd_compute_chart
+    from module.cli import cmd_compute_chart, cmd_compute_transit_series
 except ImportError:
     # Fallback if CLI not available
     def cmd_compute_chart(args):
+        return {"error": "CLI not available"}
+    def cmd_compute_transit_series(args):
         return {"error": "CLI not available"}
 
 
 def _make_sample_location() -> Location:
     """Create a sample location (Prague)."""
+    # Use coordinates as name to avoid geocoding (works offline)
     return Location(
-        name="Prague, CZ",
+        name="50.0875,14.4214",  # Use coordinates to avoid geocoding
         latitude=50.0875,
         longitude=14.4214,
         timezone="Europe/Prague",
@@ -400,66 +403,59 @@ class TestComprehensive(unittest.TestCase):
     
     @unittest.skipUnless(STORAGE_AVAILABLE, "duckdb not available")
     def test_12_storage_and_parquet_export(self):
-        """Test storing computed data in DuckDB and exporting to Parquet."""
+        """Test storing computed data in DuckDB and exporting to Parquet with new batch methods."""
         # Reload workspace to get current state
         self._reload_workspace()
         
-        # Create charts and compute positions
-        chart1 = _make_sample_chart("Storage Test 1", self.base_time, self.loc)
-        chart2 = _make_sample_chart("Storage Test 2", self.base_time + timedelta(hours=1), self.loc)
-        
-        # Add to workspace
-        add_chart(self.ws, chart1, base_dir=self.test_base)
-        add_chart(self.ws, chart2, base_dir=self.test_base)
+        # Create base chart for transit series
+        base_chart = _make_sample_chart("Base Chart", self.base_time, self.loc)
+        add_chart(self.ws, base_chart, base_dir=self.test_base)
         save_workspace_modular(self.ws, self.test_base)
         self._reload_workspace()
-        
-        # Compute positions
-        pos1 = compute_positions_for_chart(chart1, ws=self.ws)
-        pos2 = compute_positions_for_chart(chart2, ws=self.ws)
         
         # Get storage path
         db_path = get_storage_path(str(self.manifest_path))
         data_dir = db_path.parent
+        parquet_dir = data_dir / "parquet"
         
-        # Store positions in DuckDB
+        # Test 1: Store individual charts using batch method
         with DuckDBStorage(db_path, create_schema=True) as storage:
-            # Store first chart
-            dt1_str = chart1.subject.event_time.isoformat()
+            # Create a few individual charts
+            chart1 = _make_sample_chart("Storage Test 1", self.base_time, self.loc)
+            chart2 = _make_sample_chart("Storage Test 2", self.base_time + timedelta(hours=1), self.loc)
+            
+            # Compute positions
+            pos1 = compute_positions_for_chart(chart1, ws=self.ws)
+            pos2 = compute_positions_for_chart(chart2, ws=self.ws)
+            
+            # Store using batch method (small batch, won't trigger Parquet export)
             cfg1 = getattr(chart1, 'config', None)
             engine1 = cfg1.engine.value if cfg1 and cfg1.engine else None
             eph1 = cfg1.override_ephemeris if cfg1 else None
             
-            storage.store_positions(
+            positions_list = [
+                (chart1.subject.event_time.isoformat(), pos1),
+                (chart2.subject.event_time.isoformat(), pos2),
+            ]
+            
+            # Store batch (small, won't auto-export)
+            storage.store_positions_batch(
                 chart1.id,
-                dt1_str,
-                pos1,
+                positions_list,
                 engine=engine1,
-                ephemeris_file=eph1
+                ephemeris_file=eph1,
+                auto_export_parquet=True,
+                parquet_threshold=100,  # Won't trigger (only 2 timestamps)
+                parquet_dir=parquet_dir
             )
             
-            # Store second chart
-            dt2_str = chart2.subject.event_time.isoformat()
-            cfg2 = getattr(chart2, 'config', None)
-            engine2 = cfg2.engine.value if cfg2 and cfg2.engine else None
-            eph2 = cfg2.override_ephemeris if cfg2 else None
-            
-            storage.store_positions(
-                chart2.id,
-                dt2_str,
-                pos2,
-                engine=engine2,
-                ephemeris_file=eph2
-            )
-            
-            # Verify data was stored
+            # Verify data was stored in DuckDB
             result = storage.conn.execute(
                 "SELECT COUNT(*) FROM computed_positions"
             ).fetchone()
             self.assertGreater(result[0], 0, "Positions should be stored in DuckDB")
             
-            # Export to Parquet
-            parquet_dir = data_dir / "parquet"
+            # Manually export to Parquet to test partitioning
             parquet_files = storage.export_to_parquet(
                 parquet_dir,
                 partition_by_date=True
@@ -471,21 +467,115 @@ class TestComprehensive(unittest.TestCase):
             for parquet_file in parquet_files:
                 self.assertTrue(parquet_file.exists(), f"Parquet file should exist: {parquet_file}")
         
-        # Verify database file exists
-        self.assertTrue(db_path.exists(), f"DuckDB file should exist: {db_path}")
+        # Test 2: Transit series with automatic Parquet export
+        # First, verify base chart has location
+        self._reload_workspace()
+        base_chart_loaded = None
+        for chart in self.ws.charts:
+            if chart.id == "Base Chart":
+                base_chart_loaded = chart
+                break
         
-        # Verify Parquet directory exists
+        self.assertIsNotNone(base_chart_loaded, "Base chart should be loaded")
+        self.assertIsNotNone(base_chart_loaded.subject.location, "Base chart should have location")
+        
+        # Compute transit series (will generate many timestamps)
+        start_dt = self.base_time
+        end_dt = self.base_time + timedelta(hours=23)  # 24 hours
+        
+        transit_result = cmd_compute_transit_series({
+            'workspace_path': str(self.manifest_path),
+            'source_chart_id': 'Base Chart',
+            'start_datetime': start_dt.isoformat(),
+            'end_datetime': end_dt.isoformat(),
+            'time_step': '1 hour',  # 24 timestamps
+            'include_physical': False,
+            'include_topocentric': False,
+        })
+        
+        self.assertNotIn("error", transit_result, f"Transit series should succeed: {transit_result.get('error')}")
+        self.assertIn("results", transit_result)
+        self.assertGreater(len(transit_result["results"]), 20, "Should have many timestamps")
+        
+        # Verify transit data was stored (positions only - no aspects table)
+        with DuckDBStorage(db_path) as storage:
+            # Query transit positions
+            transit_df = storage.query_positions(
+                chart_id="transit_Base Chart",
+                start_datetime=start_dt,
+                end_datetime=end_dt
+            )
+            
+            self.assertGreater(len(transit_df), 0, "Transit positions should be queryable")
+            
+            # Test SQL-based aspect computation from positions
+            aspects_df = storage.compute_aspects_from_positions(
+                chart_id="transit_Base Chart",
+                datetime_str=start_dt.isoformat()
+            )
+            
+            self.assertGreater(len(aspects_df), 0, "Should be able to compute aspects from positions")
+            self.assertIn("aspect_type", aspects_df.columns)
+            self.assertIn("angle", aspects_df.columns)
+            self.assertIn("orb", aspects_df.columns)
+            
+            # Export transit series to Parquet (should auto-partition by date)
+            transit_parquet_files = storage.export_to_parquet(
+                parquet_dir,
+                chart_id="transit_Base Chart",
+                partition_by_date=True
+            )
+            
+            self.assertGreater(len(transit_parquet_files), 0, "Transit Parquet files should be created")
+            
+            # Test querying from Parquet
+            parquet_df = storage.query_positions(
+                chart_id="transit_Base Chart",
+                start_datetime=start_dt,
+                end_datetime=end_dt,
+                use_parquet=True,
+                parquet_dir=parquet_dir
+            )
+            
+            self.assertGreater(len(parquet_df), 0, "Should be able to query from Parquet")
+        
+        # Verify final structure
+        self.assertTrue(db_path.exists(), f"DuckDB file should exist: {db_path}")
         self.assertTrue(parquet_dir.exists(), f"Parquet directory should exist: {parquet_dir}")
         
-        # List Parquet files for inspection
+        # List all Parquet files for inspection
         parquet_files_list = list(parquet_dir.glob("*.parquet"))
         self.assertGreater(len(parquet_files_list), 0, "Parquet files should be in directory")
         
-        print(f"\n✅ Storage test passed:")
+        print(f"\n✅ Storage test passed with new structure:")
         print(f"   - DuckDB: {db_path}")
         print(f"   - Parquet files: {len(parquet_files_list)} files in {parquet_dir}")
-        for pf in parquet_files_list:
-            print(f"     - {pf.name} ({pf.stat().st_size} bytes)")
+        for pf in sorted(parquet_files_list):
+            size_kb = pf.stat().st_size / 1024
+            print(f"     - {pf.name} ({size_kb:.2f} KB)")
+        
+        # Show data structure
+        with DuckDBStorage(db_path) as storage:
+            chart_count = storage.conn.execute(
+                "SELECT COUNT(DISTINCT chart_id) FROM computed_positions"
+            ).fetchone()[0]
+            row_count = storage.conn.execute(
+                "SELECT COUNT(*) FROM computed_positions"
+            ).fetchone()[0]
+            
+            # Verify only positions table exists (no aspects table)
+            tables = storage.conn.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'"
+            ).fetchdf()
+            table_names = tables['table_name'].tolist()
+            
+            self.assertIn("computed_positions", table_names, "Should have positions table")
+            self.assertNotIn("computed_aspects", table_names, "Should NOT have aspects table (computed on-demand)")
+            
+            print(f"   - Charts in DB: {chart_count}")
+            print(f"   - Total position rows: {row_count}")
+            print(f"   - Tables: {', '.join(table_names)}")
+            print(f"   - Aspects: computed on-demand from positions via SQL")
 
 
 if __name__ == "__main__":

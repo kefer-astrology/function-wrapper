@@ -10,6 +10,7 @@ warnings.filterwarnings("ignore", category=ResourceWarning)
 import unittest
 import datetime
 from pathlib import Path
+from pprint import pformat
 import pytz
 
 try:
@@ -189,6 +190,67 @@ class TestJPLSkyfieldEngine(unittest.TestCase):
             self.assertGreaterEqual(lon, 0.0)
             self.assertLess(lon, 360.0)
 
+    @unittest.skipUnless(SKYFIELD_AVAILABLE, "skyfield not available")
+    def test_jpl_available_functions(self):
+        """Report and sanity-check available Skyfield API functions."""
+        import skyfield.api as skyfield_api
+
+        public_callables = sorted(
+            name
+            for name in dir(skyfield_api)
+            if not name.startswith("_") and callable(getattr(skyfield_api, name))
+        )
+
+        # Ensure a few key API helpers are present.
+        self.assertIn("load", public_callables)
+        self.assertIn("load_file", public_callables)
+        self.assertIn("Topos", public_callables)
+        self.assertGreater(len(public_callables), 0)
+        print("Skyfield public callables:", public_callables)
+
+    @unittest.skipUnless(SKYFIELD_AVAILABLE, "skyfield not available")
+    def test_jpl_today_tomorrow_transits_output(self):
+        """Report typical JPL output shape for today and tomorrow."""
+        if not self.ephemeris_path:
+            self.skipTest("JPL ephemeris file (de421.bsp) not found")
+
+        tz = pytz.UTC
+        today = datetime.datetime.now(tz).replace(hour=12, minute=0, second=0, microsecond=0)
+        tomorrow = today + datetime.timedelta(days=1)
+
+        for dt_value in [today, tomorrow]:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=ResourceWarning)
+                positions = compute_jpl_positions(
+                    name="Test",
+                    dt_str=dt_value.isoformat(),
+                    loc_str="Prague, CZ",
+                    ephemeris_path=self.ephemeris_path,
+                    extended=True,
+                    include_physical=True,
+                    include_topocentric=True,
+                )
+
+            self.assertIsInstance(positions, dict)
+            self.assertGreater(len(positions), 0)
+            print(
+                f"JPL positions for {dt_value.isoformat()}:",
+                pformat(positions, width=120),
+            )
+
+            # Validate a representative planet structure.
+            if "sun" in positions:
+                sun_data = positions["sun"]
+                self.assertIsInstance(sun_data, dict)
+                self.assertIn("longitude", sun_data)
+                self.assertIn("distance", sun_data)
+                self.assertIn("declination", sun_data)
+                self.assertIn("right_ascension", sun_data)
+                self.assertIsInstance(sun_data["longitude"], float)
+                self.assertIsInstance(sun_data["distance"], float)
+                self.assertIsInstance(sun_data["declination"], float)
+                self.assertIsInstance(sun_data["right_ascension"], float)
+
 
 class TestKerykeionEngine(unittest.TestCase):
     """Test Kerykeion engine position computation."""
@@ -237,6 +299,50 @@ class TestKerykeionEngine(unittest.TestCase):
             # Sun on Jan 1 is around 280-290° (Capricorn)
             self.assertGreater(sun_lon, 270.0)
             self.assertLess(sun_lon, 300.0)
+
+    @unittest.skipUnless(KERYKEION_AVAILABLE, "kerykeion not available")
+    def test_kerykeion_available_functions(self):
+        """Report and sanity-check available Kerykeion functions."""
+        import kerykeion as kerykeion_module
+
+        public_callables = sorted(
+            name
+            for name in dir(kerykeion_module)
+            if not name.startswith("_") and callable(getattr(kerykeion_module, name))
+        )
+
+        # Ensure the main entry point is present.
+        self.assertIn("AstrologicalSubject", public_callables)
+        self.assertGreater(len(public_callables), 0)
+        print("Kerykeion public callables:", public_callables)
+
+    @unittest.skipUnless(KERYKEION_AVAILABLE, "kerykeion not available")
+    def test_kerykeion_today_tomorrow_transits_output(self):
+        """Report typical Kerykeion output shape for today and tomorrow."""
+        tz = pytz.timezone("Europe/Prague")
+        today = datetime.datetime.now(tz).replace(hour=12, minute=0, second=0, microsecond=0)
+        tomorrow = today + datetime.timedelta(days=1)
+
+        for dt_value in [today, tomorrow]:
+            positions = compute_positions(
+                engine=None,
+                name="Test",
+                dt_str=dt_value.isoformat(),
+                loc_str="Prague, CZ",
+            )
+
+            self.assertIsInstance(positions, dict)
+            self.assertGreater(len(positions), 0)
+            print(
+                f"Kerykeion positions for {dt_value.isoformat()}:",
+                pformat(positions, width=120),
+            )
+
+            if "sun" in positions:
+                sun_lon = positions["sun"]
+                self.assertIsInstance(sun_lon, float)
+                self.assertGreaterEqual(sun_lon, 0.0)
+                self.assertLess(sun_lon, 360.0)
 
 
 class TestEngineComparison(unittest.TestCase):
