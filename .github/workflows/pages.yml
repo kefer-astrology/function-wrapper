@@ -38,14 +38,15 @@ jobs:
         uses: actions/configure-pages@v4
       
       - name: Initialize Hugo modules (if needed)
+        working-directory: docs/site
         run: |
           # Only initialize if go.mod doesn't exist (docs/site is the Hugo root)
-          if [ ! -f "docs/site/go.mod" ]; then
+          if [ ! -f "go.mod" ]; then
             hugo mod init github.com/kefer-astrology/function-wrapper/docs-site || true
           fi
           # Get and tidy modules
-          hugo mod get -u --source docs/site || true
-          hugo mod tidy --source docs/site || true
+          hugo mod get -u || true
+          hugo mod tidy || true
       
       - name: Verify theme is available
         run: |
@@ -57,10 +58,11 @@ jobs:
           fi
       
       - name: Build with Hugo
+        working-directory: docs/site
         run: |
           # Clean previous build output but keep Hugo sources in docs/site
-          find docs -mindepth 1 -maxdepth 1 ! -name site -exec rm -rf {} +
-          hugo --source docs/site --config docs/site/hugo.toml --minify --destination docs
+          find ../docs -mindepth 1 -maxdepth 1 ! -name site -exec rm -rf {} +
+          hugo --config hugo.toml --minify --destination ../docs
         env:
           HUGO_ENVIRONMENT: production
       
