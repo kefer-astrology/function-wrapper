@@ -23,6 +23,7 @@ from kivy.uix.togglebutton import ToggleButton
 try:
     from module.services import (
         compute_positions,
+        compute_positions_for_chart,
         list_open_view_rows,
         search_charts,
         build_chart_instance,
@@ -43,6 +44,7 @@ try:
 except ImportError:
     from services import (
         compute_positions,
+        compute_positions_for_chart,
         list_open_view_rows,
         search_charts,
         build_chart_instance,
@@ -63,16 +65,29 @@ except ImportError:
 
 try:
     from module.models import EngineType, ChartInstance, ChartSubject, ChartConfig, HouseSystem, ChartMode
-except Exception:
+except ImportError:
     from models import EngineType, ChartInstance, ChartSubject, ChartConfig, HouseSystem, ChartMode
 try:
     # Kivy Garden WebView for interactive Plotly in-app
     from kivy_garden.webview import WebView  # noqa: F401 (used in KV)
     WEBVIEW_OK = True
-except Exception:
+except ImportError:
     WEBVIEW_OK = False
 
 from pathlib import Path
+
+# Optional storage integration (positions-only storage like Tauri flow).
+try:
+    from module.storage import DuckDBStorage, DUCKDB_AVAILABLE
+except ImportError:
+    try:
+        from storage import DuckDBStorage, DUCKDB_AVAILABLE
+    except ImportError:
+        DuckDBStorage = None
+        DUCKDB_AVAILABLE = False
+
+# Exceptions we treat as recoverable in UI flows.
+UI_RECOVERABLE_EXC = (AttributeError, KeyError, TypeError, ValueError, OSError, RuntimeError)
 
 class MyApp(MDApp):
     # top-level view: "aspects", "transits", "progressions", "synastry"
@@ -115,7 +130,7 @@ class MyApp(MDApp):
             if left is not None:
                 # children order in Kivy is reverse of addition; store a copy
                 self._left_defaults = left.children[:]
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             self._left_defaults = []
         # First-run: try open hardcoded dir; else wizard
         default_path = Path("/home/jav/Documents/Space/aaaaaaaaaaaaa/")
@@ -132,11 +147,11 @@ class MyApp(MDApp):
                 try:
                     if self.charts:
                         self._focus_chart_by_name(self.charts[0])
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     pass
                 # initial view: chart icon (create)
                 self.on_toolbar("chart_settings")
-            except Exception as e:
+            except UI_RECOVERABLE_EXC as e:
                 self.show_message(f"Failed to open default workspace: {e}")
                 self._prompt_workspace_selection()
         else:
@@ -218,16 +233,16 @@ class MyApp(MDApp):
         # focus matching chart and update header
         try:
             self._focus_chart_by_name(self.current_person_name)
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             try:
                 ids.get('view_label').text = f"[b]{self.current_view_title}[/b] — {self.current_person_name}"
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
         # refresh settings view if active
         if self.center_mode == "chart_settings":
             try:
                 self._render_chart_settings()
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
 
     def _update_person_buttons(self):
@@ -238,7 +253,7 @@ class MyApp(MDApp):
         # rebuild dynamic chip buttons
         try:
             row.clear_widgets()
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         from kivymd.uix.button import MDButton, MDButtonText
         for i, name in enumerate(self.charts or []):
@@ -247,7 +262,7 @@ class MyApp(MDApp):
                 btn.add_widget(MDButtonText(text=name or '-'))
                 btn.bind(on_release=lambda _b, idx=i: self.set_person(idx))
                 row.add_widget(btn)
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 continue
 
     # ---------- expand/collapse sections ----------
@@ -286,7 +301,7 @@ class MyApp(MDApp):
             eng = getattr(d, 'ephemeris_engine', None) if d is not None else None
             if eng:
                 return eng
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         return EngineType.JPL
 
@@ -298,10 +313,42 @@ class MyApp(MDApp):
         try:
             if tags:
                 chart.tags = [t.strip() for t in tags if t and t.strip()]
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         self.chart = chart
         return self.chart
+
+    def _store_positions_if_possible(self, chart, positions, engine=None, eph=None) -> None:
+        if not DUCKDB_AVAILABLE or DuckDBStorage is None:
+            return
+        if not positions:
+            return
+        if not getattr(self, 'workspace_dir', None):
+            return
+        try:
+            chart_id = getattr(chart, 'id', None) or getattr(chart, 'chart_id', None)
+            if not chart_id:
+                return
+            subj = getattr(chart, 'subject', None)
+            event_time = getattr(subj, 'event_time', None) if subj else None
+            if isinstance(event_time, datetime):
+                dt_str = event_time.isoformat()
+            elif isinstance(event_time, str):
+                dt_str = event_time
+            else:
+                return
+            engine_val = engine.value if isinstance(engine, EngineType) else (str(engine).lower() if engine else None)
+            db_path = Path(self.workspace_dir) / "data" / "workspace.db"
+            storage = DuckDBStorage(db_path)
+            storage.store_positions(
+                chart_id,
+                dt_str,
+                positions,
+                engine=engine_val,
+                ephemeris_file=eph,
+            )
+        except UI_RECOVERABLE_EXC:
+            return
 
     def render_radix(self):
         """Render the standardized radix chart to interactive HTML and load it in the embedded WebView."""
@@ -328,11 +375,13 @@ class MyApp(MDApp):
         # Compute and build figure via services
         try:
             if getattr(self, 'chart', None) is not None:
+                positions = compute_positions_for_chart(self.chart, ws=getattr(self, 'workspace', None))
+                self._store_positions_if_possible(self.chart, positions, engine, eph)
                 fig = build_radix_figure_for_chart(self.chart)
             else:
                 positions = compute_positions(engine, name, dt_str, loc_text, ephemeris_path=eph)
                 fig = build_radix_figure(positions)
-        except Exception as e:
+        except UI_RECOVERABLE_EXC as e:
             self.show_message(f"Failed to compute figure: {e}")
             return
 
@@ -345,14 +394,14 @@ class MyApp(MDApp):
                 out_path = write_plotly_html(fig, tmpname="radix_chart.html")
                 webbrowser.open(f"file://{out_path}")
                 self.show_message("Opened interactive chart in your default browser (install 'kivy_garden.webview' to embed).")
-            except Exception as e:
+            except UI_RECOVERABLE_EXC as e:
                 self.show_message(f"Failed to open browser: {e}")
             return
         try:
             out_path = write_plotly_html(fig, tmpname="radix_chart.html")
             # load into webview
             wv.url = f"file://{out_path}"
-        except Exception as e:
+        except UI_RECOVERABLE_EXC as e:
             self.show_message(f"Failed to render interactive chart: {e}")
 
     # ---------- workspace selection & loading ----------
@@ -363,7 +412,7 @@ class MyApp(MDApp):
         # Start in current workspace dir if available; allow selecting directories
         try:
             start_path = self.workspace_dir if getattr(self, 'workspace_dir', None) else str(Path.cwd())
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             start_path = str(Path.cwd())
         chooser = FileChooserIconView(path=start_path, dirselect=True)
         box.add_widget(chooser)
@@ -394,7 +443,7 @@ class MyApp(MDApp):
                         active_model="default",
                         default_ephemeris={"name": None, "backend": "swisseph"},
                     )
-                except Exception as e:
+                except UI_RECOVERABLE_EXC as e:
                     self.show_message(f"Failed to init workspace: {e}")
                     return
                 manifest = str(Path(base) / "workspace.yaml")
@@ -405,7 +454,7 @@ class MyApp(MDApp):
                 # Scan for new/missing items on disk vs manifest
                 try:
                     changes = scan_workspace_changes(base)
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     changes = {'charts': {'new_on_disk': [], 'missing_on_disk': []}, 'subjects': {'new_on_disk': [], 'missing_on_disk': []}}
                 imported = 0
                 # Auto-import new charts found on disk
@@ -416,9 +465,9 @@ class MyApp(MDApp):
                             chart = import_chart_yaml(path)
                             add_or_update_chart(ws, chart, base_dir=base)
                             imported += 1
-                        except Exception:
+                        except UI_RECOVERABLE_EXC:
                             continue
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     pass
                 # Auto-import new subjects found on disk
                 try:
@@ -430,15 +479,15 @@ class MyApp(MDApp):
                             if subj is not None:
                                 add_subject(ws, subj, base_dir=base)
                                 imported += 1
-                        except Exception:
+                        except UI_RECOVERABLE_EXC:
                             continue
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     pass
                 if imported:
                     try:
                         save_workspace_modular(ws, base)
                         self.show_message(f"Imported {imported} new item(s) from disk into workspace.")
-                    except Exception:
+                    except UI_RECOVERABLE_EXC:
                         pass
                 # Notify about missing items (present in manifest, missing on disk)
                 missing_ch = changes.get('charts', {}).get('missing_on_disk', []) if changes else []
@@ -467,11 +516,11 @@ class MyApp(MDApp):
                 try:
                     if self.charts:
                         self._focus_chart_by_name(self.charts[0])
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     pass
                 # render overview immediately
                 self._render_workspace_overview(show_open_button=True)
-            except Exception as e:
+            except UI_RECOVERABLE_EXC as e:
                 self.show_message(f"Failed to load workspace: {e}")
             finally:
                 popup.dismiss()
@@ -480,11 +529,11 @@ class MyApp(MDApp):
         try:
             btn_cancel.bind(on_release=on_cancel)
             btn_select.bind(on_release=on_select)
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         try:
             popup.open()
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
 
     def _popup_open_workspace(self):
@@ -505,7 +554,7 @@ class MyApp(MDApp):
         try:
             if getattr(self, "workspace", None) is not None and (self.workspace_dir or ""):
                 save_workspace_modular(self.workspace, self.workspace_dir)
-        except Exception as e:
+        except UI_RECOVERABLE_EXC as e:
             self.show_message(f"Failed to save workspace: {e}")
 
     def _popup_export_chart(self):
@@ -539,7 +588,7 @@ class MyApp(MDApp):
                 out = dest_p / fname
                 write_yaml_file(out, data, sort_keys=False, allow_unicode=True)
                 self.show_message(f"Exported to {out}")
-            except Exception as e:
+            except UI_RECOVERABLE_EXC as e:
                 self.show_message(f"Failed to export: {e}")
             popup.dismiss()
 
@@ -547,11 +596,11 @@ class MyApp(MDApp):
         try:
             btn_cancel.bind(on_release=on_cancel)
             btn_export.bind(on_release=on_export)
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         try:
             popup.open()
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
 
     def _chart_to_dict(self, chart: ChartInstance) -> dict:
@@ -628,13 +677,13 @@ class MyApp(MDApp):
             if self.current_person_name not in (self.charts or []):
                 self.charts = (self.charts or []) + [self.current_person_name]
             self.current_person_index = max(0, self.charts.index(self.current_person_name))
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         self._update_person_buttons()
         # Optionally update center title
         try:
             self.root.ids.get('view_label').text = f"[b]{self.current_view_title}[/b] — {self.current_person_name}"
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         self.show_message(f"Focused: {self.current_person_name}")
 
@@ -679,7 +728,7 @@ class MyApp(MDApp):
                         else:
                             widget.size_hint_y = None
                             widget.height = 0
-                    except Exception:
+                    except UI_RECOVERABLE_EXC:
                         pass
 
                 def _ensure_open(section_key: str):
@@ -693,7 +742,7 @@ class MyApp(MDApp):
                             content = ids.get('transits_content')
                         if content is not None and (getattr(content, 'height', 0) or 0) <= 1:
                             self.toggle_section(section_key)
-                    except Exception:
+                    except UI_RECOVERABLE_EXC:
                         pass
 
                 def _ensure_closed(section_key: str):
@@ -706,7 +755,7 @@ class MyApp(MDApp):
                             content = ids.get('transits_content')
                         if content is not None and (getattr(content, 'height', 0) or 0) > 1:
                             self.toggle_section(section_key)
-                    except Exception:
+                    except UI_RECOVERABLE_EXC:
                         pass
 
                 def set_mode(which):
@@ -714,7 +763,7 @@ class MyApp(MDApp):
                     for btn, key in buttons:
                         try:
                             btn.style = 'filled' if key == which else 'text'
-                        except Exception:
+                        except UI_RECOVERABLE_EXC:
                             pass
                     # Toggle whole-card visibility to avoid residuals
                     chart_cards = ids.get('chart_cards')
@@ -745,12 +794,12 @@ class MyApp(MDApp):
                 # Place selector at the top of the left pane
                 try:
                     left.add_widget(selector)
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     pass
 
                 # Initialize default mode to 'chart'
                 set_mode('chart')
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         root = AnchorLayout(anchor_y='top')
         vbox = BoxLayout(orientation='vertical', size_hint_y=None)
@@ -813,7 +862,7 @@ class MyApp(MDApp):
                 for btn, m in buttons:
                     try:
                         btn.style = 'filled' if m == mode else 'text'
-                    except Exception:
+                    except UI_RECOVERABLE_EXC:
                         pass
             selector.clear_widgets()
             for label, mode in items:
@@ -824,7 +873,7 @@ class MyApp(MDApp):
             # ensure only this widget exists in left pane
             try:
                 left.add_widget(selector)
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
         # Center form
         form = GridLayout(cols=2, spacing=8, size_hint_y=None, padding=8)
@@ -855,14 +904,14 @@ class MyApp(MDApp):
                 adv_box.opacity = 1
                 try:
                     adv_btn.style = 'filled'
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     pass
             else:
                 adv_box.height = 0
                 adv_box.opacity = 0
                 try:
                     adv_btn.style = 'text'
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     pass
         adv_btn.bind(on_release=_toggle_adv)
         # span full width: add empty placeholder for first column
@@ -902,7 +951,7 @@ class MyApp(MDApp):
                 try:
                     ws = getattr(self, 'workspace', None)
                     self.charts = [getattr(getattr(c, 'subject', None), 'name', '') for c in (ws.charts or []) if getattr(getattr(c, 'subject', None), 'name', '')]
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     # fallback append-only
                     names = self.charts or []
                     if nm not in names:
@@ -912,7 +961,7 @@ class MyApp(MDApp):
                 self.current_person_index = max(0, self.charts.index(nm))
                 self._update_person_buttons()
                 self.show_message('Chart created')
-            except Exception as e:
+            except UI_RECOVERABLE_EXC as e:
                 self.show_message(f'Failed to save chart: {e}')
         btn_create.bind(on_release=on_create)
 
@@ -937,7 +986,7 @@ class MyApp(MDApp):
             opt_box.add_widget(btn_db)
             try:
                 left.add_widget(opt_box)
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
         # Center: search + list
         search_row = BoxLayout(size_hint_y=None, height=44, spacing=8)
@@ -970,7 +1019,7 @@ class MyApp(MDApp):
                 try:
                     ws = getattr(self, 'workspace', None)
                     dl = getattr(getattr(ws, 'default_location', None), 'name', '') if ws else ''
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     dl = ''
                 location_name = info.get('location', '') or dl
                 tags = info.get('tags', '')
@@ -1031,7 +1080,7 @@ class MyApp(MDApp):
                 try:
                     ws = getattr(self, 'workspace', None)
                     self.charts = [getattr(getattr(c, 'subject', None), 'name', '') for c in (ws.charts or []) if getattr(getattr(c, 'subject', None), 'name', '')]
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     # fallback append-only
                     names = self.charts or []
                     if nm not in names:
@@ -1040,13 +1089,13 @@ class MyApp(MDApp):
                 self.current_person_name = nm
                 try:
                     self.current_person_index = max(0, self.charts.index(nm))
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     pass
                 self._update_person_buttons()
                 self.show_message('Chart imported')
                 # Refresh open-view list to include the new item
                 self._render_open_chart_view()
-            except Exception as e:
+            except UI_RECOVERABLE_EXC as e:
                 self.show_message(f"Failed to import chart: {e}")
             finally:
                 popup.dismiss()
@@ -1055,11 +1104,11 @@ class MyApp(MDApp):
         try:
             btn_cancel.bind(on_release=on_cancel)
             btn_import.bind(on_release=on_import)
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         try:
             popup.open()
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
 
     # ---------- helper for side panes ----------
@@ -1093,7 +1142,7 @@ class MyApp(MDApp):
             left = self.root.ids.get('left_col')
             if left:
                 left.clear_widgets()
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
 
     def _show_left_defaults(self):
@@ -1106,7 +1155,7 @@ class MyApp(MDApp):
             if getattr(self, '_left_defaults', None):
                 for w in reversed(self._left_defaults):
                     left.add_widget(w)
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
 
     def _render_settings_view(self):
@@ -1133,7 +1182,7 @@ class MyApp(MDApp):
         btn_appearance = add_cat('Appearance')
         try:
             left.add_widget(cats)
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         # Center controls (default: General)
         ws = getattr(self, 'workspace', None)
@@ -1166,11 +1215,11 @@ class MyApp(MDApp):
             try:
                 # update button label
                 house_btn.children[0].text = house_val
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
             try:
                 house_menu.dismiss()
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
 
         def _set_engine(v):
@@ -1178,11 +1227,11 @@ class MyApp(MDApp):
             engine_val = str(v)
             try:
                 engine_btn.children[0].text = engine_val
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
             try:
                 engine_menu.dismiss()
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
 
         def _set_theme(v):
@@ -1190,11 +1239,11 @@ class MyApp(MDApp):
             theme_val = str(v)
             try:
                 theme_btn.children[0].text = theme_val
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
             try:
                 theme_menu.dismiss()
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
 
         house_menu = MDDropdownMenu(
@@ -1242,23 +1291,23 @@ class MyApp(MDApp):
                     try:
                         loc = Actual(dl, t='loc').to_model_location()
                         ws.default_location = loc
-                    except Exception:
+                    except UI_RECOVERABLE_EXC:
                         pass
                 try:
                     hs_key = (house_val or 'PLACIDUS').upper()
                     ws.default_house_system = getattr(HouseSystem, hs_key, HouseSystem.PLACIDUS)
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     ws.default_house_system = HouseSystem.PLACIDUS
                 ws.default_aspects = [a.strip() for a in (aspects_inp.text or '').split(',') if a.strip()]
                 ws.color_theme = theme_val or 'default'
                 try:
                     eng_key = (engine_val or 'SWISSEPH').upper()
                     ws.default.ephemeris_engine = getattr(EngineType, eng_key, EngineType.SWISSEPH)
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     pass
                 save_workspace_modular(ws, self.workspace_dir)
                 self.show_message('Settings saved')
-            except Exception as e:
+            except UI_RECOVERABLE_EXC as e:
                 self.show_message(f'Failed to save settings: {e}')
         btn_save.bind(on_release=_save_settings)
 
@@ -1273,7 +1322,7 @@ class MyApp(MDApp):
                 md_bg_color=self.theme_cls.primary_color,
             )
             bar.open()
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             # Fallback: print to console
             print(f"INFO: {message}")
 

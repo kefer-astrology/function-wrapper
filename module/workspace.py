@@ -15,9 +15,29 @@ except ImportError:
         BodyDefinition, ObjectType, AspectDefinition, AstroModel
     )
 try:
-    from module.utils import read_yaml_file, write_yaml_file, write_json_file, resolve_under_base, _to_primitive, load_sfs_models_from_dir, parse_sfs_content, export_workspace_yaml
+    from module.utils import (
+        read_yaml_file,
+        write_yaml_file,
+        write_json_file,
+        resolve_under_base,
+        resolve_user_path,
+        _to_primitive,
+        load_sfs_models_from_dir,
+        parse_sfs_content,
+        export_workspace_yaml,
+    )
 except ImportError:
-    from utils import read_yaml_file, write_yaml_file, write_json_file, resolve_under_base, _to_primitive, load_sfs_models_from_dir, parse_sfs_content, export_workspace_yaml
+    from utils import (
+        read_yaml_file,
+        write_yaml_file,
+        write_json_file,
+        resolve_under_base,
+        resolve_user_path,
+        _to_primitive,
+        load_sfs_models_from_dir,
+        parse_sfs_content,
+        export_workspace_yaml,
+    )
 
 try:
     from module.services import get_active_model
@@ -306,9 +326,9 @@ def _parse_workspace_defaults(manifest: dict) -> WorkspaceDefaults:
         default_house_system=None,  # Will be set from model if needed
         default_bodies=default_block.get('default_bodies'),
         default_aspects=default_block.get('default_aspects'),
-        element_colors=None,  # TODO: parse from default_block if present
-        radix_point_colors=None,  # TODO: parse from default_block if present
-        time_system=None,  # TODO: parse from default_block if present
+        element_colors=default_block.get('element_colors'),
+        radix_point_colors=default_block.get('radix_point_colors'),
+        time_system=default_block.get('time_system'),
     )
 
 
@@ -498,38 +518,33 @@ def get_default_aspect_definitions() -> Dict[str, AspectDefinition]:
         Dictionary mapping aspect_id -> AspectDefinition for standard aspects
         (conjunction, opposition, trine, square, sextile, etc.)
     """
-    defaults = {}
-    
-    # Standard aspects with typical settings
-    aspects = [
-        ("conjunction", "☌", 0.0, 8.0, "#FF0000", 10, "solid", 2.0, True),
-        ("opposition", "☍", 180.0, 8.0, "#FF0000", 10, "solid", 2.0, True),
-        ("trine", "△", 120.0, 8.0, "#00FF00", 8, "solid", 1.5, True),
-        ("square", "□", 90.0, 8.0, "#FF8800", 9, "solid", 1.5, True),
-        ("sextile", "⚹", 60.0, 6.0, "#00AAFF", 6, "dashed", 1.0, True),
-        ("quincunx", "⚻", 150.0, 3.0, "#888888", 4, "dotted", 1.0, False),
-        ("semisextile", "⚬", 30.0, 3.0, "#AAAAAA", 3, "dotted", 0.5, False),
-        ("semisquare", "∠", 45.0, 2.0, "#CCCCCC", 5, "dashed", 1.0, False),
-        ("sesquiquadrate", "⚼", 135.0, 2.0, "#CCCCCC", 5, "dashed", 1.0, False),
-        ("quintile", "Q", 72.0, 2.0, "#AA00FF", 4, "dotted", 0.5, False),
-        ("biquintile", "bQ", 144.0, 2.0, "#AA00FF", 4, "dotted", 0.5, False),
-    ]
-    
-    for asp_data in aspects:
-        asp_id, glyph, angle, orb, color, importance, line_style, line_width, show_label = asp_data
-        defaults[asp_id] = AspectDefinition(
-            id=asp_id,
-            glyph=glyph,
-            angle=angle,
-            default_orb=orb,
-            i18n={"Caption": asp_id.replace("_", " ").title()},
-            color=color,
-            importance=importance,
-            line_style=line_style,
-            line_width=line_width,
-            show_label=show_label,
-        )
-    
+    defaults: Dict[str, AspectDefinition] = {}
+    aspects_path = Path(__file__).with_name("default_aspects.yaml")
+    aspects_data = None
+    if aspects_path.exists():
+        try:
+            aspects_data = read_yaml_file(aspects_path)
+        except (OSError, ValueError):
+            aspects_data = None
+    if isinstance(aspects_data, list):
+        for item in aspects_data:
+            if not isinstance(item, dict):
+                continue
+            asp_id = item.get("id")
+            if not asp_id:
+                continue
+            defaults[asp_id] = AspectDefinition(
+                id=asp_id,
+                glyph=item.get("glyph", ""),
+                angle=float(item.get("angle", 0.0)),
+                default_orb=float(item.get("default_orb", 0.0)),
+                i18n={"Caption": asp_id.replace("_", " ").title()},
+                color=item.get("color"),
+                importance=int(item.get("importance", 0)),
+                line_style=item.get("line_style"),
+                line_width=float(item.get("line_width", 1.0)),
+                show_label=bool(item.get("show_label", False)),
+            )
     return defaults
 
 
@@ -567,20 +582,6 @@ def get_all_aspect_definitions(ws: Optional['Workspace'] = None, model: Optional
 def _ensure_dir(p: Path) -> None:
     """Ensure directory exists, creating parent directories if needed."""
     p.mkdir(parents=True, exist_ok=True)
-
-
-def _resolve_workspace_dir(base_dir: Union[str, Path]) -> Path:
-    """Resolve a workspace directory safely.
-
-    - Absolute paths are normalized.
-    - Relative paths are resolved under the current working directory and
-      rejected if they attempt to escape it.
-    """
-    base_path = Path(base_dir).expanduser()
-    if base_path.is_absolute():
-        return base_path.resolve()
-    cwd = Path.cwd().resolve()
-    return resolve_under_base(cwd, base_path)
 
 
 def _safe_filename(name: str) -> str:
@@ -631,7 +632,7 @@ def init_workspace(base_dir: Union[str, Path], owner: str, active_model: str, de
     - Absolute path to the created `workspace.yaml` file.
     """
     # Validate and resolve base directory to prevent path traversal
-    base = _resolve_workspace_dir(base_dir)
+    base = resolve_user_path(base_dir, base_dir=Path.cwd())
     _ensure_dir(base)
     # subdirs
     subjects_dir = base / "subjects"

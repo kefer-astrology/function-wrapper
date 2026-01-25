@@ -179,7 +179,7 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
                                 continue
                 if positions:
                     logger.debug("Successfully extracted %d positions from planets_list/planets_degrees_ut", len(positions))
-        except Exception as e:
+        except (AttributeError, KeyError, TypeError, ValueError) as e:
             logger.debug("Failed to extract from planets_list/planets_degrees_ut: %s", e, exc_info=True)
     
     # If planets_list method didn't work, try direct planet attributes (newer Kerykeion versions)
@@ -392,7 +392,7 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
                             continue
                     else:
                         logger.debug("  ✗ Could not extract longitude from %s (tried abs_pos, position, sign_num calculation)", attr_name)
-            except Exception as e:
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
                 logger.debug("  ✗ Exception extracting from %s: %s", attr_name, e, exc_info=True)
                 continue
     
@@ -473,7 +473,7 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
                                     except (ValueError, TypeError, KeyError):
                                         continue
                         continue
-            except Exception as e:
+            except (AttributeError, KeyError, TypeError, ValueError):
                 continue
     
     # Extract houses from houses_list if available
@@ -640,11 +640,19 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
         # Topocentric coordinates (altitude/azimuth)
         if include_topocentric:
             try:
-                alt, az, _ = observer.at(t).observe(body).apparent().altaz()
+                # Compute topocentric position (observer's view from Earth's surface)
+                # Use the same pattern as astrometric: (eph["earth"] + observer).at(t).observe(body)
+                # This gives us the position from the observer's location on Earth's surface
+                topocentric = (eph["earth"] + observer).at(t).observe(body).apparent()
+                # Now compute altaz from the observer's perspective
+                alt, az, distance_altaz = topocentric.altaz()
                 result['altitude'] = float(alt.degrees)
                 result['azimuth'] = float(az.degrees)
-            except Exception:
-                pass  # Topocentric may not be available for all bodies
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
+                logger.warning("Could not compute topocentric coordinates for %s: %s", body, e)
+                # Set to None so we know it failed
+                result['altitude'] = None
+                result['azimuth'] = None
         
         # Physical properties
         if include_physical:
@@ -671,13 +679,13 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
                     # Phase angle approximation (simplified)
                     # Full calculation would use distance to Sun and distance to planet
                     result['phase_angle'] = float(elongation_approx)  # Approximation
-                except Exception:
+                except (AttributeError, KeyError, TypeError, ValueError):
                     pass
                 
                 # Apparent magnitude (not directly available from Skyfield for all bodies)
                 # Would need additional computation or lookup tables
                 # For now, skip this as it requires more complex calculations
-            except Exception:
+            except (AttributeError, KeyError, TypeError, ValueError):
                 pass
         
         # Speed and retrograde (would require computing position at two time points)
@@ -739,7 +747,7 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                           requested_objects: Optional[List[str]] = None,
                           include_physical: bool = False,
                           include_topocentric: bool = False,
-                          extended: bool = False) -> Union[Dict[str, float], Dict[str, Dict[str, float]]]:
+                          extended: bool = False) -> Dict[str, Union[float, Dict[str, float]]]:
     """Compute planetary positions using Skyfield JPL ephemerides.
 
     Parameters:
@@ -753,8 +761,8 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
     - extended: if True, return extended format with distance/declination/RA
 
     Returns:
-    - If extended=False: mapping planet -> ecliptic longitude in degrees [0, 360)
-    - If extended=True: mapping planet -> dict with extended properties
+    - Mapping planet -> ecliptic longitude (float) or extended dict
+    - Empty dict if computation is unavailable
     """
     if JPL:
         ts = load.timescale()
@@ -823,7 +831,7 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
 
         return positions
     else:
-        # Return empty dict instead of string to maintain consistent return type
+        # Return empty dict to maintain consistent return type
         return {}
 
 
@@ -1110,7 +1118,7 @@ def compute_aspects_for_chart(
                             else:
                                 updated_defs.append(asp_def)
                         aspect_definitions = updated_defs
-            except Exception as e:
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
                 logger.warning("Could not get aspect definitions from workspace: %s", e)
         
         # If still no definitions, use defaults
@@ -1120,7 +1128,7 @@ def compute_aspects_for_chart(
                 # Get aspects from workspace/model YAML, not SQLite
                 all_aspects = get_all_aspect_definitions(ws=ws, model=model)
                 aspect_definitions = list(all_aspects.values())
-            except Exception:
+            except (ImportError, AttributeError, KeyError, TypeError, ValueError):
                 # Fallback: create basic aspect definitions
                 aspect_definitions = [
                     AspectDefinition(id='conjunction', glyph='☌', angle=0.0, default_orb=8.0, i18n={}),
@@ -1346,7 +1354,7 @@ def resolve_effective_defaults(ws: 'Workspace', model: Optional[AstroModel]) -> 
 
 
 def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_str: str,
-                      ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None) -> Dict[str, float]:
+                      ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None) -> Dict[str, Union[float, Dict[str, float]]]:
     """Dispatch position computation based on engine.
     - For EngineType.JPL, returns a dict of ecliptic longitudes using Skyfield and a local ephemeris file.
     - For other or None, returns Kerykeion observable object longitudes (degrees) as a dict.
@@ -1360,7 +1368,8 @@ def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_
         requested_objects: Optional list of object IDs to compute (filters results)
     
     Returns:
-        Dict mapping object_id -> ecliptic_longitude (degrees). Empty dict on error.
+        Dict mapping object_id -> ecliptic_longitude (degrees) or extended dict.
+        Empty dict on error or if no positions found.
         
     Raises:
         ValueError: If datetime or location cannot be parsed
@@ -1385,10 +1394,7 @@ def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_
                     subj = compute_subject(name, dt_str, loc_str)
                     # Get model for constants (degrees_in_circle)
                     model = None
-                    try:
-                        model = get_active_model(None)
-                    except Exception:
-                        pass
+                    model = get_active_model(None)
                     kerykeion_positions = _extract_kerykeion_observable_objects(subj, requested_objects=non_planet_objects, model=model)
                     jpl_positions.update(kerykeion_positions)
                 except (ValueError, AttributeError, KeyError) as e:
@@ -1429,16 +1435,12 @@ def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_
             else:
                 logger.debug("Subject.data() returned empty or mismatched lists: objects=%s, degrees=%s", 
                            len(object_list) if object_list else 0, len(degrees_list) if degrees_list else 0)
-        except Exception as e:
+        except (AttributeError, KeyError, TypeError, ValueError) as e:
             logger.debug("Subject wrapper failed, falling back to direct extraction: %s", e)
         
         # Also try direct extraction as fallback
         # Get active model for constants (degrees_in_circle)
-        model = None
-        try:
-            model = get_active_model(None)  # We don't have workspace here, but model might be available
-        except Exception:
-            pass
+        model = get_active_model(None)  # We don't have workspace here, but model might be available
         
         if not positions:
             positions = _extract_kerykeion_observable_objects(subj, requested_objects=requested_objects, model=model)
@@ -1469,10 +1471,6 @@ def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_
         # Log specific errors for debugging
         logger.error("Error computing positions with Kerykeion: %s", e, exc_info=True)
         return {}
-    except Exception as e:
-        # Catch-all for unexpected errors
-        logger.error("Unexpected error computing positions: %s", e, exc_info=True)
-        return {}
 
 
 def compute_positions_for_chart(
@@ -1492,7 +1490,8 @@ def compute_positions_for_chart(
         include_topocentric: If True, include altitude/azimuth (JPL with location)
         
     Returns:
-        Dict mapping object_id -> position data:
+        Dict mapping object_id -> position data.
+        Empty dict on error or if no positions found:
         - For non-JPL engines: float (longitude in degrees)
         - For JPL engine: dict with keys:
             - 'longitude': float (degrees) - always present
@@ -1610,10 +1609,7 @@ def compute_positions_for_chart(
                     subj = compute_subject(name, dt_str, loc_str)
                     # Get model for constants
                     model = None
-                    try:
-                        model = get_active_model(ws)
-                    except Exception:
-                        pass
+                    model = get_active_model(ws)
                     kerykeion_positions = _extract_kerykeion_observable_objects(subj, requested_objects=non_planet_objects, model=model)
                     # Kerykeion returns simple floats, but we need to maintain extended format for JPL
                     # For non-planets, we'll keep them as floats (they don't have extended properties)
@@ -1664,7 +1660,7 @@ def build_chart_instance(name: str, dt_str: str, loc_text: str,
             # Workspace default engine override
             d = getattr(ws, 'default', None)
             engine = getattr(d, 'ephemeris_engine', None)
-        except Exception:
+        except (AttributeError, TypeError):
             pass
         # Resolve effective defaults from active model
         try:
@@ -1775,7 +1771,7 @@ def search_charts(ws: Optional[Workspace], query: str) -> List[ChartInstance]:
             ]).lower()
             if q in hay:
                 out.append(ch)
-        except Exception:
+        except (AttributeError, TypeError):
             continue
     return out
 
@@ -1816,7 +1812,7 @@ def list_open_view_rows(ws: Optional[Workspace]) -> List[Dict[str, str]]:
                 'tags': tags,
                 'search_text': search_text,
             })
-        except Exception:
+        except (AttributeError, TypeError):
             continue
     return rows
 

@@ -21,6 +21,7 @@ try:
         parse_chart_yaml,
         ensure_aware,
         now_utc,
+        resolve_user_path,
     )
 except ImportError:
     from utils import (
@@ -35,6 +36,7 @@ except ImportError:
         parse_chart_yaml,
         ensure_aware,
         now_utc,
+        resolve_user_path,
     )
 
 try:
@@ -59,6 +61,19 @@ except ImportError:
         scan_workspace_changes, save_workspace_modular, summarize_chart, add_subject,
     )
     from ui_translations import change_language
+
+# Optional storage integration (positions-only storage like Tauri flow).
+try:
+    from module.storage import DuckDBStorage, DUCKDB_AVAILABLE
+except ImportError:
+    try:
+        from storage import DuckDBStorage, DUCKDB_AVAILABLE
+    except ImportError:
+        DuckDBStorage = None
+        DUCKDB_AVAILABLE = False
+
+# Exceptions we treat as recoverable in UI flows.
+UI_RECOVERABLE_EXC = (AttributeError, KeyError, TypeError, ValueError, OSError, RuntimeError)
 
 # -----------------------------
 # Toolbar / layout configuration
@@ -152,6 +167,10 @@ def _ensure_session_defaults():
         st.session_state.current_person_name = ""
     if "footer_select" not in st.session_state:
         st.session_state.footer_select = ""
+    if "ws_default_engine" in st.session_state:
+        normalized = _normalize_engine_select_value(st.session_state.get("ws_default_engine"))
+        if normalized is not None:
+            st.session_state["ws_default_engine"] = normalized
     if "workspace_report" not in st.session_state:
         st.session_state.workspace_report = None
     # Focused chart display fields (read-only, safe across modes)
@@ -187,9 +206,73 @@ def _safe_get(obj, attr: str, key: str = None, default=None):
         if isinstance(obj, dict):
             k = key or attr
             return obj.get(k, default)
-    except Exception:
+    except UI_RECOVERABLE_EXC:
         return default
     return default
+
+
+ENGINE_SELECT_OPTIONS = ["JPL", "swisseph", "jyotish", "custom"]
+
+
+def _normalize_engine_select_value(val):
+    if isinstance(val, EngineType):
+        return "JPL" if val == EngineType.JPL else "swisseph"
+    if val is None:
+        return None
+    s = str(val)
+    if s in ENGINE_SELECT_OPTIONS:
+        return s
+    if s.upper().startswith("JPL"):
+        return "JPL"
+    return "swisseph"
+
+
+def _engine_from_value(val):
+    if isinstance(val, EngineType):
+        return val
+    if val is None:
+        return None
+    s = str(val)
+    return EngineType.JPL if s.upper().startswith("JPL") else EngineType.SWISSEPH
+
+
+def _store_positions_if_possible(chart, positions, engine_override=None, eph_override=None):
+    if not DUCKDB_AVAILABLE or DuckDBStorage is None:
+        return
+    if not positions:
+        return
+    manifest = st.session_state.get("workspace_manifest")
+    if not manifest:
+        return
+    try:
+        chart_id = _safe_get(chart, 'id') or _safe_get(chart, 'chart_id')
+        if not chart_id:
+            return
+        subj = _safe_get(chart, 'subject')
+        event_time = _safe_get(subj, 'event_time')
+        if isinstance(event_time, datetime.datetime):
+            dt_str = event_time.isoformat()
+        elif isinstance(event_time, str):
+            dt_str = event_time
+        else:
+            return
+        engine_val = engine_override
+        if isinstance(engine_val, EngineType):
+            engine_val = engine_val.value
+        elif engine_val is not None:
+            engine_val = str(engine_val).lower()
+        base_dir = Path(manifest).parent
+        db_path = base_dir / "data" / "workspace.db"
+        storage = DuckDBStorage(db_path)
+        storage.store_positions(
+            chart_id,
+            dt_str,
+            positions,
+            engine=engine_val,
+            ephemeris_file=eph_override,
+        )
+    except UI_RECOVERABLE_EXC:
+        return
 
 
 def _safe_subject_name(chart) -> str:
@@ -217,7 +300,7 @@ def _safe_event_dt(chart):
     if isinstance(dt, str):
         try:
             return _dt.fromisoformat(dt)
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             return None
     return dt
 
@@ -613,7 +696,7 @@ def _run_compute(name, dt, place, engine_choice, eph_path):
     horoscope.at_time(dt)
     try:
         positions = compute_positions(engine, name, str(dt), place, ephemeris_path=eph_override)
-    except Exception as e:
+    except UI_RECOVERABLE_EXC as e:
         # Log the error message first (as requested)
         msg = str(e)
         st.error(f"Chyba při výpočtu pozic: {msg}")
@@ -649,7 +732,7 @@ def _update_people_list_from_workspace(ws):
             nm = _safe_subject_name(c)
             if nm and nm not in names:  # Avoid duplicates
                 names.append(nm)
-    except Exception:
+    except UI_RECOVERABLE_EXC:
         names = []
     st.session_state.people = names
     return names
@@ -679,7 +762,7 @@ def _open_view_center():
                 st.success('Chart importován do workspace.')
                 # Trigger rerun to refresh the UI
                 st.rerun()
-        except Exception as e:
+        except UI_RECOVERABLE_EXC as e:
             st.error(f"Import selhal: {e}")
 
     # Get fresh workspace reference (may have been updated by import)
@@ -723,7 +806,7 @@ def _open_view_center():
                 'tags': tags,
                 'search_text': search_text,
             })
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             continue
     
     # Filter by search query
@@ -773,11 +856,7 @@ def _open_workspace_center():
                 workspace_root = (Path.cwd() / "workspaces").resolve()
                 # Validate and resolve path to prevent path traversal attacks
                 try:
-                    # Interpret the user input as a path inside the workspace_root
-                    requested_path = workspace_root / base_dir
-                    resolved_base_path = requested_path.resolve()
-                    # Ensure the resolved path is within the workspace_root
-                    resolved_base_path.relative_to(workspace_root)
+                    resolved_base_path = resolve_user_path(base_dir, base_dir=workspace_root)
                     manifest = resolved_base_path / "workspace.yaml"
                 except (ValueError, OSError) as e:
                     st.error(f"Neplatná cesta: {e}")
@@ -790,7 +869,7 @@ def _open_workspace_center():
                     report = _load_workspace_and_sync(str(manifest), scan_and_import=True)
                     st.success("Workspace načten a synchronizován.")
                     _render_ws_report(report)
-        except Exception as e:
+        except UI_RECOVERABLE_EXC as e:
             st.error(f"Nelze načíst workspace: {e}")
 
 
@@ -803,7 +882,7 @@ def _load_workspace_and_sync(manifest_path: str, scan_and_import: bool = True) -
     if scan_and_import:
         try:
             changes = scan_workspace_changes(base_dir)
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             changes = {'charts': {'new_on_disk': [], 'missing_on_disk': []}, 'subjects': {'new_on_disk': [], 'missing_on_disk': []}}
         # Import new charts
         try:
@@ -813,9 +892,9 @@ def _load_workspace_and_sync(manifest_path: str, scan_and_import: bool = True) -
                     chart = import_chart_yaml(path)
                     add_or_update_chart(ws, chart, base_dir=base_dir)
                     imported += 1
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     continue
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         # Import new subjects
         try:
@@ -827,14 +906,14 @@ def _load_workspace_and_sync(manifest_path: str, scan_and_import: bool = True) -
                     if subj is not None:
                         add_subject(ws, subj, base_dir=base_dir)
                         imported += 1
-                except Exception:
+                except UI_RECOVERABLE_EXC:
                     continue
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         if imported:
             try:
                 save_workspace_modular(ws, base_dir)
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 pass
     # Update session
     st.session_state.workspace = ws
@@ -852,7 +931,7 @@ def _load_workspace_and_sync(manifest_path: str, scan_and_import: bool = True) -
             nm = _safe_subject_name(c)
             if nm and nm not in names:  # Avoid duplicates
                 names.append(nm)
-    except Exception:
+    except UI_RECOVERABLE_EXC:
         names = []
     st.session_state.people = names
     if names:
@@ -870,7 +949,7 @@ def _load_workspace_and_sync(manifest_path: str, scan_and_import: bool = True) -
                     try:
                         st.session_state.focused_date = dtv.date()
                         st.session_state.focused_time = dtv.time()
-                    except Exception:
+                    except UI_RECOVERABLE_EXC:
                         st.session_state.focused_date = None
                         st.session_state.focused_time = None
                 cfg = _safe_config(first)
@@ -881,13 +960,13 @@ def _load_workspace_and_sync(manifest_path: str, scan_and_import: bool = True) -
                 # tags can be list or missing
                 tags_val = _safe_get(first, 'tags') or _safe_get(first, 'tags', 'tags', []) or []
                 st.session_state.focused_tags = list(tags_val or [])
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
         # Keep crt_name in sync if not managed by widget at this time
         try:
             if 'crt_name' in st.session_state and not st.session_state.get('crt_name'):
                 st.session_state.crt_name = names[0]
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             pass
     # Build a report
     report = {
@@ -935,7 +1014,7 @@ def _get_focused_chart():
                 cid = _safe_get(ch, 'id') or _safe_get(ch, 'id', 'id')
                 if subj_name == current_name or cid == current_name:
                     return ch
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 continue
     
     # Then check session charts (created without workspace)
@@ -946,7 +1025,7 @@ def _get_focused_chart():
             cid = _safe_get(ch, 'id') or _safe_get(ch, 'id', 'id')
             if subj_name == current_name or cid == current_name:
                 return ch
-        except Exception:
+        except UI_RECOVERABLE_EXC:
             continue
     
     return None
@@ -966,7 +1045,7 @@ def _focus_chart_by_name(name: str):
                 if subj_name == name or cid == name:
                     found = ch
                     break
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 continue
     
     # Then check session charts
@@ -979,7 +1058,7 @@ def _focus_chart_by_name(name: str):
                 if subj_name == name or cid == name:
                     found = ch
                     break
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 continue
     
     if not found:
@@ -997,7 +1076,7 @@ def _focus_chart_by_name(name: str):
             try:
                 st.session_state.focused_date = dtv.date()
                 st.session_state.focused_time = dtv.time()
-            except Exception:
+            except UI_RECOVERABLE_EXC:
                 st.session_state.focused_date = None
                 st.session_state.focused_time = None
         cfg = _safe_config(found)
@@ -1007,13 +1086,13 @@ def _focus_chart_by_name(name: str):
         st.session_state.focused_engine = cfg.get('engine')
         tags_val = _safe_get(found, 'tags') or _safe_get(found, 'tags', 'tags', []) or []
         st.session_state.focused_tags = list(tags_val or [])
-    except Exception:
+    except UI_RECOVERABLE_EXC:
         pass
     # Sync non-widget value for compute defaults
     try:
         if 'crt_name' in st.session_state and not st.session_state.get('crt_name'):
             st.session_state.crt_name = st.session_state.current_person_name
-    except Exception:
+    except UI_RECOVERABLE_EXC:
         pass
 
 
@@ -1103,9 +1182,9 @@ def _render_initial_dialog():
             engine_options = ["Kerykeion / swisseph", "JPL / Skyfield"]
             selected_engine = st.selectbox("Výchozí výpočetní engine", engine_options, key="init_engine", index=0)
             if selected_engine == "JPL / Skyfield":
-                st.session_state["ws_default_engine"] = EngineType.JPL
+                st.session_state["ws_default_engine"] = "JPL"
             else:
-                st.session_state["ws_default_engine"] = EngineType.SWISSEPH
+                st.session_state["ws_default_engine"] = "swisseph"
         
         elif section == "Manuál":
             st.subheader("Manuál")
@@ -1120,12 +1199,10 @@ def _render_initial_dialog():
                 if not base_dir:
                     st.warning("Zadejte cestu ke složce")
                 else:
+                    workspace_root = (Path.cwd() / "workspaces").resolve()
                     # Validate and resolve path to prevent path traversal attacks
                     try:
-                        base_path = Path(base_dir).resolve()
-                        # Check for path traversal attempts (should not contain .. after resolution)
-                        if ".." in str(base_path) or not base_path.is_absolute():
-                            raise ValueError("Invalid path: path traversal detected")
+                        base_path = resolve_user_path(base_dir, base_dir=workspace_root)
                         manifest = base_path / "workspace.yaml"
                     except (ValueError, OSError) as e:
                         st.error(f"Neplatná cesta: {e}")
@@ -1138,7 +1215,7 @@ def _render_initial_dialog():
                         report = _load_workspace_and_sync(str(manifest), scan_and_import=True)
                         st.success("Workspace načten a synchronizován.")
                         _render_ws_report(report)
-            except Exception as e:
+            except UI_RECOVERABLE_EXC as e:
                 st.error(f"Nelze načíst workspace: {e}")
         
         # Proceed button
@@ -1255,18 +1332,32 @@ def main():
                     
                     st.markdown("---")
                     if st.button("Exportovat", use_container_width=True, type="primary", key="do_export"):
-                        # TODO: Implement actual export functionality
-                        st.success(f"Export ({export_format}) připraven. Funkcionalita exportu bude implementována.")
+                        export_dir = None
+                        manifest = st.session_state.get("workspace_manifest")
+                        if manifest:
+                            export_dir = Path(manifest).parent / "exports"
+                        else:
+                            export_dir = Path.cwd() / "exports"
+                        export_dir.mkdir(parents=True, exist_ok=True)
+                        safe_title = "".join(ch.lower() if ch.isalnum() else "-" for ch in (export_title or "export"))
+                        safe_title = safe_title.strip("-") or "export"
+                        timestamp = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+                        export_path = export_dir / f"{safe_title}_{timestamp}.txt"
+                        lines = [f"Export format: {export_format}"]
                         if include_name:
-                            st.info("Zahrnuto: Název a údaje o Horoskopu")
-                        if include_chart:
-                            st.info("Zahrnuto: Horoskop")
+                            lines.append(f"Name: {export_title}")
                         if include_location:
-                            st.info("Zahrnuto: Poloha")
-                        if include_aspektarium:
-                            st.info("Zahrnuto: Aspektárium")
+                            loc = _safe_subject_location(focused_chart) or {}
+                            lines.append(f"Location: {loc.get('name', '')}")
                         if include_info:
-                            st.info("Zahrnuto: Info")
+                            subj = _safe_get(focused_chart, 'subject')
+                            lines.append(f"Event time: {_safe_get(subj, 'event_time')}")
+                        if include_chart:
+                            lines.append("Chart: exported separately (not included in text export).")
+                        if include_aspektarium:
+                            lines.append("Aspektarium: compute on demand (not included in text export).")
+                        export_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                        st.success(f"Export ({export_format}) uložen: {export_path}")
 
             elif mode == "notes":
                 focused_chart = _get_focused_chart()
@@ -1326,7 +1417,7 @@ def main():
                                 title=note_title,
                                 content=note_content,
                                 created=now_utc(),
-                                author="user"  # TODO: Get actual user
+                                author=st.session_state.get("active_user") or st.session_state.get("ws_owner") or "user"
                             )
                             
                             if ws:
@@ -1343,7 +1434,7 @@ def main():
                                         base_dir = str(Path(st.session_state.workspace_manifest).parent)
                                         save_workspace_modular(ws, base_dir)
                                         st.success(f"Poznámka '{note_title}' uložena do workspace.")
-                                    except Exception as e:
+                                    except UI_RECOVERABLE_EXC as e:
                                         st.error(f"Chyba při ukládání: {e}")
                                 else:
                                     st.info("Poznámka uložena v session. Otevřete workspace pro trvalé uložení.")
@@ -1385,7 +1476,7 @@ def main():
                     ], key="ws_house_sys")
                     st.text_input("Výchozí aspekty (čárkou)", key="ws_aspects")
                     st.selectbox("Barvy (téma)", ["default", "dark", "light"], key="ws_color_theme")
-                    st.selectbox("Výchozí engine", ["JPL", "swisseph", "jyotish", "custom"], key="ws_default_engine")
+                    st.selectbox("Výchozí engine", ENGINE_SELECT_OPTIONS, key="ws_default_engine")
                 else:
                     st.markdown("#### Efemeridy")
                     st.selectbox(
@@ -1476,7 +1567,7 @@ def main():
                         # Switch to chart view automatically
                         st.session_state.mode = "chart"
                         st.rerun()
-                    except Exception as e:
+                    except UI_RECOVERABLE_EXC as e:
                         import traceback
                         error_details = traceback.format_exc()
                         st.error(f"Chyba při přidávání do workspace: {e}")
@@ -1499,7 +1590,7 @@ def main():
                         temp_ws = None
                         if st.session_state.get('ws_default_engine') or st.session_state.get('ws_default_loc') or st.session_state.get('ws_house_sys'):
                             # Get engine
-                            engine = st.session_state.get('ws_default_engine', EngineType.SWISSEPH)
+                            engine = _engine_from_value(st.session_state.get('ws_default_engine')) or EngineType.SWISSEPH
                             
                             # Build workspace defaults
                             house_sys_str = st.session_state.get('ws_house_sys', 'Placidus')
@@ -1509,12 +1600,10 @@ def main():
                             except (KeyError, AttributeError, TypeError):
                                 house_sys = HouseSystem.PLACIDUS
                             
-                            # TODO: Build proper Location object if we have coordinates/timezone
-                            # For now, just set basic defaults without location
                             ws_defaults = WorkspaceDefaults(
                                 ephemeris_engine=engine if isinstance(engine, EngineType) else EngineType.SWISSEPH,
                                 ephemeris_backend=None,
-                                default_location=None,  # TODO: Create Location object from session state
+                                default_location=None,
                                 language=st.session_state.get('settings', {}).get('language', 'cs'),
                                 theme=st.session_state.get('ws_color_theme', 'default'),
                                 default_house_system=house_sys,
@@ -1571,7 +1660,7 @@ def main():
                         # Switch to chart view
                         st.session_state.mode = "chart"
                         st.rerun()
-                    except Exception as e:
+                    except UI_RECOVERABLE_EXC as e:
                         import traceback
                         error_details = traceback.format_exc()
                         st.error(f"Chyba při ukládání horoskopu: {e}")
@@ -1605,7 +1694,7 @@ def main():
                         # Use a unique key to prevent caching issues
                         chart_key = f"chart_shifted_{name}_{engine_choice}_{dtc}"
                         st.plotly_chart(fig, use_container_width=True, key=chart_key)
-                    except Exception as e:
+                    except UI_RECOVERABLE_EXC as e:
                         import traceback
                         error_details = traceback.format_exc()
                         st.error(f"Chyba při výpočtu pozic: {e}")
@@ -1622,12 +1711,7 @@ def main():
                         # Check both settings_engine and ws_default_engine
                         engine_choice_val = st.session_state.get('settings_engine') or st.session_state.get('ws_default_engine')
                         if engine_choice_val:
-                            if isinstance(engine_choice_val, EngineType):
-                                engine_override = engine_choice_val
-                            elif str(engine_choice_val).startswith("JPL"):
-                                engine_override = EngineType.JPL
-                            else:
-                                engine_override = EngineType.SWISSEPH
+                            engine_override = _engine_from_value(engine_choice_val)
                             eph_override = st.session_state.get('settings_eph', eph_path) if engine_override == EngineType.JPL else None
                         else:
                             # If no override, use chart's stored engine
@@ -1641,6 +1725,7 @@ def main():
                         # Recompute positions to ensure we have fresh data
                         from services import compute_positions_for_chart
                         positions = compute_positions_for_chart(focused_chart, ws=ws)
+                        _store_positions_if_possible(focused_chart, positions, engine_override, eph_override)
                         if not positions:
                             st.warning("⚠️ Nepodařilo se vypočítat pozice pro vybraný horoskop. Zkontrolujte nastavení engine a data horoskopu.")
                             with st.expander("Debug informace", expanded=False):
@@ -1656,7 +1741,7 @@ def main():
                             chart_name = _safe_subject_name(focused_chart) or 'unknown'
                             chart_key = f"chart_{chart_name}_{engine_override}_{st.session_state.get('astrolab_active', False)}_{id(focused_chart)}"
                             st.plotly_chart(fig, use_container_width=True, key=chart_key)
-                    except Exception as e:
+                    except UI_RECOVERABLE_EXC as e:
                         import traceback
                         error_details = traceback.format_exc()
                         st.error(f"Chyba při výpočtu pozic: {e}")
@@ -1685,7 +1770,7 @@ def main():
                     horoscope, fig = _run_compute(name, dtc, place, engine_choice, eph_path)
                     chart_key = f"chart_no_workspace_{name}_{dtc}_{place}_{engine_choice}"
                     st.plotly_chart(fig, use_container_width=True, key=chart_key)
-                except Exception as e:
+                except UI_RECOVERABLE_EXC as e:
                     import traceback
                     error_details = traceback.format_exc()
                     st.error(f"Chyba při výpočtu pozic: {e}")
@@ -1723,7 +1808,7 @@ def main():
                             else:
                                 # Fallback to kerykeion points if compute_positions fails
                                 st.table(extract_kerykeion_points(horoscope.computed))
-                        except Exception as e:
+                        except UI_RECOVERABLE_EXC as e:
                             import traceback
                             error_details = traceback.format_exc()
                             st.error(f"Chyba při výpočtu pozic: {e}")
@@ -1736,6 +1821,7 @@ def main():
                             # Pass workspace if available for observable objects
                             ws = st.session_state.get('workspace')
                             positions = compute_positions_for_chart(focused_chart, ws=ws)
+                            _store_positions_if_possible(focused_chart, positions, None, None)
                             
                             if not positions:
                                 st.warning("Nepodařilo se vypočítat pozice pro vybraný horoskop.")
@@ -1752,7 +1838,7 @@ def main():
                                 positions_df = DataFrame([positions]).T
                                 positions_df.columns = ['Longitude (°)']
                                 st.table(positions_df)
-                        except Exception as e:
+                        except UI_RECOVERABLE_EXC as e:
                             import traceback
                             error_details = traceback.format_exc()
                             st.error(f"Chyba při výpočtu pozic: {e}")
@@ -1771,6 +1857,7 @@ def main():
                         # Pass workspace if available for observable objects
                         ws = st.session_state.get('workspace')
                         positions = compute_positions_for_chart(focused_chart, ws=ws)
+                        _store_positions_if_possible(focused_chart, positions, None, None)
                         
                         if not positions:
                             st.warning("Nepodařilo se vypočítat pozice pro vybraný horoskop.")
@@ -1787,7 +1874,7 @@ def main():
                             positions_df = DataFrame([positions]).T
                             positions_df.columns = ['Longitude (°)']
                             st.table(positions_df)
-                    except Exception as e:
+                    except UI_RECOVERABLE_EXC as e:
                         import traceback
                         error_details = traceback.format_exc()
                         st.error(f"Chyba při výpočtu pozic: {e}")
@@ -1832,7 +1919,7 @@ def main():
                     else:
                         # Fallback to kerykeion points if compute_positions fails
                         st.table(extract_kerykeion_points(horoscope.computed))
-                except Exception as e:
+                except UI_RECOVERABLE_EXC as e:
                     import traceback
                     error_details = traceback.format_exc()
                     st.error(f"Chyba při výpočtu pozic: {e}")
@@ -1861,6 +1948,7 @@ def main():
                     try:
                         from services import compute_positions_for_chart
                         positions = compute_positions_for_chart(focused_chart)
+                        _store_positions_if_possible(focused_chart, positions, None, None)
                         
                         if positions:
                             st.write(f"Interpretace pro: **{selected}**")
@@ -1870,7 +1958,7 @@ def main():
                             st.caption(f"Počet vypočítaných pozic: {len(positions)}")
                         else:
                             st.warning("Nelze vypočítat pozice pro interpretaci.")
-                    except Exception as e:
+                    except UI_RECOVERABLE_EXC as e:
                         st.error(f"Chyba při načítání dat pro interpretaci: {e}")
 
     elif mode == "transzit":

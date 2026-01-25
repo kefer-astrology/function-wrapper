@@ -195,14 +195,14 @@ def figure_3d(objects: object):
     # Add planet positions
     for o in objects:
         if o == "earth":
-            continue  # TODO: can be from anywhere (skip for now)
+            continue  # Earth is omitted from topocentric marker plot
         # Convert altitude and azimuth to polar coordinates
         azimuth = (90 - objects[o][0].degrees) % 360
         altitude = 90 - objects[o][1].degrees
         # Create a scatter plot for each object
         fig.add_trace(
             go.Scatterpolar(
-                r=[0.6],  # TODO: cope with altitude
+                r=[0.6],  # Fixed radius: altitude not encoded in this view
                 theta=[azimuth],
                 text=dictionary["planets"][o]["symbol"],
                 customdata=[dictionary["planets"][o]["symbol"]],

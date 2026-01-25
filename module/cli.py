@@ -320,12 +320,8 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
                 include_topocentric=include_topocentric
             )
             
-            # Compute aspects between transit and source
-            # For now, compute aspects for the transit chart itself
-            # Full transit aspect computation would compare transit vs source positions
-            transit_aspects = compute_aspects_for_chart(transit_chart, ws=ws)
-            
-            # Store in DuckDB if available (for batch operations)
+            # Store positions only - aspects are computed on-demand from positions via SQL
+            # This avoids duplication and allows flexible aspect computation
             if use_storage and storage:
                 try:
                     storage.store_positions(
@@ -335,16 +331,16 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
                         engine=engine,
                         ephemeris_file=eph_file
                     )
-                    # Store aspects with relation_id
-                    relation_id = f"transit_{source_chart_id}_{start_dt.date()}_{end_dt.date()}"
-                    storage.store_aspects(relation_id, tp.isoformat(), transit_aspects)
                 except Exception as e:
                     print(f"Warning: Failed to store in DuckDB: {e}", file=sys.stderr)
+            
+            # Compute aspects for return value (not stored - can be recomputed from positions)
+            transit_aspects = compute_aspects_for_chart(transit_chart, ws=ws)
             
             results.append({
                 "datetime": tp.isoformat(),
                 "transit_positions": transit_positions,
-                "aspects": transit_aspects
+                "aspects": transit_aspects  # Returned but not stored
             })
         
         # Close storage if used

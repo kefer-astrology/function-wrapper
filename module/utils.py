@@ -33,8 +33,14 @@ except ImportError:
         Workspace, EphemerisSource, WorkspaceDefaults
     )
 
+try:
+    from module.logging_config import get_logger
+except ImportError:
+    from logging_config import get_logger
+
 # simple in-process cache to avoid repeated geocoding of same string
 _GEOCODE_CACHE: dict[str, Optional[GeoLocation]] = {}
+logger = get_logger(__name__)
 
 def now_utc() -> datetime:
     """Return current time as a timezone-aware UTC datetime."""
@@ -331,7 +337,10 @@ class Actual:
                 value_to_parse = args[0] if isinstance(args[0], str) else str(args[0][0])
                 self.value = _parse_date_string(value_to_parse)
             except Exception as e:
-                print(f"Failed to parse time: {args[0]} ({e}), fallback to current time")
+                logger.warning(
+                    "Failed to parse time input; falling back to current time (%s).",
+                    type(e).__name__,
+                )
                 self.value = now_utc()
         else:
             self.value = now_utc()
@@ -735,7 +744,7 @@ def load_sfs_models_from_dir(dir_path: Union[str, Path]) -> Dict[str, AstroModel
         Dictionary mapping model name (from file stem or parsed model.name) to AstroModel.
         Files that cannot be decoded or parsed are skipped.
     """
-    base = Path(dir_path).resolve()
+    base = resolve_user_path(dir_path)
     models: Dict[str, AstroModel] = {}
     if not base.exists() or not base.is_dir():
         return models
@@ -782,6 +791,19 @@ def resolve_under_base(base: Union[str, Path], rel_path: Union[str, Path]) -> Pa
     except Exception:
         raise ValueError(f"Path traversal detected: {rel_path}")
     return full
+
+
+def resolve_user_path(path: Union[str, Path], *, base_dir: Union[str, Path, None] = None) -> Path:
+    """Resolve a user-provided path safely.
+
+    - Absolute paths are normalized.
+    - Relative paths are resolved under base_dir (or current working directory).
+    """
+    raw = Path(path).expanduser()
+    if raw.is_absolute():
+        return raw.resolve()
+    base = Path(base_dir).resolve() if base_dir is not None else Path.cwd().resolve()
+    return resolve_under_base(base, raw)
 
 def read_yaml_file(path: Union[str, Path]) -> dict:
     """Read a YAML file and return a dict.
@@ -947,7 +969,7 @@ def export_chart_yaml(chart: ChartInstance, dest_dir: str) -> str:
     Returns:
         Absolute file path to exported YAML file
     """
-    base = Path(dest_dir).resolve()
+    base = resolve_user_path(dest_dir)
     base.mkdir(parents=True, exist_ok=True)
     fname = f"{(getattr(chart, 'id', '') or 'chart').replace(' ', '-').lower()}.yml"
     out = base / fname
@@ -1010,7 +1032,7 @@ def export_workspace_yaml(ws: Workspace, dest_path: Union[str, Path]) -> Path:
         Uses the local serializer to convert dataclasses, enums, and datetimes
         to primitives. Ensures parent directory exists.
     """
-    p = Path(dest_path).resolve()
+    p = resolve_user_path(dest_path)
     p.parent.mkdir(parents=True, exist_ok=True)
     # Reuse local primitive conversion
     data = _to_primitive(ws)
