@@ -1,0 +1,99 @@
+ - id: conjunction
+   glyph: "☌"
+   angle: 0.0
+   default_orb: 8.0
+   color: "#FF0000"
+   importance: 10
+   line_style: "solid"
+   line_width: 2.0
+   show_label: true
+ - id: opposition
+   glyph: "☍"
+   angle: 180.0
+   default_orb: 8.0
+   color: "#FF0000"
+   importance: 10
+   line_style: "solid"
+   line_width: 2.0
+   show_label: true
+ - id: trine
+   glyph: "△"
+   angle: 120.0
+   default_orb: 8.0
+   color: "#00FF00"
+   importance: 8
+   line_style: "solid"
+   line_width: 1.5
+   show_label: true
+ - id: square
+   glyph: "□"
+   angle: 90.0
+   default_orb: 8.0
+   color: "#FF8800"
+   importance: 9
+   line_style: "solid"
+   line_width: 1.5
+   show_label: true
+ - id: sextile
+   glyph: "⚹"
+   angle: 60.0
+   default_orb: 6.0
+   color: "#00AAFF"
+   importance: 6
+   line_style: "dashed"
+   line_width: 1.0
+   show_label: true
+ - id: quincunx
+   glyph: "⚻"
+   angle: 150.0
+   default_orb: 3.0
+   color: "#888888"
+   importance: 4
+   line_style: "dotted"
+   line_width: 0.5
+   show_label: false
+ - id: semisextile
+   glyph: "⚬"
+   angle: 30.0
+   default_orb: 3.0
+   color: "#AAAAAA"
+   importance: 3
+   line_style: "dotted"
+   line_width: 0.5
+   show_label: false
+ - id: semisquare
+   glyph: "∠"
+   angle: 45.0
+   default_orb: 2.0
+   color: "#CCCCCC"
+   importance: 5
+   line_style: "dashed"
+   line_width: 1.0
+   show_label: false
+ - id: sesquiquadrate
+   glyph: "⚼"
+   angle: 135.0
+   default_orb: 2.0
+   color: "#CCCCCC"
+   importance: 5
+   line_style: "dashed"
+   line_width: 1.0
+   show_label: false
+ - id: quintile
+   glyph: "Q"
+   angle: 72.0
+   default_orb: 2.0
+   color: "#AA00FF"
+   importance: 4
+   line_style: "dotted"
+   line_width: 0.5
+   show_label: false
+ - id: biquintile
+   glyph: "bQ"
+   angle: 144.0
+   default_orb: 2.0
+   color: "#AA00FF"
+   importance: 4
+   line_style: "dotted"
+   line_width: 0.5
+   show_label: false
