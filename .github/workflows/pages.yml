@@ -5,8 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'docs/**'
-      - 'hugo.toml'
+      - 'docs/site/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:  # Allow manual triggering
 
@@ -27,6 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history for proper git operations
+          submodules: recursive  # Initialize submodules automatically
       
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
@@ -37,28 +37,37 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
-      - name: Initialize and install Hugo modules
+      - name: Initialize Hugo modules (if needed)
         run: |
-          # Initialize Hugo modules if not already initialized
-          if [ ! -f "go.mod" ]; then
-            hugo mod init github.com/kefer-astrology/function-wrapper
+          # Only initialize if go.mod doesn't exist (docs/site is the Hugo root)
+          if [ ! -f "docs/site/go.mod" ]; then
+            hugo mod init github.com/kefer-astrology/function-wrapper/docs-site || true
           fi
-          # Download and update modules
-          hugo mod get -u github.com/nanxiaobei/hugo-paper
-          hugo mod tidy
-          # List modules to verify
-          hugo mod list
+          # Get and tidy modules
+          hugo mod get -u --source docs/site || true
+          hugo mod tidy --source docs/site || true
+      
+      - name: Verify theme is available
+        run: |
+          # Theme should be initialized via checkout submodules or Hugo modules
+          if [ -d "docs/site/themes/hugo-paper" ] || [ -d "docs/site/_vendor" ]; then
+            echo "Theme installed successfully"
+          else
+            echo "Warning: Theme directory not found. Hugo will try to download it via modules."
+          fi
       
       - name: Build with Hugo
         run: |
-          hugo --minify --destination public
+          # Clean previous build output but keep Hugo sources in docs/site
+          find docs -mindepth 1 -maxdepth 1 ! -name site -exec rm -rf {} +
+          hugo --source docs/site --config docs/site/hugo.toml --minify --destination docs
         env:
           HUGO_ENVIRONMENT: production
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
+          path: ./docs
 
   deploy:
     environment:

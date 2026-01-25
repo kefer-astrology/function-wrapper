@@ -38,25 +38,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libcairo2-dev pkg-config
       
-      - name: Install dependencies
+      - name: Create docs venv
         run: |
           python -m pip install --upgrade pip
-          # Install base requirements (must succeed)
-          pip install -r requirements/base.txt
+          make venv-docs
       
       - name: Generate module documentation
         env:
           PYTHONPATH: ${{ github.workspace }}
         working-directory: ${{ github.workspace }}
         run: |
-          python -m devtools.docs_export --out docs/auto --hugo
+          venv-docs/bin/python -m devtools.docs_export --out docs/site/content/auto --hugo
       
       - name: Generate Mermaid diagram and enum overview
         env:
           PYTHONPATH: ${{ github.workspace }}
         working-directory: ${{ github.workspace }}
         run: |
-          python -m devtools.diagram_export --out docs/models.mmd --enums-out docs/enums.md
+          venv-docs/bin/python -m devtools.diagram_export --out docs/site/content/models.mmd --enums-out docs/site/content/enums.md
       
       - name: Check for changes
         id: verify-changed-files
