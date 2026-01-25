@@ -411,7 +411,7 @@ Resolved Path that is contained within base
 
 ⚠️ ValueError: If path is absolute or attempts directory traversal outside base
 
-## `resolve_user_path`
+### `to_timezone`
 
 ```python
 resolve_user_path(path: Union[str, pathlib._local.Path], *, base_dir: Union[str, pathlib._local.Path, NoneType] = None) -> pathlib._local.Path
