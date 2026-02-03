@@ -31,15 +31,15 @@ contourpy==1.3.3
 cycler==0.12.1
     # via matplotlib
 duckdb==1.4.3
-    # via -r requirements/base.in
+    # via -r base.in
 flatbuffers==25.9.23
     # via timezonefinder
-fonttools==4.60.1
+fonttools==4.60.2
     # via matplotlib
 geographiclib==2.1
     # via geopy
 geopy==2.4.1
-    # via -r requirements/base.in
+    # via -r base.in
 h3==4.3.1
     # via timezonefinder
 idna==3.11
@@ -51,9 +51,9 @@ iniconfig==2.3.0
 jplephem==2.23
     # via skyfield
 kaleido==1.1.0
-    # via -r requirements/base.in
+    # via -r base.in
 kerykeion==5.1.6
-    # via -r requirements/base.in
+    # via -r base.in
 kiwisolver==1.4.9
     # via matplotlib
 logistro==2.0.0
@@ -61,7 +61,7 @@ logistro==2.0.0
     #   choreographer
     #   kaleido
 matplotlib==3.10.7
-    # via -r requirements/base.in
+    # via -r base.in
 narwhals==2.10.0
     # via plotly
 numpy==2.3.4
@@ -83,19 +83,19 @@ packaging==25.0
     #   pytest
     #   wheel
 pandas==2.3.3
-    # via -r requirements/base.in
+    # via -r base.in
 pillow==12.0.0
     # via matplotlib
 pip-tools==7.5.1
-    # via -r requirements/base.in
+    # via -r base.in
 platformdirs==4.5.0
     # via requests-cache
 plotly==6.3.1
-    # via -r requirements/base.in
+    # via -r base.in
 pluggy==1.6.0
     # via pytest
 pyarrow==23.0.0
-    # via -r requirements/base.in
+    # via -r base.in
 pycparser==2.23
     # via cffi
 pydantic==2.12.3
@@ -125,7 +125,7 @@ pytz==2025.2
     #   kerykeion
     #   pandas
 pyyaml==6.0.3
-    # via -r requirements/base.in
+    # via -r base.in
 requests==2.32.5
     # via
     #   kerykeion
@@ -145,9 +145,9 @@ six==1.17.0
     #   python-dateutil
     #   scour
 skyfield==1.53
-    # via -r requirements/base.in
+    # via -r base.in
 timezonefinder==8.1.0
-    # via -r requirements/base.in
+    # via -r base.in
 typing-extensions==4.15.0
     # via
     #   cattrs
@@ -163,7 +163,7 @@ url-normalize==2.2.1
     # via requests-cache
 urllib3==2.6.3
     # via
-    #   -r requirements/base.in
+    #   -r base.in
     #   requests
     #   requests-cache
 wheel==0.46.3
