@@ -1,0 +1,1598 @@
+<!doctype html>
+
+
+
+
+
+
+
+<html
+  class="not-ready lg:text-base"
+  style="--bg:#faf8f1"
+  lang="en-us"
+  dir="ltr"
+><head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title> - Kefer Astrology Documentation</title>
+
+  
+  <meta name="theme-color" />
+
+  <meta name="description" content="FastAPI &#43; React &#43; Tauri Integration
+Overview
+This guide describes the recommended way to use the Python package in a desktop application built from:
+
+React (or Svelte) frontend
+FastAPI backend
+Tauri packaging
+
+The key idea is to treat the Python package as a reusable computation library, and to keep UI-specific modules optional.
+Recommended runtime flow:
+Tauri shell
+  -&gt; React frontend
+  -&gt; HTTP calls to FastAPI on localhost
+  -&gt; FastAPI calls module.services / module.workspace / module.storage
+Do not build the Tauri app around module/ui_streamlit.py or module/ui_kivy.py.
+Those files are alternative Python frontends, not the ideal integration surface for Tauri." />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://kefer-astrology.github.io/function-wrapper/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
+
+  
+  <link rel="preload" as="image" href="https://kefer-astrology.github.io/function-wrapper/theme.png" />
+
+  
+
+  
+
+  <script
+    defer
+    src="https://kefer-astrology.github.io/function-wrapper/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+
+  
+  <link
+    rel="icon"
+    href="https://kefer-astrology.github.io/function-wrapper/favicon.ico"
+  />
+  <link
+    rel="apple-touch-icon"
+    href="https://kefer-astrology.github.io/function-wrapper/apple-touch-icon.png"
+  />
+
+  <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="Kefer Astrology Documentation">
+  <meta itemprop="description" content="FastAPI &#43; React &#43; Tauri Integration Overview This guide describes the recommended way to use the Python package in a desktop application built from:
+React (or Svelte) frontend FastAPI backend Tauri packaging The key idea is to treat the Python package as a reusable computation library, and to keep UI-specific modules optional.
+Recommended runtime flow:
+Tauri shell -&gt; React frontend -&gt; HTTP calls to FastAPI on localhost -&gt; FastAPI calls module.services / module.workspace / module.storage Do not build the Tauri app around module/ui_streamlit.py or module/ui_kivy.py. Those files are alternative Python frontends, not the ideal integration surface for Tauri.">
+  <meta itemprop="wordCount" content="3193"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/fastapi_tauri/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="Kefer Astrology Documentation">
+  <meta property="og:description" content="FastAPI &#43; React &#43; Tauri Integration Overview This guide describes the recommended way to use the Python package in a desktop application built from:
+React (or Svelte) frontend FastAPI backend Tauri packaging The key idea is to treat the Python package as a reusable computation library, and to keep UI-specific modules optional.
+Recommended runtime flow:
+Tauri shell -&gt; React frontend -&gt; HTTP calls to FastAPI on localhost -&gt; FastAPI calls module.services / module.workspace / module.storage Do not build the Tauri app around module/ui_streamlit.py or module/ui_kivy.py. Those files are alternative Python frontends, not the ideal integration surface for Tauri.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Kefer Astrology Documentation">
+  <meta name="twitter:description" content="FastAPI &#43; React &#43; Tauri Integration Overview This guide describes the recommended way to use the Python package in a desktop application built from:
+React (or Svelte) frontend FastAPI backend Tauri packaging The key idea is to treat the Python package as a reusable computation library, and to keep UI-specific modules optional.
+Recommended runtime flow:
+Tauri shell -&gt; React frontend -&gt; HTTP calls to FastAPI on localhost -&gt; FastAPI calls module.services / module.workspace / module.storage Do not build the Tauri app around module/ui_streamlit.py or module/ui_kivy.py. Those files are alternative Python frontends, not the ideal integration surface for Tauri.">
+
+  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/fastapi_tauri/" />
+</head>
+<body
+    class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
+  >
+    
+<div class="sticky top-0 z-50 w-full border-b border-gray-700 shadow-sm backdrop-blur-sm" style="background-color: #1a1a1a !important; position: sticky; top: 0;">
+  <div class="mx-auto flex items-center px-8" style="max-width: 90% !important; gap: 2rem; min-height: 6rem; padding-top: 1.5rem; padding-bottom: 1.5rem;">
+    <div class="flex items-center" style="flex: 3;">
+      <a
+        class="text-2xl font-medium no-underline text-white"
+        href="https://kefer-astrology.github.io/function-wrapper/"
+        >Kefer Astrology Documentation</a
+      >
+      <div
+        class="btn-dark text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right] invert"
+        role="button"
+        aria-label="Dark"
+      ></div>
+    </div>
+    <div style="flex: 2;">
+<div class="relative">
+  <input 
+    type="text" 
+    id="search-input" 
+    placeholder="Search documentation..." 
+    class="w-full px-4 py-2 rounded-lg border text-sm"
+    style="background-color: #000000 !important; color: #b8860b !important; border-color: #b8860b !important;"
+  />
+  <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 hidden" style="background-color: #1a1a1a !important; border-color: #4a4a4a !important;"></div>
+</div>
+
+<style>
+  #search-input {
+    background-color: #000000 !important;
+    color: #b8860b !important;
+    border-color: #b8860b !important;
+  }
+  #search-input::placeholder {
+    color: #b8860b !important;
+    opacity: 0.7;
+  }
+  #search-input:focus {
+    border-color: #b8860b !important;
+    ring-color: #b8860b !important;
+  }
+</style>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  
+  if (!searchInput) return;
+  
+  
+  let globalSearchIndex = [];
+  const basePath = '\/';
+  const basePathNormalized = basePath.endsWith('/') && basePath.length > 1
+    ? basePath.slice(0, -1)
+    : basePath;
+  const indexUrl = basePathNormalized === '/' ? '/index.json' : basePathNormalized + '/index.json';
+  
+  
+  function buildSearchIndex() {
+    const allLinks = Array.from(document.querySelectorAll('a[href]'));
+    const indexMap = new Map();
+    
+    allLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      if (normalized && !normalized.includes('#') && !normalized.includes('http')) {
+        const title = link.textContent.trim();
+        if (title && !indexMap.has(normalized)) {
+          indexMap.set(normalized, {
+            title: title,
+            url: normalized,
+            keywords: (title + ' ' + normalized).toLowerCase()
+          });
+        }
+      }
+    });
+    
+    globalSearchIndex = Array.from(indexMap.values());
+  }
+
+  async function loadSearchIndex() {
+    try {
+      const response = await fetch(indexUrl, { cache: 'no-store' });
+      if (!response.ok) return;
+      const pages = await response.json();
+      if (!Array.isArray(pages)) return;
+      globalSearchIndex = pages.map(page => {
+        const title = (page.title || '').toString();
+        const url = (page.url || '').toString();
+        const content = (page.content || '').toString();
+        return {
+          title,
+          url,
+          content,
+          keywords: (title + ' ' + url + ' ' + content).toLowerCase()
+        };
+      });
+    } catch (err) {
+      
+    }
+  }
+  
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      buildSearchIndex();
+      loadSearchIndex();
+    });
+  } else {
+    buildSearchIndex();
+    loadSearchIndex();
+  }
+  
+  
+  function normalizeUrl(href) {
+    if (!href || href.startsWith('http') || href.startsWith('#')) {
+      return null;
+    }
+    let normalized = href.trim();
+    
+    
+    if (normalized.endsWith('.md')) {
+      normalized = normalized.slice(0, -3);
+    }
+    
+    
+    if (!normalized.startsWith('/')) {
+      
+      const currentPath = window.location.pathname;
+      
+      const relativePath = currentPath.startsWith(basePath) 
+        ? currentPath.slice(basePath.length) 
+        : currentPath;
+      
+      const currentDir = relativePath.split('/').slice(0, -1).filter(p => p).join('/');
+      
+      if (currentDir) {
+        normalized = '/' + currentDir + '/' + normalized;
+      } else {
+        normalized = '/' + normalized;
+      }
+    }
+    
+    
+    if (normalized.startsWith('/') && !normalized.startsWith(basePathNormalized)) {
+      normalized = basePathNormalized + normalized;
+    }
+    
+    
+    normalized = normalized.replace(/\/+/g, '/');
+    
+    
+    if (normalized !== basePathNormalized && normalized !== basePathNormalized + '/' && normalized.endsWith('/')) {
+      normalized = normalized.slice(0, -1);
+    }
+    
+    return normalized;
+  }
+
+  function buildSnippet(text, query) {
+    if (!text) return '';
+    const lower = text.toLowerCase();
+    const q = query.toLowerCase();
+    const index = lower.indexOf(q);
+    if (index < 0) {
+      return text.length > 160 ? text.slice(0, 160) + '...' : text;
+    }
+    const start = Math.max(0, index - 60);
+    const end = Math.min(text.length, index + q.length + 120);
+    const prefix = start > 0 ? '...' : '';
+    const suffix = end < text.length ? '...' : '';
+    return prefix + text.slice(start, end).trim() + suffix;
+  }
+  
+  
+  const pageIndex = new Map();
+  const allLinks = Array.from(document.querySelectorAll('a[href]'));
+  
+  allLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    const normalized = normalizeUrl(href);
+    if (normalized) {
+      const text = link.textContent.trim();
+      const linkText = text.toLowerCase();
+      
+      pageIndex.set(normalized, {
+        title: text || normalized.split('/').pop(),
+        searchText: linkText,
+        href: normalized
+      });
+    }
+  });
+  
+  
+  const currentPath = window.location.pathname;
+  pageIndex.set(currentPath, {
+    title: document.title || 'Current Page',
+    searchText: document.body.textContent.toLowerCase(),
+    href: currentPath
+  });
+  
+  
+  searchInput.addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 1) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+
+    if (globalSearchIndex.length > 0) {
+      const results = [];
+      const seenUrls = new Set();
+      const queryWords = query.split(' ').filter(w => w.length > 0);
+
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query)
+        );
+
+        if (matches && page.url && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title || page.url.split('/').pop(),
+            url: page.url,
+            text: buildSnippet(page.content || page.title || '', query),
+            priority: 0
+          });
+        }
+      });
+
+      if (results.length > 0) {
+        const resultsHtml = results.slice(0, 10).map((r, idx) => {
+          const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' +
+            r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' +
+            safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+        }).join('');
+
+        searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+
+        searchResults.querySelectorAll('.search-result-item').forEach(item => {
+          item.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+              window.location.href = url;
+            }
+          });
+        });
+
+        searchResults.classList.remove('hidden');
+      } else {
+        searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+        searchResults.classList.remove('hidden');
+      }
+      return;
+    }
+
+    const results = [];
+    
+    const queryWords = query.split(' ').filter(w => w.length > 0);
+    const seenUrls = new Set();
+    const seenResults = new Set(); 
+    
+    
+    if (globalSearchIndex.length > 0) {
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query) 
+        );
+        
+        if (matches && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title,
+            url: page.url,
+            text: page.title + ' - Documentation page (click to search this page)',
+            priority: 0 
+          });
+        }
+      });
+    }
+    
+    
+    pageIndex.forEach((pageInfo, url) => {
+      
+      const urlSegments = url.toLowerCase().split('/').filter(s => s.length > 0);
+      const searchableText = (pageInfo.searchText + ' ' + pageInfo.title.toLowerCase() + ' ' + urlSegments.join(' ')).toLowerCase();
+      
+      const matches = queryWords.every(word => 
+        searchableText.includes(word) || 
+        urlSegments.some(seg => seg.includes(word))
+      );
+      
+      if (matches && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        results.push({
+          title: pageInfo.title,
+          url: url,
+          text: pageInfo.title + ' - Documentation page',
+          priority: 1 
+        });
+      }
+    });
+    
+    
+    allLinks.forEach(link => {
+      const linkText = link.textContent.toLowerCase();
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      
+      if (normalized) {
+        
+        const urlSegments = normalized.toLowerCase().split('/').filter(s => s.length > 0);
+        const searchableText = (linkText + ' ' + urlSegments.join(' ')).toLowerCase();
+        
+        const matches = queryWords.every(word => 
+          searchableText.includes(word) || 
+          urlSegments.some(seg => seg.includes(word))
+        );
+        
+        if (matches && !seenUrls.has(normalized)) {
+          seenUrls.add(normalized);
+          results.push({
+            title: link.textContent.trim() || normalized.split('/').pop().replace(/-/g, ' '),
+            url: normalized,
+            text: link.textContent.trim() || 'Documentation page',
+            priority: 1 
+          });
+        }
+      }
+    });
+    
+    
+    
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, code, pre, dt, dd, td, th, strong, em, b').forEach(el => {
+      const text = el.textContent.toLowerCase();
+      
+      const matches = queryWords.length > 0 && (
+        queryWords.every(word => text.includes(word)) || 
+        text.includes(query) 
+      );
+      
+      if (matches && el.textContent.trim() && el.textContent.trim().length > 1) {
+        
+        let pageUrl = currentPath;
+        let pageTitle = document.title || 'Documentation';
+        
+        
+        const parent = el.closest('article, section, li, ul, ol, table, dl');
+        if (parent) {
+          const nearbyLink = parent.querySelector('a[href*="/auto/"], a[href*="/enums"], a[href*="/ui_"], a[href*="/models"]');
+          if (nearbyLink) {
+            const normalized = normalizeUrl(nearbyLink.getAttribute('href'));
+            if (normalized) {
+              pageUrl = normalized;
+              pageTitle = nearbyLink.textContent.trim() || pageTitle;
+            }
+          }
+        }
+        
+        
+        if (el.tagName && el.tagName.match(/^H[1-6]$/)) {
+          pageTitle = el.textContent.trim();
+        }
+        
+        
+        let snippet = el.textContent.trim();
+        if (snippet.length > 200) {
+          
+          const queryLower = query.toLowerCase();
+          const index = snippet.toLowerCase().indexOf(queryLower);
+          if (index > 0) {
+            const start = Math.max(0, index - 50);
+            snippet = '...' + snippet.substring(start, start + 150) + '...';
+          } else {
+            snippet = snippet.substring(0, 150) + '...';
+          }
+        }
+        
+        const resultKey = pageUrl + '|' + pageTitle;
+        
+        if (!seenResults.has(resultKey)) {
+          seenResults.add(resultKey);
+          results.push({
+            title: pageTitle,
+            url: pageUrl,
+            text: snippet,
+            priority: 2 
+          });
+        }
+      }
+    });
+    
+    
+    const bodyText = document.body.textContent.toLowerCase();
+    const bodyMatches = queryWords.length > 0 && (
+      queryWords.every(word => bodyText.includes(word)) || 
+      bodyText.includes(query) 
+    );
+    
+    if (bodyMatches) {
+      
+      const resultKey = currentPath + '|' + (document.title || 'Current Page');
+      if (!seenResults.has(resultKey)) {
+        seenResults.add(resultKey);
+        
+        const queryLower = query.toLowerCase();
+        const index = bodyText.indexOf(queryLower);
+        if (index >= 0) {
+          const fullText = document.body.textContent;
+          const snippetStart = Math.max(0, index - 100);
+          const snippetEnd = Math.min(fullText.length, index + query.length + 100);
+          const snippet = '...' + fullText.substring(snippetStart, snippetEnd).trim() + '...';
+          
+          results.push({
+            title: document.title || 'Current Page',
+            url: currentPath,
+            text: snippet,
+            priority: 3 
+          });
+        }
+      }
+    }
+    
+    
+    results.sort((a, b) => (a.priority || 2) - (b.priority || 2));
+    
+    
+    if (results.length > 0) {
+      const resultsHtml = results.slice(0, 10).map((r, idx) => {
+        
+        const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' + 
+          r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' + 
+          safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+      }).join('');
+      
+      searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+      
+      
+      searchResults.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.location.href = url;
+          }
+        });
+      });
+      
+      searchResults.classList.remove('hidden');
+    } else {
+      searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+      searchResults.classList.remove('hidden');
+    }
+  });
+  
+  
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      searchResults.classList.add('hidden');
+      searchInput.value = '';
+    }
+  });
+})();
+</script>
+</div>
+  </div>
+</div>
+
+<script>
+  
+  const htmlClass = document.documentElement.classList;
+  const btnDark = document.querySelector('.btn-dark');
+  if (btnDark) {
+    btnDark.addEventListener('click', () => {
+      const isDark = localStorage.getItem('dark') !== 'true';
+      localStorage.setItem('dark', isDark);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', isDark ? "rgb(0 0 0 / 85%)" : '#faf8f1');
+      }
+    });
+  }
+  
+  
+  const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  const darkVal = localStorage.getItem('dark');
+  if (darkVal === 'true' || (!darkVal && darkScheme.matches)) {
+    htmlClass.add('dark');
+  }
+</script>
+<main
+      class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
+      style="max-width: 90% !important;"
+    ><article class="pt-6">
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="fastapi--react--tauri-integration">FastAPI + React + Tauri Integration</h1>
+<h2 id="overview">Overview</h2>
+<p>This guide describes the recommended way to use the Python package in a desktop application built from:</p>
+<ul>
+<li>React (or Svelte) frontend</li>
+<li>FastAPI backend</li>
+<li>Tauri packaging</li>
+</ul>
+<p>The key idea is to treat the Python package as a reusable computation library, and to keep UI-specific modules optional.</p>
+<p>Recommended runtime flow:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Tauri shell
+</span></span><span style="display:flex;"><span>  -&gt; React frontend
+</span></span><span style="display:flex;"><span>  -&gt; HTTP calls to FastAPI on localhost
+</span></span><span style="display:flex;"><span>  -&gt; FastAPI calls module.services / module.workspace / module.storage
+</span></span></code></pre></div><p>Do not build the Tauri app around <code>module/ui_streamlit.py</code> or <code>module/ui_kivy.py</code>.
+Those files are alternative Python frontends, not the ideal integration surface for Tauri.</p>
+<h2 id="recommended-package-split">Recommended package split</h2>
+<p>Use the package in layers:</p>
+<ul>
+<li><code>module.models</code>
+<ul>
+<li>dataclasses and enums shared by the backend</li>
+</ul>
+</li>
+<li><code>module.services</code>
+<ul>
+<li>chart computation and domain logic</li>
+</ul>
+</li>
+<li><code>module.workspace</code>
+<ul>
+<li>workspace loading and saving</li>
+</ul>
+</li>
+<li><code>module.storage</code>
+<ul>
+<li>optional DuckDB and Parquet support</li>
+</ul>
+</li>
+<li><code>module.cli</code>
+<ul>
+<li>existing JSON command contract, useful as a reference</li>
+</ul>
+</li>
+<li><code>module.ui_*</code>
+<ul>
+<li>optional developer-facing UIs, not required by FastAPI or Tauri</li>
+</ul>
+</li>
+</ul>
+<p>For the target architecture, prefer:</p>
+<ul>
+<li>core package install for shared astrology logic</li>
+<li><code>api</code> extra for FastAPI</li>
+<li>optional <code>visuals</code> extra only if the backend needs Plotly/Matplotlib output</li>
+</ul>
+<h2 id="installation-options">Installation options</h2>
+<h3 id="lean-backend-for-tauri">Lean backend for Tauri</h3>
+<p>Install only the backend runtime:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install .
+</span></span><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>api<span style="color:#0550ae">]</span>
+</span></span></code></pre></div><p>This is the preferred setup when:</p>
+<ul>
+<li>React renders the UI</li>
+<li>FastAPI exposes JSON endpoints</li>
+<li>the backend does not need Streamlit or Kivy</li>
+</ul>
+<h3 id="backend-with-chart-rendering-support">Backend with chart rendering support</h3>
+<p>If the Python backend must generate Plotly figures or export images:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install .
+</span></span><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>api<span style="color:#0550ae">]</span>
+</span></span><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>visuals<span style="color:#0550ae">]</span>
+</span></span></code></pre></div><h3 id="optional-developer-uis">Optional developer UIs</h3>
+<p>Install only when those frontends are actually used:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>streamlit<span style="color:#0550ae">]</span>
+</span></span><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>kivy<span style="color:#0550ae">]</span>
+</span></span></code></pre></div><h2 id="why-this-split-matters">Why this split matters</h2>
+<p>The repository contains multiple frontend styles:</p>
+<ul>
+<li>Streamlit</li>
+<li>Kivy</li>
+<li>CLI/TUI</li>
+<li>sidecar-style JSON commands</li>
+</ul>
+<p>For a Tauri desktop app, shipping unnecessary frontend dependencies makes the Python environment larger and harder to maintain.</p>
+<p>In particular:</p>
+<ul>
+<li>Streamlit should not be required by the FastAPI sidecar</li>
+<li>Kivy should not be required by the FastAPI sidecar</li>
+<li>visualization libraries should be optional unless the backend renders charts itself</li>
+</ul>
+<h2 id="existing-integration-surface">Existing integration surface</h2>
+<p>The current repo already has a useful contract in <code>module.cli</code>.</p>
+<p>See:</p>
+<ul>
+<li><code>cli_reference.md</code></li>
+<li><code>module/cli.py</code></li>
+</ul>
+<p>That CLI already exposes sidecar-style operations such as:</p>
+<ul>
+<li><code>compute_chart</code></li>
+<li><code>compute_transit_series</code></li>
+<li><code>get_workspace_settings</code></li>
+<li><code>list_charts</code></li>
+<li><code>get_chart</code></li>
+</ul>
+<p>You can either:</p>
+<ol>
+<li>Keep using the CLI as a subprocess contract from Tauri, or</li>
+<li>Move that same contract behind FastAPI routes</li>
+</ol>
+<p>For new work, FastAPI is usually the cleaner option because it gives you:</p>
+<ul>
+<li>typed request and response models</li>
+<li>easier debugging</li>
+<li>better error handling</li>
+<li>simpler integration from React</li>
+<li>cleaner long-term API evolution</li>
+</ul>
+<h2 id="recommended-fastapi-structure">Recommended FastAPI structure</h2>
+<p>Create a dedicated API layer instead of putting HTTP concerns into <code>module.services</code>.</p>
+<p>Suggested layout:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>module/
+</span></span><span style="display:flex;"><span>  api/
+</span></span><span style="display:flex;"><span>    __init__.py
+</span></span><span style="display:flex;"><span>    app.py
+</span></span><span style="display:flex;"><span>    schemas.py
+</span></span><span style="display:flex;"><span>    routes/
+</span></span><span style="display:flex;"><span>      charts.py
+</span></span><span style="display:flex;"><span>      workspace.py
+</span></span><span style="display:flex;"><span>      transits.py
+</span></span></code></pre></div><p>Suggested responsibility split:</p>
+<ul>
+<li><code>module.services</code>
+<ul>
+<li>pure domain logic</li>
+</ul>
+</li>
+<li><code>module.workspace</code>
+<ul>
+<li>file and workspace orchestration</li>
+</ul>
+</li>
+<li><code>module.storage</code>
+<ul>
+<li>persistence concerns</li>
+</ul>
+</li>
+<li><code>module.api.schemas</code>
+<ul>
+<li>Pydantic request and response models</li>
+</ul>
+</li>
+<li><code>module.api.routes.*</code>
+<ul>
+<li>HTTP request parsing and response shaping</li>
+</ul>
+</li>
+</ul>
+<h2 id="example-fastapi-adapter">Example FastAPI adapter</h2>
+<p>Minimal example:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#cf222e">from</span> <span style="color:#24292e">fastapi</span> <span style="color:#cf222e">import</span> FastAPI<span style="color:#1f2328">,</span> HTTPException
+</span></span><span style="display:flex;"><span><span style="color:#cf222e">from</span> <span style="color:#24292e">pydantic</span> <span style="color:#cf222e">import</span> BaseModel
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#cf222e">from</span> <span style="color:#24292e">module.workspace</span> <span style="color:#cf222e">import</span> load_workspace
+</span></span><span style="display:flex;"><span><span style="color:#cf222e">from</span> <span style="color:#24292e">module.services</span> <span style="color:#cf222e">import</span> <span style="color:#1f2328">(</span>
+</span></span><span style="display:flex;"><span>    compute_positions_for_chart<span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    compute_aspects_for_chart<span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    find_chart_by_name_or_id<span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span><span style="color:#1f2328">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>app <span style="color:#0550ae">=</span> FastAPI<span style="color:#1f2328">()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#cf222e">class</span> <span style="color:#1f2328">ComputeChartRequest</span><span style="color:#1f2328">(</span>BaseModel<span style="color:#1f2328">):</span>
+</span></span><span style="display:flex;"><span>    workspace_path<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span>
+</span></span><span style="display:flex;"><span>    chart_id<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span>
+</span></span><span style="display:flex;"><span>    include_physical<span style="color:#1f2328">:</span> <span style="color:#6639ba">bool</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">False</span>
+</span></span><span style="display:flex;"><span>    include_topocentric<span style="color:#1f2328">:</span> <span style="color:#6639ba">bool</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">False</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#0550ae">@app.post</span><span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;/charts/compute&#34;</span><span style="color:#1f2328">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#cf222e">def</span> <span style="color:#6639ba">compute_chart</span><span style="color:#1f2328">(</span>payload<span style="color:#1f2328">:</span> ComputeChartRequest<span style="color:#1f2328">):</span>
+</span></span><span style="display:flex;"><span>    ws <span style="color:#0550ae">=</span> load_workspace<span style="color:#1f2328">(</span>payload<span style="color:#0550ae">.</span>workspace_path<span style="color:#1f2328">)</span>
+</span></span><span style="display:flex;"><span>    chart <span style="color:#0550ae">=</span> find_chart_by_name_or_id<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">,</span> payload<span style="color:#0550ae">.</span>chart_id<span style="color:#1f2328">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#cf222e">if</span> <span style="color:#0550ae">not</span> chart<span style="color:#1f2328">:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#cf222e">raise</span> HTTPException<span style="color:#1f2328">(</span>status_code<span style="color:#0550ae">=</span><span style="color:#0550ae">404</span><span style="color:#1f2328">,</span> detail<span style="color:#0550ae">=</span><span style="color:#0a3069">&#34;Chart not found&#34;</span><span style="color:#1f2328">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    positions <span style="color:#0550ae">=</span> compute_positions_for_chart<span style="color:#1f2328">(</span>
+</span></span><span style="display:flex;"><span>        chart<span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>        ws<span style="color:#0550ae">=</span>ws<span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>        include_physical<span style="color:#0550ae">=</span>payload<span style="color:#0550ae">.</span>include_physical<span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>        include_topocentric<span style="color:#0550ae">=</span>payload<span style="color:#0550ae">.</span>include_topocentric<span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#1f2328">)</span>
+</span></span><span style="display:flex;"><span>    aspects <span style="color:#0550ae">=</span> compute_aspects_for_chart<span style="color:#1f2328">(</span>chart<span style="color:#1f2328">,</span> ws<span style="color:#0550ae">=</span>ws<span style="color:#1f2328">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#cf222e">return</span> <span style="color:#1f2328">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0a3069">&#34;chart_id&#34;</span><span style="color:#1f2328">:</span> payload<span style="color:#0550ae">.</span>chart_id<span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0a3069">&#34;positions&#34;</span><span style="color:#1f2328">:</span> positions<span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#0a3069">&#34;aspects&#34;</span><span style="color:#1f2328">:</span> aspects<span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#1f2328">}</span>
+</span></span></code></pre></div><p>This keeps the package reusable while giving the React app a clean HTTP API.</p>
+<p>The repository now includes a scaffolded FastAPI adapter in:</p>
+<ul>
+<li><code>module/api/app.py</code></li>
+<li><code>module/api/schemas.py</code></li>
+<li><code>module/api/__main__.py</code></li>
+</ul>
+<p>Run it locally with:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>api<span style="color:#0550ae">]</span>
+</span></span><span style="display:flex;"><span>python -m module.api --host 127.0.0.1 --port <span style="color:#0550ae">8765</span> --reload
+</span></span></code></pre></div><p>Or:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make run-api
+</span></span></code></pre></div><h2 id="suggested-react-and-tauri-responsibilities">Suggested React and Tauri responsibilities</h2>
+<h3 id="react-frontend">React frontend</h3>
+<p>The React app should handle:</p>
+<ul>
+<li>routing</li>
+<li>forms</li>
+<li>state management</li>
+<li>chart selection</li>
+<li>API calls to FastAPI</li>
+<li>rendering backend results</li>
+</ul>
+<h3 id="tauri-shell">Tauri shell</h3>
+<p>Tauri should handle:</p>
+<ul>
+<li>packaging</li>
+<li>starting and stopping the FastAPI sidecar</li>
+<li>native file dialogs if needed</li>
+<li>desktop-only capabilities</li>
+</ul>
+<h2 id="connecting-the-pieces-together">Connecting the pieces together</h2>
+<p>The clean connection model is:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Tauri
+</span></span><span style="display:flex;"><span>  -&gt; starts Python sidecar
+</span></span><span style="display:flex;"><span>  -&gt; loads React frontend
+</span></span><span style="display:flex;"><span>  -&gt; React waits for GET /health
+</span></span><span style="display:flex;"><span>  -&gt; React calls FastAPI routes on localhost
+</span></span></code></pre></div><h3 id="step-1-start-the-backend-locally">Step 1: start the backend locally</h3>
+<p>During development, run:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>api<span style="color:#0550ae">]</span>
+</span></span><span style="display:flex;"><span>python -m module.api --host 127.0.0.1 --port <span style="color:#0550ae">8765</span> --reload
+</span></span></code></pre></div><h3 id="step-2-point-react-at-the-local-api">Step 2: point React at the local API</h3>
+<p>Use a frontend API base URL such as:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>http://127.0.0.1:8765
+</span></span></code></pre></div><p>Typical frontend calls:</p>
+<ul>
+<li><code>GET /health</code></li>
+<li><code>GET /workspace/settings?workspace_path=...</code></li>
+<li><code>GET /charts?workspace_path=...</code></li>
+<li><code>GET /charts/{chart_id}?workspace_path=...</code></li>
+<li><code>POST /charts/compute</code></li>
+<li><code>POST /transits/compute-series</code></li>
+</ul>
+<p>Example fetch:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#cf222e">const</span> <span style="color:#1f2328">API_BASE</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#34;http://127.0.0.1:8765&#34;</span><span style="color:#1f2328">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#cf222e">export</span> <span style="color:#cf222e">async</span> <span style="color:#cf222e">function</span> <span style="color:#1f2328">computeChart</span><span style="color:#1f2328">(</span><span style="color:#1f2328">workspacePath</span>: <span style="color:#cf222e">string</span><span style="color:#1f2328">,</span> <span style="color:#1f2328">chartId</span>: <span style="color:#cf222e">string</span><span style="color:#1f2328">)</span> <span style="color:#1f2328">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#cf222e">const</span> <span style="color:#1f2328">response</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">await</span> <span style="color:#1f2328">fetch</span><span style="color:#1f2328">(</span><span style="color:#0a3069">`</span><span style="color:#0a3069">${</span><span style="color:#1f2328">API_BASE</span><span style="color:#0a3069">}</span><span style="color:#0a3069">/charts/compute`</span><span style="color:#1f2328">,</span> <span style="color:#1f2328">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#1f2328">method</span><span style="color:#0550ae">:</span> <span style="color:#0a3069">&#34;POST&#34;</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#1f2328">headers</span><span style="color:#0550ae">:</span> <span style="color:#1f2328">{</span> <span style="color:#0a3069">&#34;Content-Type&#34;</span><span style="color:#0550ae">:</span> <span style="color:#0a3069">&#34;application/json&#34;</span> <span style="color:#1f2328">},</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#1f2328">body</span>: <span style="color:#cf222e">JSON.stringify</span><span style="color:#1f2328">({</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#1f2328">workspace_path</span>: <span style="color:#cf222e">workspacePath</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#1f2328">chart_id</span>: <span style="color:#cf222e">chartId</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#1f2328">include_physical</span>: <span style="color:#cf222e">false</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#1f2328">include_topocentric</span>: <span style="color:#cf222e">false</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#1f2328">store_in_db</span>: <span style="color:#cf222e">false</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#1f2328">}),</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#1f2328">});</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#cf222e">if</span> <span style="color:#1f2328">(</span><span style="color:#0550ae">!</span><span style="color:#1f2328">response</span><span style="color:#1f2328">.</span><span style="color:#1f2328">ok</span><span style="color:#1f2328">)</span> <span style="color:#1f2328">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#cf222e">throw</span> <span style="color:#cf222e">new</span> <span style="color:#6639ba">Error</span><span style="color:#1f2328">(</span><span style="color:#0a3069">`API error: </span><span style="color:#0a3069">${</span><span style="color:#1f2328">response</span><span style="color:#1f2328">.</span><span style="color:#1f2328">status</span><span style="color:#0a3069">}</span><span style="color:#0a3069">`</span><span style="color:#1f2328">);</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#1f2328">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#cf222e">return</span> <span style="color:#1f2328">response</span><span style="color:#1f2328">.</span><span style="color:#1f2328">json</span><span style="color:#1f2328">();</span>
+</span></span><span style="display:flex;"><span><span style="color:#1f2328">}</span>
+</span></span></code></pre></div><h3 id="step-3-let-tauri-launch-the-sidecar">Step 3: let Tauri launch the sidecar</h3>
+<p>In the packaged desktop app, Tauri should launch the bundled backend executable on startup.</p>
+<p>The frontend should not assume the backend is instantly ready.</p>
+<p>Recommended flow:</p>
+<ol>
+<li>Tauri starts the sidecar.</li>
+<li>React polls <code>GET /health</code>.</li>
+<li>When health is ready, the app unlocks the main UI.</li>
+</ol>
+<h3 id="step-4-keep-the-backend-address-configurable">Step 4: keep the backend address configurable</h3>
+<p>In development:</p>
+<ul>
+<li>use a fixed localhost URL such as <code>http://127.0.0.1:8765</code></li>
+</ul>
+<p>In production:</p>
+<ul>
+<li>keep the same default if possible</li>
+<li>or inject the backend URL into the frontend on startup</li>
+</ul>
+<h3 id="step-5-pass-workspace-paths-explicitly">Step 5: pass workspace paths explicitly</h3>
+<p>The current API scaffold keeps workspace selection explicit.</p>
+<p>That means React or Tauri should provide the <code>workspace_path</code> when calling endpoints that need it.</p>
+<p>This is a good starting point because it avoids hidden global backend state.</p>
+<h2 id="exact-tauri-integration-checklist">Exact Tauri integration checklist</h2>
+<p>Use this sequence when you open the Tauri project.</p>
+<h2 id="handoff-checklist-for-the-tauri-project">Handoff checklist for the Tauri project</h2>
+<p>Use one of these two handoff modes.</p>
+<h3 id="option-a-source-based-handoff">Option A: source-based handoff</h3>
+<p>Use this if the Tauri project or CI will build the Python sidecar itself.</p>
+<p>Pass these:</p>
+<ul>
+<li><code>module/</code></li>
+<li><code>pyproject.toml</code></li>
+<li><code>source/</code> if runtime assets such as ephemeris files are needed</li>
+<li>this document: <code>docs/site/content/fastapi_tauri.md</code></li>
+</ul>
+<p>Do not pass these:</p>
+<ul>
+<li><code>build/</code></li>
+<li><code>.venv-build/</code></li>
+<li>PyInstaller temporary caches</li>
+</ul>
+<p>Optional:</p>
+<ul>
+<li><code>kefer-backend.spec</code> if you want the Tauri project to reuse the same PyInstaller config</li>
+</ul>
+<h3 id="option-b-artifact-based-handoff">Option B: artifact-based handoff</h3>
+<p>Use this if the Python backend is built outside the Tauri project and Tauri only bundles the finished sidecar.</p>
+<p>Pass these:</p>
+<ul>
+<li><code>dist/kefer-backend</code> or <code>dist/kefer-backend.exe</code></li>
+<li>this document: <code>docs/site/content/fastapi_tauri.md</code></li>
+<li>runtime asset files if the backend expects them beside the executable</li>
+</ul>
+<p>Do not pass these:</p>
+<ul>
+<li><code>build/</code></li>
+<li><code>.venv-build/</code></li>
+<li>the full backend source tree, unless the Tauri project also needs to rebuild it</li>
+</ul>
+<h3 id="recommendation">Recommendation</h3>
+<p>If you want the cleanest Tauri repository, prefer:</p>
+<ul>
+<li>artifact-based handoff for packaging</li>
+<li>source-based handoff only if the Tauri repo is also responsible for backend builds</li>
+</ul>
+<p>That keeps the Tauri app smaller and avoids mixing Python build machinery into the frontend project unless you really want one repository to own everything.</p>
+<h2 id="recommended-folder-strategy">Recommended folder strategy</h2>
+<p>You do not need to flatten everything into one folder.</p>
+<p>In fact, that usually becomes harder to maintain.</p>
+<p>The cleaner approach is to keep clear boundaries inside the Tauri repository.</p>
+<p>Suggested shape:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>tauri-app/
+</span></span><span style="display:flex;"><span>  frontend/
+</span></span><span style="display:flex;"><span>  src-tauri/
+</span></span><span style="display:flex;"><span>  backend-python/
+</span></span><span style="display:flex;"><span>    module/
+</span></span><span style="display:flex;"><span>    pyproject.toml
+</span></span><span style="display:flex;"><span>    source/
+</span></span></code></pre></div><p>Or, if the backend is only consumed as a built artifact:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>tauri-app/
+</span></span><span style="display:flex;"><span>  frontend/
+</span></span><span style="display:flex;"><span>  src-tauri/
+</span></span><span style="display:flex;"><span>    binaries/
+</span></span><span style="display:flex;"><span>      kefer-backend-...
+</span></span></code></pre></div><h3 id="when-to-keep-a-separate-backend-folder">When to keep a separate backend folder</h3>
+<p>Prefer a separate backend folder when:</p>
+<ul>
+<li>Python is still evolving</li>
+<li>you want backend builds in CI</li>
+<li>you want to keep Python dependencies isolated</li>
+<li>you do not want Tauri frontend folders cluttered with Python files</li>
+</ul>
+<h3 id="when-artifact-only-is-better">When artifact-only is better</h3>
+<p>Prefer artifact-only handoff when:</p>
+<ul>
+<li>the backend is built elsewhere</li>
+<li>the Tauri project should stay mostly frontend plus Rust</li>
+<li>you want the smallest possible mental overhead in the Tauri repo</li>
+</ul>
+<h3 id="recommendation-for-you">Recommendation for you</h3>
+<p>Based on your concern about clutter, I would not merge everything into one giant folder.</p>
+<p>I would use one of these:</p>
+<ol>
+<li>a dedicated <code>backend-python/</code> folder inside the Tauri repo</li>
+<li>no backend source in the Tauri repo at all, only the packaged sidecar in <code>src-tauri/binaries/</code></li>
+</ol>
+<p>Both are cleaner than flattening the whole Python project into the Tauri app root.</p>
+<h2 id="recommended-tauri-repo-layout">Recommended Tauri repo layout</h2>
+<p>If you plan to pass the backend source and sort it out inside the Tauri project, this is the layout I recommend.</p>
+<h3 id="option-1-keep-backend-source-in-the-tauri-repo">Option 1: keep backend source in the Tauri repo</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>tauri-app/
+</span></span><span style="display:flex;"><span>  frontend/
+</span></span><span style="display:flex;"><span>    src/
+</span></span><span style="display:flex;"><span>    package.json
+</span></span><span style="display:flex;"><span>    vite.config.ts
+</span></span><span style="display:flex;"><span>  src-tauri/
+</span></span><span style="display:flex;"><span>    Cargo.toml
+</span></span><span style="display:flex;"><span>    tauri.conf.json
+</span></span><span style="display:flex;"><span>    binaries/
+</span></span><span style="display:flex;"><span>  backend-python/
+</span></span><span style="display:flex;"><span>    module/
+</span></span><span style="display:flex;"><span>    source/
+</span></span><span style="display:flex;"><span>    pyproject.toml
+</span></span><span style="display:flex;"><span>    Makefile
+</span></span><span style="display:flex;"><span>    docs/
+</span></span></code></pre></div><p>Why this is good:</p>
+<ul>
+<li>frontend stays frontend</li>
+<li>Rust and Tauri stay in <code>src-tauri/</code></li>
+<li>Python stays isolated in <code>backend-python/</code></li>
+<li>CI can build the sidecar from <code>backend-python/</code> and copy the result into <code>src-tauri/binaries/</code></li>
+</ul>
+<h3 id="option-2-keep-only-built-backend-artifacts-in-the-tauri-repo">Option 2: keep only built backend artifacts in the Tauri repo</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>tauri-app/
+</span></span><span style="display:flex;"><span>  frontend/
+</span></span><span style="display:flex;"><span>    src/
+</span></span><span style="display:flex;"><span>    package.json
+</span></span><span style="display:flex;"><span>  src-tauri/
+</span></span><span style="display:flex;"><span>    Cargo.toml
+</span></span><span style="display:flex;"><span>    tauri.conf.json
+</span></span><span style="display:flex;"><span>    binaries/
+</span></span><span style="display:flex;"><span>      kefer-backend-x86_64-pc-windows-msvc.exe
+</span></span><span style="display:flex;"><span>      kefer-backend-x86_64-unknown-linux-gnu
+</span></span><span style="display:flex;"><span>      kefer-backend-aarch64-apple-darwin
+</span></span><span style="display:flex;"><span>      kefer-backend-x86_64-apple-darwin
+</span></span><span style="display:flex;"><span>  docs/
+</span></span><span style="display:flex;"><span>    backend-handoff.md
+</span></span></code></pre></div><p>Why this is good:</p>
+<ul>
+<li>smallest Tauri repo footprint</li>
+<li>no Python build tooling mixed into the desktop app</li>
+<li>Tauri only bundles and launches the sidecar</li>
+</ul>
+<h3 id="which-option-i-recommend">Which option I recommend</h3>
+<p>If you are still actively changing the Python backend:</p>
+<ul>
+<li>use Option 1 first</li>
+</ul>
+<p>If the backend becomes stable or is built in separate CI:</p>
+<ul>
+<li>move toward Option 2</li>
+</ul>
+<h3 id="what-i-would-do-in-your-place">What I would do in your place</h3>
+<p>For now, since you plan to pass all of these things to the Tauri project:</p>
+<ol>
+<li>create <code>backend-python/</code></li>
+<li>put <code>module/</code>, <code>source/</code>, <code>pyproject.toml</code>, <code>Makefile</code>, and this doc there</li>
+<li>build the sidecar from <code>backend-python/</code></li>
+<li>copy the built executable into <code>src-tauri/binaries/</code></li>
+<li>let Tauri bundle only the executable, not the whole Python folder</li>
+</ol>
+<p>That gives you a clean transition path:</p>
+<ul>
+<li>easy to work on now</li>
+<li>easy to slim down later</li>
+</ul>
+<h3 id="files-to-ignore-in-the-tauri-project">Files to ignore in the Tauri project</h3>
+<p>Even if you pass everything over initially, I recommend not keeping these in the long-term packaged project:</p>
+<ul>
+<li><code>backend-python/build/</code></li>
+<li><code>backend-python/dist/</code> except for the final sidecar you actually bundle</li>
+<li><code>backend-python/.venv-build/</code></li>
+<li>any temporary PyInstaller cache directories</li>
+</ul>
+<h3 id="minimal-copy-set-into-backend-python">Minimal copy set into <code>backend-python/</code></h3>
+<p>Best practical handoff:</p>
+<ul>
+<li><code>module/</code></li>
+<li><code>source/</code></li>
+<li><code>pyproject.toml</code></li>
+<li><code>Makefile</code></li>
+<li><code>docs/site/content/fastapi_tauri.md</code></li>
+</ul>
+<p>Optional:</p>
+<ul>
+<li><code>kefer-backend.spec</code></li>
+</ul>
+<h3 id="step-1-copy-or-add-the-python-backend-package">Step 1: copy or add the Python backend package</h3>
+<p>Make sure the Tauri app can build this Python project as part of the desktop build.</p>
+<p>You need these pieces available to the desktop app build:</p>
+<ul>
+<li><code>module/</code></li>
+<li><code>pyproject.toml</code></li>
+<li><code>source/</code> if ephemeris assets are needed at runtime</li>
+<li>any workspace/example data you want to ship</li>
+</ul>
+<p>If the Tauri app lives in a different repository, either:</p>
+<ul>
+<li>include this repo as a submodule, or</li>
+<li>copy the backend into a dedicated <code>backend/</code> folder, or</li>
+<li>publish the backend package and install it during CI</li>
+</ul>
+<h3 id="step-2-create-a-backend-build-environment">Step 2: create a backend build environment</h3>
+<p>For local development:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m venv .venv-build
+</span></span><span style="display:flex;"><span>.venv-build/bin/python -m pip install --upgrade pip
+</span></span><span style="display:flex;"><span>.venv-build/bin/python -m pip install -e <span style="color:#0a3069">&#34;.[api]&#34;</span> pyinstaller
+</span></span></code></pre></div><p>On Windows, use:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>python -m venv <span style="color:#1f2328">.</span><span style="color:#6639ba">venv-build</span>
+</span></span><span style="display:flex;"><span><span style="color:#1f2328">.</span><span style="color:#6639ba">venv-build</span><span style="color:#1f2328">\</span>Scripts<span style="color:#1f2328">\</span>python -m pip install <span style="color:#1f2328">-</span>-upgrade pip
+</span></span><span style="display:flex;"><span><span style="color:#1f2328">.</span><span style="color:#6639ba">venv-build</span><span style="color:#1f2328">\</span>Scripts<span style="color:#1f2328">\</span>python -m pip install -e <span style="color:#0a3069">&#34;.[api]&#34;</span> pyinstaller
+</span></span></code></pre></div><h3 id="step-3-verify-the-backend-runs-before-packaging">Step 3: verify the backend runs before packaging</h3>
+<p>Run the backend directly first:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>.venv-build/bin/python -m module.api --host 127.0.0.1 --port <span style="color:#0550ae">8765</span>
+</span></span></code></pre></div><p>Check:</p>
+<ul>
+<li><code>http://127.0.0.1:8765/health</code></li>
+<li><code>http://127.0.0.1:8765/docs</code></li>
+</ul>
+<p>Do this before touching Tauri packaging.</p>
+<h3 id="step-4-build-a-backend-sidecar-executable">Step 4: build a backend sidecar executable</h3>
+<p>Start with PyInstaller.</p>
+<p>Example command on Linux or macOS:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>.venv-build/bin/pyinstaller <span style="color:#0a3069">\
+</span></span></span><span style="display:flex;"><span>  --name kefer-backend <span style="color:#0a3069">\
+</span></span></span><span style="display:flex;"><span>  --onefile <span style="color:#0a3069">\
+</span></span></span><span style="display:flex;"><span>  --collect-all kerykeion <span style="color:#0a3069">\
+</span></span></span><span style="display:flex;"><span>  --hidden-import module.api.app <span style="color:#0a3069">\
+</span></span></span><span style="display:flex;"><span>  --hidden-import module.api.schemas <span style="color:#0a3069">\
+</span></span></span><span style="display:flex;"><span>  -m module.api
+</span></span></code></pre></div><p>On Windows:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span><span style="color:#1f2328">.</span><span style="color:#6639ba">venv-build</span><span style="color:#1f2328">\</span>Scripts<span style="color:#1f2328">\</span>pyinstaller <span style="color:#1f2328">`</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#1f2328">-</span>-name <span style="color:#6639ba">kefer-backend</span> <span style="color:#1f2328">`</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#1f2328">-</span>-onefile <span style="color:#1f2328">`</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#1f2328">-</span>-collect-all kerykeion <span style="color:#1f2328">`</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#1f2328">-</span>-hidden-import module<span style="color:#1f2328">.</span>api<span style="color:#1f2328">.</span>app <span style="color:#1f2328">`</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#1f2328">-</span>-hidden-import module<span style="color:#1f2328">.</span>api<span style="color:#1f2328">.</span>schemas <span style="color:#1f2328">`</span>
+</span></span><span style="display:flex;"><span>  -m module<span style="color:#1f2328">.</span>api
+</span></span></code></pre></div><p>Expected output:</p>
+<ul>
+<li><code>dist/kefer-backend</code> on Linux or macOS</li>
+<li><code>dist/kefer-backend.exe</code> on Windows</li>
+</ul>
+<h3 id="step-5-add-the-sidecar-binary-to-the-tauri-project">Step 5: add the sidecar binary to the Tauri project</h3>
+<p>Inside the Tauri project, place the built backend into the sidecar/binaries area used by Tauri.</p>
+<p>Typical layout:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>src-tauri/
+</span></span><span style="display:flex;"><span>  binaries/
+</span></span><span style="display:flex;"><span>    kefer-backend-x86_64-pc-windows-msvc.exe
+</span></span><span style="display:flex;"><span>    kefer-backend-x86_64-unknown-linux-gnu
+</span></span><span style="display:flex;"><span>    kefer-backend-aarch64-apple-darwin
+</span></span><span style="display:flex;"><span>    kefer-backend-x86_64-apple-darwin
+</span></span></code></pre></div><p>The exact file names depend on your Tauri target configuration, but the important part is:</p>
+<ul>
+<li>one backend executable per platform target</li>
+<li>copied into the Tauri packaging inputs before the app build runs</li>
+</ul>
+<h3 id="step-6-start-the-sidecar-from-tauri">Step 6: start the sidecar from Tauri</h3>
+<p>In the Tauri app:</p>
+<ul>
+<li>start the sidecar on app startup</li>
+<li>pass <code>--host 127.0.0.1 --port 8765</code></li>
+<li>capture stdout and stderr for debugging</li>
+</ul>
+<p>The Tauri side should:</p>
+<ol>
+<li>launch the bundled <code>kefer-backend</code></li>
+<li>wait until <code>GET /health</code> returns success</li>
+<li>then allow the React app to use the backend</li>
+</ol>
+<h3 id="step-7-point-react-to-the-local-api">Step 7: point React to the local API</h3>
+<p>In the React app, use:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>http://127.0.0.1:8765
+</span></span></code></pre></div><p>Recommended pattern:</p>
+<ul>
+<li>centralize the base URL in one API client module</li>
+<li>wait for backend readiness before loading workspace-dependent screens</li>
+<li>show a loading or recovery state if the sidecar fails to start</li>
+</ul>
+<h3 id="step-8-wire-workspace-selection">Step 8: wire workspace selection</h3>
+<p>Because the scaffolded backend is stateless with respect to workspace selection, React or Tauri must provide:</p>
+<ul>
+<li>a workspace file path</li>
+</ul>
+<p>Good first implementation:</p>
+<ol>
+<li>use a Tauri file dialog to select <code>workspace.yaml</code></li>
+<li>store that path in frontend state</li>
+<li>send it on every API request that needs it</li>
+</ol>
+<h3 id="step-9-package-the-desktop-installers">Step 9: package the desktop installers</h3>
+<p>After the sidecar is wired in, build Tauri normally for each platform.</p>
+<p>Expected final artifacts:</p>
+<ul>
+<li>Windows <code>.msi</code> or <code>.exe</code></li>
+<li>Linux <code>.AppImage</code></li>
+<li>macOS <code>.dmg</code></li>
+</ul>
+<p>Each installer should already contain the backend sidecar.</p>
+<h3 id="step-10-ci-artifact-strategy">Step 10: CI artifact strategy</h3>
+<p>Recommended CI pipeline:</p>
+<ol>
+<li>build backend sidecar per platform</li>
+<li>upload sidecar binaries as CI artifacts</li>
+<li>build Tauri installers using those sidecars</li>
+<li>upload installers as release artifacts</li>
+</ol>
+<p>This gives you both:</p>
+<ul>
+<li>backend artifacts for debugging</li>
+<li>final app artifacts for users</li>
+</ul>
+<h3 id="fastapi-backend">FastAPI backend</h3>
+<p>FastAPI should handle:</p>
+<ul>
+<li>workspace loading</li>
+<li>chart computation</li>
+<li>transit computation</li>
+<li>persistence requests</li>
+<li>normalization of Python exceptions into stable API responses</li>
+</ul>
+<h2 id="suggested-endpoint-groups">Suggested endpoint groups</h2>
+<p>Useful endpoint groups for this project:</p>
+<ul>
+<li><code>GET /health</code></li>
+<li><code>GET /workspace/settings</code></li>
+<li><code>GET /charts</code></li>
+<li><code>GET /charts/{chart_id}</code></li>
+<li><code>POST /charts/compute</code></li>
+<li><code>POST /transits/compute-series</code></li>
+<li><code>POST /storage/export-parquet</code></li>
+</ul>
+<p>These map naturally to the existing logic in <code>module.cli</code>.</p>
+<p>Current scaffolded routes:</p>
+<ul>
+<li><code>GET /health</code></li>
+<li><code>GET /workspace/settings</code></li>
+<li><code>GET /charts</code></li>
+<li><code>GET /charts/{chart_id}</code></li>
+<li><code>POST /charts/compute</code></li>
+<li><code>POST /transits/compute-series</code></li>
+<li><code>POST /workspace/sync</code></li>
+<li><code>POST /storage/export-parquet</code></li>
+</ul>
+<h2 id="data-model-guidance">Data model guidance</h2>
+<p>Avoid returning internal dataclasses directly over HTTP.</p>
+<p>Instead:</p>
+<ul>
+<li>keep dataclasses in <code>module.models</code></li>
+<li>map them to Pydantic schemas in <code>module.api.schemas</code></li>
+<li>use JSON-friendly response shapes</li>
+</ul>
+<p>This helps with:</p>
+<ul>
+<li>versioning</li>
+<li>frontend stability</li>
+<li>better OpenAPI docs</li>
+<li>clearer validation errors</li>
+</ul>
+<h2 id="what-to-keep-out-of-the-backend-core">What to keep out of the backend core</h2>
+<p>Do not make the core computation modules depend on:</p>
+<ul>
+<li>Streamlit</li>
+<li>Kivy</li>
+<li>Tauri-specific code</li>
+<li>frontend rendering details</li>
+</ul>
+<p>If you need chart visualization, keep it behind an optional boundary.</p>
+<p>For example:</p>
+<ul>
+<li>pure position/aspect computation stays in <code>services</code></li>
+<li>Plotly figure creation stays optional</li>
+<li>UI presentation logic stays in React or separate Python UI modules</li>
+</ul>
+<h2 id="cli-vs-fastapi">CLI vs FastAPI</h2>
+<p>Both are valid, but they serve different goals.</p>
+<h3 id="use-cli-when">Use CLI when</h3>
+<ul>
+<li>you want the fastest possible integration</li>
+<li>Tauri launches Python subprocesses directly</li>
+<li>request volume is small</li>
+</ul>
+<h3 id="use-fastapi-when">Use FastAPI when</h3>
+<ul>
+<li>you want a stable backend contract</li>
+<li>React should call normal HTTP endpoints</li>
+<li>you expect the integration to grow</li>
+<li>you want easier debugging and testing</li>
+</ul>
+<p>For this project, FastAPI is the better long-term fit.</p>
+<h2 id="migration-path-from-current-repo">Migration path from current repo</h2>
+<p>Recommended path:</p>
+<ol>
+<li>Keep <code>module.services</code>, <code>module.workspace</code>, and <code>module.storage</code> as the core.</li>
+<li>Treat <code>module.cli</code> as the source contract for the first API routes.</li>
+<li>Add <code>module/api/</code> with Pydantic schemas and FastAPI routes.</li>
+<li>Keep <code>module/ui_streamlit.py</code> and <code>module/ui_kivy.py</code> as optional tools for manual testing or demos.</li>
+<li>Let Tauri start the FastAPI sidecar and point the React app at it.</li>
+</ol>
+<h2 id="bundling-python-into-the-tauri-app">Bundling Python into the Tauri app</h2>
+<p>For shipped desktop builds, do not depend on a user-installed Python.</p>
+<p>Instead, bundle the backend privately inside the application package.</p>
+<p>There are two main approaches.</p>
+<h3 id="option-a-bundle-a-python-runtime">Option A: bundle a Python runtime</h3>
+<p>In this approach, the packaged app contains:</p>
+<ul>
+<li>a Python interpreter</li>
+<li>your installed package</li>
+<li>your dependencies</li>
+<li>a small startup command such as <code>python -m module.api.app</code></li>
+</ul>
+<p>This works, but it is usually more operationally complex because you need to assemble a platform-specific embedded runtime for:</p>
+<ul>
+<li>Windows</li>
+<li>macOS</li>
+<li>Linux</li>
+</ul>
+<p>It is better than requiring a system Python, but it is not the simplest Tauri integration path.</p>
+<h3 id="option-b-freeze-the-python-backend-into-a-standalone-executable">Option B: freeze the Python backend into a standalone executable</h3>
+<p>In this approach, you build the backend into a self-contained binary with a tool such as:</p>
+<ul>
+<li>PyInstaller</li>
+<li>Nuitka</li>
+</ul>
+<p>Tauri then ships that backend binary as a sidecar and starts it on launch.</p>
+<p>For this project, this is the recommended approach.</p>
+<p>Benefits:</p>
+<ul>
+<li>no dependency on system Python</li>
+<li>simpler installer behavior</li>
+<li>easier Tauri integration</li>
+<li>cleaner artifact story in CI</li>
+</ul>
+<h2 id="recommended-approach-for-this-repository">Recommended approach for this repository</h2>
+<p>The most practical packaging model here is:</p>
+<ul>
+<li>React frontend inside Tauri</li>
+<li>FastAPI backend as a sidecar executable</li>
+<li>Python package kept normal during development</li>
+<li>frozen backend executable produced per platform during release builds</li>
+</ul>
+<p>In development, use <code>venv</code>.</p>
+<p>In release packaging, do not ship the development virtual environment directly.</p>
+<h2 id="why-not-ship-the-raw-virtualenv">Why not ship the raw virtualenv</h2>
+<p>A virtual environment is mainly a development convenience.</p>
+<p>It is not the best final artifact because:</p>
+<ul>
+<li>it is platform-specific</li>
+<li>it often contains unnecessary development files</li>
+<li>paths inside it can be brittle</li>
+<li>copying it between machines is unreliable</li>
+<li>it usually produces a messier installer than a real sidecar binary</li>
+</ul>
+<p>So the typical workflow is:</p>
+<ol>
+<li>develop in a <code>venv</code></li>
+<li>build a frozen backend executable for each platform</li>
+<li>let Tauri bundle that executable into the final installer</li>
+</ol>
+<h2 id="suggested-build-artifacts">Suggested build artifacts</h2>
+<p>You will usually end up with two layers of artifacts.</p>
+<h3 id="backend-artifacts">Backend artifacts</h3>
+<p>These are produced first, one per platform:</p>
+<ul>
+<li><code>backend-windows-x64.zip</code>
+<ul>
+<li>contains <code>kefer-backend.exe</code></li>
+</ul>
+</li>
+<li><code>backend-linux-x64.tar.gz</code>
+<ul>
+<li>contains <code>kefer-backend</code></li>
+</ul>
+</li>
+<li><code>backend-macos-x64.tar.gz</code>
+<ul>
+<li>contains <code>kefer-backend</code></li>
+</ul>
+</li>
+<li><code>backend-macos-aarch64.tar.gz</code>
+<ul>
+<li>contains <code>kefer-backend</code></li>
+</ul>
+</li>
+</ul>
+<p>These are CI-friendly artifacts and can be reused by the desktop packaging job.</p>
+<h3 id="desktop-installer-artifacts">Desktop installer artifacts</h3>
+<p>These are the final Tauri deliverables:</p>
+<ul>
+<li>Windows: <code>.msi</code> and/or <code>.exe</code></li>
+<li>Linux: <code>.AppImage</code> and optionally <code>.deb</code></li>
+<li>macOS: <code>.dmg</code></li>
+</ul>
+<p>These final installers should already contain the backend sidecar.</p>
+<h2 id="suggested-ci-flow">Suggested CI flow</h2>
+<p>Recommended release pipeline:</p>
+<ol>
+<li>Build frontend assets.</li>
+<li>Build Python backend sidecar for each target platform.</li>
+<li>Upload backend sidecars as CI artifacts.</li>
+<li>Build Tauri app for each target platform.</li>
+<li>Bundle the matching backend sidecar into the Tauri package.</li>
+<li>Upload final installers as release artifacts.</li>
+</ol>
+<p>This is a good fit if you want &ldquo;artifacts will be available as artifacts&rdquo; in CI, because it gives you:</p>
+<ul>
+<li>intermediate backend artifacts for debugging</li>
+<li>final installer artifacts for users</li>
+</ul>
+<h2 id="suggested-repository-layout-for-packaging">Suggested repository layout for packaging</h2>
+<p>Once you add the Tauri app, a practical structure looks like this:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>function-wrapper/
+</span></span><span style="display:flex;"><span>  module/
+</span></span><span style="display:flex;"><span>  frontend/
+</span></span><span style="display:flex;"><span>  src-tauri/
+</span></span><span style="display:flex;"><span>    tauri.conf.json
+</span></span><span style="display:flex;"><span>    Cargo.toml
+</span></span><span style="display:flex;"><span>    binaries/
+</span></span><span style="display:flex;"><span>      kefer-backend-x86_64-pc-windows-msvc.exe
+</span></span><span style="display:flex;"><span>      kefer-backend-x86_64-unknown-linux-gnu
+</span></span><span style="display:flex;"><span>      kefer-backend-aarch64-apple-darwin
+</span></span><span style="display:flex;"><span>      kefer-backend-x86_64-apple-darwin
+</span></span></code></pre></div><p>The exact sidecar naming depends on the Tauri version and configuration, but the main idea is the same:</p>
+<ul>
+<li>one backend binary per target</li>
+<li>checked into build outputs or copied there during CI</li>
+<li>bundled by Tauri into the final installer</li>
+</ul>
+<h2 id="runtime-behavior-inside-the-packaged-app">Runtime behavior inside the packaged app</h2>
+<p>At runtime:</p>
+<ol>
+<li>Tauri launches the bundled backend sidecar.</li>
+<li>The backend starts FastAPI on <code>127.0.0.1</code> and a fixed or negotiated port.</li>
+<li>React calls the local HTTP API.</li>
+<li>On app exit, Tauri stops the sidecar.</li>
+</ol>
+<p>Good practice:</p>
+<ul>
+<li>wait for backend readiness before loading API-dependent screens</li>
+<li>expose a small <code>GET /health</code> endpoint</li>
+<li>log sidecar startup failures clearly</li>
+</ul>
+<h2 id="backend-entrypoint-recommendation">Backend entrypoint recommendation</h2>
+<p>Create a tiny dedicated backend entrypoint for packaging.</p>
+<p>For example:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>module/
+</span></span><span style="display:flex;"><span>  api/
+</span></span><span style="display:flex;"><span>    app.py
+</span></span><span style="display:flex;"><span>    __main__.py
+</span></span></code></pre></div><p>That entrypoint should do one job:</p>
+<ul>
+<li>start the FastAPI app with the correct host and port</li>
+</ul>
+<p>Keep packaging logic outside the domain modules.</p>
+<p>This repository now provides that entrypoint through:</p>
+<ul>
+<li><code>python -m module.api</code></li>
+<li><code>kefer-api</code></li>
+</ul>
+<h2 id="tooling-recommendation">Tooling recommendation</h2>
+<p>For this repository, start with:</p>
+<ul>
+<li>FastAPI + Uvicorn for the backend</li>
+<li>PyInstaller for the first packaged sidecar</li>
+<li>Tauri sidecar bundling for the desktop app</li>
+</ul>
+<p>PyInstaller is not perfect, but it is usually the fastest way to get to real artifacts.</p>
+<p>If startup speed or binary size later becomes a problem, evaluate Nuitka after the integration is already working.</p>
+<h2 id="practical-release-plan">Practical release plan</h2>
+<p>The simplest path to production-like artifacts is:</p>
+<ol>
+<li>Add <code>module/api/app.py</code></li>
+<li>Add a minimal backend launcher</li>
+<li>Build that backend with PyInstaller for each target platform</li>
+<li>Add the Tauri app and configure it to start the sidecar</li>
+<li>Produce installer artifacts per platform</li>
+</ol>
+<p>That gets you to:</p>
+<ul>
+<li>reusable Python package in development</li>
+<li>private bundled backend in release builds</li>
+<li>downloadable CI artifacts for both sidecars and installers</li>
+</ul>
+<h2 id="practical-recommendation">Practical recommendation</h2>
+<p>If you are building the new application now, the most maintainable setup is:</p>
+<ul>
+<li>Python package for business logic</li>
+<li>FastAPI as the backend adapter</li>
+<li>React as the only application UI</li>
+<li>Tauri as the desktop shell</li>
+</ul>
+<p>That gives you one real UI, one real backend contract, and keeps the old Python UI modules optional instead of foundational.</p>
+</section>
+  
+  <style>
+     
+    .prose {
+      color: #374151 !important;  
+    }
+    .prose p, .prose li, .prose td, .prose th {
+      color: #4b5563 !important;  
+    }
+    .prose h1 {
+      font-size: 2.5rem !important;
+      font-weight: 700 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.5rem;
+      color: #111827 !important;  
+    }
+    .prose h2 {
+      font-size: 2rem !important;
+      font-weight: 600 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 0.25rem;
+      color: #1f2937 !important;  
+    }
+    .prose h3 {
+      font-size: 1.5rem !important;
+      font-weight: 600 !important;
+      margin-top: 1.5rem !important;
+      margin-bottom: 0.75rem !important;
+      color: #374151 !important;  
+    }
+    .prose a {
+      color: #2563eb !important;  
+    }
+    .prose a:hover {
+      color: #1d4ed8 !important;  
+    }
+    .dark .prose {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose p, .dark .prose li, .dark .prose td, .dark .prose th {
+      color: #d1d5db !important;  
+    }
+    .dark .prose h1 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      color: #f9fafb !important;  
+    }
+    .dark .prose h2 {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      color: #f3f4f6 !important;  
+    }
+    .dark .prose h3 {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose a {
+      color: #60a5fa !important;  
+    }
+     
+    .prose h4 {
+      color: #b8860b !important;  
+    }
+    .prose ul li strong,
+    .prose ol li strong {
+      color: #b8860b !important;  
+    }
+    .dark .prose h4 {
+      color: #b8860b !important;  
+    }
+    .dark .prose ul li strong,
+    .dark .prose ol li strong {
+      color: #b8860b !important;  
+    }
+     
+    .prose code {
+      color: #92400e !important;  
+      background-color: #fef3c7 !important;  
+    }
+    .prose pre {
+      background-color: #1f2937 !important;  
+    }
+    .prose pre code {
+      color: #fbbf24 !important;  
+      background-color: transparent !important;
+    }
+    .dark .prose code {
+      color: #fbbf24 !important;  
+      background-color: rgba(251, 191, 36, 0.1) !important;  
+    }
+    .dark .prose pre {
+      background-color: #111827 !important;  
+    }
+    .dark .prose pre code {
+      color: #fbbf24 !important;  
+    }
+  </style>
+
+  
+</article></main><footer
+  class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
+>
+  <div class="mr-auto">&copy;2026
+    <a class="link" href="https://kefer-astrology.github.io/function-wrapper/">Kefer Astrology Documentation</a></div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
+    >powered by hugo️️</a
+  >️
+  <a
+    class="link"
+    href="https://github.com/nanxiaobei/hugo-paper"
+    rel="noopener"
+    target="_blank"
+    >hugo-paper</a
+  >
+</footer>
+</body>
+</html>

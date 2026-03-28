@@ -11,7 +11,7 @@
   style="--bg:#faf8f1"
   lang="en-us"
   dir="ltr"
-><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+><head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta
@@ -132,10 +132,10 @@ pip install -e &quot;.[docs]&quot; (includes UI deps so make docs can import UI 
 
 Sync pyproject from requirements
 pyproject.toml is derived from requirements/*.in (not from the compiled .txt lockfiles)." />
-  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.4d6e4063acd5362e811e595b8dda7b07c6d8d9afb1f0c67fd37159fb016bec64.css" integrity="sha256-TW5AY6zVNi6BHllbjdp7B8bY2a&#43;x8MZ/03FZ&#43;wFr7GQ=" />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://kefer-astrology.github.io/function-wrapper/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
-  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
+  <link rel="preload" as="image" href="https://kefer-astrology.github.io/function-wrapper/theme.png" />
 
   
 
@@ -143,21 +143,41 @@ pyproject.toml is derived from requirements/*.in (not from the compiled .txt loc
 
   <script
     defer
-    src="http://localhost:1313/highlight.min.js"
+    src="https://kefer-astrology.github.io/function-wrapper/highlight.min.js"
     onload="hljs.initHighlightingOnLoad();"
   ></script>
 
   
   <link
     rel="icon"
-    href="http://localhost:1313/favicon.ico"
+    href="https://kefer-astrology.github.io/function-wrapper/favicon.ico"
   />
   <link
     rel="apple-touch-icon"
-    href="http://localhost:1313/apple-touch-icon.png"
+    href="https://kefer-astrology.github.io/function-wrapper/apple-touch-icon.png"
   />
 
-  <meta name="generator" content="Hugo 0.154.2">
+  <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="Kefer Astrology Documentation">
+  <meta itemprop="description" content="Installation and Venvs This project uses multiple virtual environments so the core backend stays lean while UI wrappers remain optional.
+Recommended venvs venv (base): core backend only venv-streamlit: Streamlit UI venv-kivy: Kivy UI venv-docs: documentation export (imports UI modules) Makefile targets Use the Makefile to create isolated environments with pinned dependencies:
+make venv (creates venv with requirements/base.txt) make venv-streamlit (creates venv-streamlit with requirements/streamlit.txt) make venv-kivy (creates venv-kivy with requirements/kivy.txt) make venv-docs (creates venv-docs with .[docs] extras) Notes A single venv cannot switch environments without uninstalling packages. Separate venvs avoid heavy or conflicting UI dependencies. Environment preparation Create virtual environment: python3 -m venv venv Activate virtual environment: Windows: venv\Scripts\activate Linux: source ./venv/bin/activate Install libraries: Using precompiled lockfiles (recommended): Base only: pip install -r requirements/base.txt Streamlit UI: pip install -r requirements/streamlit.txt Kivy UI: pip install -r requirements/kivy.txt Dev all‑in: pip install -r requirements/dev.txt (or top‑level requirements.txt if present) To (re)compile lockfiles with pip‑tools: Base: pip-compile requirements/base.in -o requirements/base.txt Streamlit: pip-compile requirements/streamlit.in -o requirements/streamlit.txt Kivy: pip-compile requirements/kivy.in -o requirements/kivy.txt Dev all‑in: create requirements/dev.in that includes -r requirements/streamlit.in and -r requirements/kivy.in, then: pip-compile requirements/dev.in -o requirements/dev.txt Run the application: Default: python3 -m module (runs TUI) Streamlit UI: python3 -m module --streamlit Kivy UI: python3 -m module --kivy TUI explicitly: python3 -m module --tui Run tests: See docs/TESTING_GUIDE.md for detailed instructions Quick start: python3 -m unittest discover tests -v Or use Makefile: make run_tests Project structure (core modules): services.py — chart creation/selection and compute orchestration utils.py — utilities for date and location parsing workspace.py — workspace, chart and settings management z_visual.py — visualization Dependency management Dependency definitions live in requirements/ as .in files: requirements/base.in contains core runtime deps. requirements/streamlit.in and requirements/kivy.in should start with -r base.in. Reproducible installs use compiled lockfiles in requirements/*.txt. Dev/all‑in: keep requirements/dev.txt under requirements/. Optionally provide a root requirements.txt that contains -r requirements/dev.txt. Environment strategy (one venv vs multiple) A single venv cannot “switch” environments without uninstalling packages; once installed, they persist. Recommended: use separate venvs per UI target (base, streamlit, kivy, docs) to avoid heavy or conflicting deps. If you still want one venv, install the base first, then add extras: pip install -e . (core only) pip install -e &#34;.[streamlit]&#34; or pip install -e &#34;.[kivy]&#34; pip install -e &#34;.[docs]&#34; (includes UI deps so make docs can import UI modules) Sync pyproject from requirements pyproject.toml is derived from requirements/*.in (not from the compiled .txt lockfiles).">
+  <meta itemprop="wordCount" content="851"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/installation/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="Kefer Astrology Documentation">
+  <meta property="og:description" content="Installation and Venvs This project uses multiple virtual environments so the core backend stays lean while UI wrappers remain optional.
+Recommended venvs venv (base): core backend only venv-streamlit: Streamlit UI venv-kivy: Kivy UI venv-docs: documentation export (imports UI modules) Makefile targets Use the Makefile to create isolated environments with pinned dependencies:
+make venv (creates venv with requirements/base.txt) make venv-streamlit (creates venv-streamlit with requirements/streamlit.txt) make venv-kivy (creates venv-kivy with requirements/kivy.txt) make venv-docs (creates venv-docs with .[docs] extras) Notes A single venv cannot switch environments without uninstalling packages. Separate venvs avoid heavy or conflicting UI dependencies. Environment preparation Create virtual environment: python3 -m venv venv Activate virtual environment: Windows: venv\Scripts\activate Linux: source ./venv/bin/activate Install libraries: Using precompiled lockfiles (recommended): Base only: pip install -r requirements/base.txt Streamlit UI: pip install -r requirements/streamlit.txt Kivy UI: pip install -r requirements/kivy.txt Dev all‑in: pip install -r requirements/dev.txt (or top‑level requirements.txt if present) To (re)compile lockfiles with pip‑tools: Base: pip-compile requirements/base.in -o requirements/base.txt Streamlit: pip-compile requirements/streamlit.in -o requirements/streamlit.txt Kivy: pip-compile requirements/kivy.in -o requirements/kivy.txt Dev all‑in: create requirements/dev.in that includes -r requirements/streamlit.in and -r requirements/kivy.in, then: pip-compile requirements/dev.in -o requirements/dev.txt Run the application: Default: python3 -m module (runs TUI) Streamlit UI: python3 -m module --streamlit Kivy UI: python3 -m module --kivy TUI explicitly: python3 -m module --tui Run tests: See docs/TESTING_GUIDE.md for detailed instructions Quick start: python3 -m unittest discover tests -v Or use Makefile: make run_tests Project structure (core modules): services.py — chart creation/selection and compute orchestration utils.py — utilities for date and location parsing workspace.py — workspace, chart and settings management z_visual.py — visualization Dependency management Dependency definitions live in requirements/ as .in files: requirements/base.in contains core runtime deps. requirements/streamlit.in and requirements/kivy.in should start with -r base.in. Reproducible installs use compiled lockfiles in requirements/*.txt. Dev/all‑in: keep requirements/dev.txt under requirements/. Optionally provide a root requirements.txt that contains -r requirements/dev.txt. Environment strategy (one venv vs multiple) A single venv cannot “switch” environments without uninstalling packages; once installed, they persist. Recommended: use separate venvs per UI target (base, streamlit, kivy, docs) to avoid heavy or conflicting deps. If you still want one venv, install the base first, then add extras: pip install -e . (core only) pip install -e &#34;.[streamlit]&#34; or pip install -e &#34;.[kivy]&#34; pip install -e &#34;.[docs]&#34; (includes UI deps so make docs can import UI modules) Sync pyproject from requirements pyproject.toml is derived from requirements/*.in (not from the compiled .txt lockfiles).">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Kefer Astrology Documentation">
+  <meta name="twitter:description" content="Installation and Venvs This project uses multiple virtual environments so the core backend stays lean while UI wrappers remain optional.
+Recommended venvs venv (base): core backend only venv-streamlit: Streamlit UI venv-kivy: Kivy UI venv-docs: documentation export (imports UI modules) Makefile targets Use the Makefile to create isolated environments with pinned dependencies:
+make venv (creates venv with requirements/base.txt) make venv-streamlit (creates venv-streamlit with requirements/streamlit.txt) make venv-kivy (creates venv-kivy with requirements/kivy.txt) make venv-docs (creates venv-docs with .[docs] extras) Notes A single venv cannot switch environments without uninstalling packages. Separate venvs avoid heavy or conflicting UI dependencies. Environment preparation Create virtual environment: python3 -m venv venv Activate virtual environment: Windows: venv\Scripts\activate Linux: source ./venv/bin/activate Install libraries: Using precompiled lockfiles (recommended): Base only: pip install -r requirements/base.txt Streamlit UI: pip install -r requirements/streamlit.txt Kivy UI: pip install -r requirements/kivy.txt Dev all‑in: pip install -r requirements/dev.txt (or top‑level requirements.txt if present) To (re)compile lockfiles with pip‑tools: Base: pip-compile requirements/base.in -o requirements/base.txt Streamlit: pip-compile requirements/streamlit.in -o requirements/streamlit.txt Kivy: pip-compile requirements/kivy.in -o requirements/kivy.txt Dev all‑in: create requirements/dev.in that includes -r requirements/streamlit.in and -r requirements/kivy.in, then: pip-compile requirements/dev.in -o requirements/dev.txt Run the application: Default: python3 -m module (runs TUI) Streamlit UI: python3 -m module --streamlit Kivy UI: python3 -m module --kivy TUI explicitly: python3 -m module --tui Run tests: See docs/TESTING_GUIDE.md for detailed instructions Quick start: python3 -m unittest discover tests -v Or use Makefile: make run_tests Project structure (core modules): services.py — chart creation/selection and compute orchestration utils.py — utilities for date and location parsing workspace.py — workspace, chart and settings management z_visual.py — visualization Dependency management Dependency definitions live in requirements/ as .in files: requirements/base.in contains core runtime deps. requirements/streamlit.in and requirements/kivy.in should start with -r base.in. Reproducible installs use compiled lockfiles in requirements/*.txt. Dev/all‑in: keep requirements/dev.txt under requirements/. Optionally provide a root requirements.txt that contains -r requirements/dev.txt. Environment strategy (one venv vs multiple) A single venv cannot “switch” environments without uninstalling packages; once installed, they persist. Recommended: use separate venvs per UI target (base, streamlit, kivy, docs) to avoid heavy or conflicting deps. If you still want one venv, install the base first, then add extras: pip install -e . (core only) pip install -e &#34;.[streamlit]&#34; or pip install -e &#34;.[kivy]&#34; pip install -e &#34;.[docs]&#34; (includes UI deps so make docs can import UI modules) Sync pyproject from requirements pyproject.toml is derived from requirements/*.in (not from the compiled .txt lockfiles).">
+
+  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/installation/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -168,7 +188,7 @@ pyproject.toml is derived from requirements/*.in (not from the compiled .txt loc
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="http://localhost:1313/"
+        href="https://kefer-astrology.github.io/function-wrapper/"
         >Kefer Astrology Documentation</a
       >
       <div
@@ -690,7 +710,7 @@ pyproject.toml is derived from requirements/*.in (not from the compiled .txt loc
 <ol>
 <li>Create virtual environment:</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python3 -m venv venv
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python3 -m venv venv
 </span></span></code></pre></div><ol start="2">
 <li>Activate virtual environment:</li>
 </ol>
@@ -772,7 +792,7 @@ pyproject.toml is derived from requirements/*.in (not from the compiled .txt loc
 <h3 id="sync-pyproject-from-requirements">Sync pyproject from requirements</h3>
 <p><code>pyproject.toml</code> is derived from <code>requirements/*.in</code> (not from the compiled <code>.txt</code> lockfiles).</p>
 <p>To regenerate the dependency sections after updating <code>.in</code> files:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make sync-pyproject
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make sync-pyproject
 </span></span></code></pre></div><h2 id="ui-quickstart">UI Quickstart</h2>
 <h3 id="streamlit-ui-interactive-in-browser">Streamlit UI (interactive, in browser)</h3>
 <ul>
@@ -884,20 +904,23 @@ pyproject.toml is derived from requirements/*.in (not from the compiled .txt loc
 <h2 id="generating-documentation">Generating Documentation</h2>
 <p>The Hugo site sources live under <code>docs/site/</code> and the build output is written to <code>docs/</code>.</p>
 <h3 id="1-generate-auto-docs">1) Generate auto-docs</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#57606a"># Create docs venv (includes extras needed for doc export)</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#57606a"># Create docs venv (includes extras needed for doc export)</span>
 </span></span><span style="display:flex;"><span>make venv-docs
 </span></span><span style="display:flex;"><span><span style="color:#6639ba">source</span> venv-docs/bin/activate
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#57606a"># Generate docs/site/content/auto, docs/site/content/models.mmd, docs/site/content/enums.md</span>
 </span></span><span style="display:flex;"><span>make docs
-</span></span></code></pre></div><h3 id="2-run-hugo-locally">2) Run Hugo locally</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#57606a"># From repo root</span>
+</span></span></code></pre></div><p>If you created <code>venv-docs</code> before syncing <code>pyproject.toml</code>, re-run
+<code>make venv-docs</code> to force-reinstall dependencies (this installs new base deps
+like <code>duckdb</code>).</p>
+<h3 id="2-run-hugo-locally">2) Run Hugo locally</h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#57606a"># From repo root</span>
 </span></span><span style="display:flex;"><span>hugo server --source docs/site --config hugo.toml --baseURL http://localhost:1313/ --appendPort<span style="color:#0550ae">=</span><span style="color:#6639ba">false</span>
 </span></span></code></pre></div><p>This serves the docs site locally at http://localhost:1313.
 If you skip the override, Hugo uses the GitHub Pages baseURL and you&rsquo;ll need
 to open http://localhost:1313/function-wrapper/ instead.</p>
 <h3 id="3-build-static-site">3) Build static site</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hugo --source docs/site --config hugo.toml --destination docs
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hugo --source docs/site --config hugo.toml --destination docs
 </span></span></code></pre></div><p>The static site is generated in <code>docs/</code> (the GitHub Pages publishing root).</p>
 <h3 id="4-github-pages-checklist-docs-folder-hosting">4) GitHub Pages checklist (docs folder hosting)</h3>
 <ul>
@@ -1016,7 +1039,7 @@ to open http://localhost:1313/function-wrapper/ instead.</p>
   class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
 >
   <div class="mr-auto">&copy;2026
-    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
+    <a class="link" href="https://kefer-astrology.github.io/function-wrapper/">Kefer Astrology Documentation</a></div>
   <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
     >powered by hugo️️</a
   >️

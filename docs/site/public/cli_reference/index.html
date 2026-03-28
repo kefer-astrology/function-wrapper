@@ -11,7 +11,7 @@
   style="--bg:#faf8f1"
   lang="en-us"
   dir="ltr"
-><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+><head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta
@@ -43,10 +43,10 @@ Arguments:
   &#34;include_topocentric&#34;: false   // Optional: Include altitude/azimuth (JPL with location)
 }
 Response:" />
-  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.4d6e4063acd5362e811e595b8dda7b07c6d8d9afb1f0c67fd37159fb016bec64.css" integrity="sha256-TW5AY6zVNi6BHllbjdp7B8bY2a&#43;x8MZ/03FZ&#43;wFr7GQ=" />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://kefer-astrology.github.io/function-wrapper/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
-  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
+  <link rel="preload" as="image" href="https://kefer-astrology.github.io/function-wrapper/theme.png" />
 
   
 
@@ -54,21 +54,47 @@ Response:" />
 
   <script
     defer
-    src="http://localhost:1313/highlight.min.js"
+    src="https://kefer-astrology.github.io/function-wrapper/highlight.min.js"
     onload="hljs.initHighlightingOnLoad();"
   ></script>
 
   
   <link
     rel="icon"
-    href="http://localhost:1313/favicon.ico"
+    href="https://kefer-astrology.github.io/function-wrapper/favicon.ico"
   />
   <link
     rel="apple-touch-icon"
-    href="http://localhost:1313/apple-touch-icon.png"
+    href="https://kefer-astrology.github.io/function-wrapper/apple-touch-icon.png"
   />
 
-  <meta name="generator" content="Hugo 0.154.2">
+  <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="Kefer Astrology Documentation">
+  <meta itemprop="description" content="CLI Reference Overview The Python sidecar provides a JSON-based CLI interface for the Tauri frontend. All commands accept JSON arguments and return JSON results.
+Usage python -m module.cli &lt;command&gt; [args_json] Or with JSON from stdin:
+echo &#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;my-chart&#34;}&#39; | python -m module.cli compute_chart Commands 1. compute_chart Compute positions and aspects for a chart.
+Arguments:
+{ &#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;chart-id&#34;, &#34;include_physical&#34;: false, // Optional: Include extended physical properties (JPL only) &#34;include_topocentric&#34;: false // Optional: Include altitude/azimuth (JPL with location) } Response:">
+  <meta itemprop="wordCount" content="469"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/cli_reference/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="Kefer Astrology Documentation">
+  <meta property="og:description" content="CLI Reference Overview The Python sidecar provides a JSON-based CLI interface for the Tauri frontend. All commands accept JSON arguments and return JSON results.
+Usage python -m module.cli &lt;command&gt; [args_json] Or with JSON from stdin:
+echo &#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;my-chart&#34;}&#39; | python -m module.cli compute_chart Commands 1. compute_chart Compute positions and aspects for a chart.
+Arguments:
+{ &#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;chart-id&#34;, &#34;include_physical&#34;: false, // Optional: Include extended physical properties (JPL only) &#34;include_topocentric&#34;: false // Optional: Include altitude/azimuth (JPL with location) } Response:">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Kefer Astrology Documentation">
+  <meta name="twitter:description" content="CLI Reference Overview The Python sidecar provides a JSON-based CLI interface for the Tauri frontend. All commands accept JSON arguments and return JSON results.
+Usage python -m module.cli &lt;command&gt; [args_json] Or with JSON from stdin:
+echo &#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;my-chart&#34;}&#39; | python -m module.cli compute_chart Commands 1. compute_chart Compute positions and aspects for a chart.
+Arguments:
+{ &#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;chart-id&#34;, &#34;include_physical&#34;: false, // Optional: Include extended physical properties (JPL only) &#34;include_topocentric&#34;: false // Optional: Include altitude/azimuth (JPL with location) } Response:">
+
+  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/cli_reference/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -79,7 +105,7 @@ Response:" />
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="http://localhost:1313/"
+        href="https://kefer-astrology.github.io/function-wrapper/"
         >Kefer Astrology Documentation</a
       >
       <div
@@ -579,21 +605,21 @@ Response:" />
 <h2 id="overview">Overview</h2>
 <p>The Python sidecar provides a JSON-based CLI interface for the Tauri frontend. All commands accept JSON arguments and return JSON results.</p>
 <h2 id="usage">Usage</h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m module.cli &lt;command&gt; <span style="color:#0550ae">[</span>args_json<span style="color:#0550ae">]</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m module.cli &lt;command&gt; <span style="color:#0550ae">[</span>args_json<span style="color:#0550ae">]</span>
 </span></span></code></pre></div><p>Or with JSON from stdin:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#6639ba">echo</span> <span style="color:#0a3069">&#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;my-chart&#34;}&#39;</span> <span style="color:#1f2328">|</span> python -m module.cli compute_chart
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#6639ba">echo</span> <span style="color:#0a3069">&#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;my-chart&#34;}&#39;</span> <span style="color:#1f2328">|</span> python -m module.cli compute_chart
 </span></span></code></pre></div><h2 id="commands">Commands</h2>
 <h3 id="1-compute_chart">1. <code>compute_chart</code></h3>
 <p>Compute positions and aspects for a chart.</p>
 <p><strong>Arguments:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;workspace_path&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;/path/to/workspace.yaml&#34;</span><span style="color:#1f2328">,</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;chart_id&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;chart-id&#34;</span><span style="color:#1f2328">,</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;include_physical&#34;</span><span style="color:#1f2328">:</span> <span style="color:#cf222e">false</span><span style="color:#1f2328">,</span>      <span style="color:#57606a">// Optional: Include extended physical properties (JPL only)
 </span></span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;include_topocentric&#34;</span><span style="color:#1f2328">:</span> <span style="color:#cf222e">false</span>   <span style="color:#57606a">// Optional: Include altitude/azimuth (JPL with location)
 </span></span></span><span style="display:flex;"><span><span style="color:#1f2328">}</span>
 </span></span></code></pre></div><p><strong>Response:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;positions&#34;</span><span style="color:#1f2328">:</span> <span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#0550ae">&#34;sun&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0550ae">45.5</span><span style="color:#1f2328">,</span>  <span style="color:#57606a">// Simple format (non-JPL) or
 </span></span></span><span style="display:flex;"><span>    <span style="color:#0550ae">&#34;moon&#34;</span><span style="color:#1f2328">:</span> <span style="color:#1f2328">{</span>     <span style="color:#57606a">// Extended format (JPL)
@@ -621,14 +647,14 @@ Response:" />
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;chart_id&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;chart-id&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#1f2328">}</span>
 </span></span></code></pre></div><p><strong>Error Response:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;error&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;Chart chart-id not found&#34;</span><span style="color:#1f2328">,</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;type&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;ChartNotFound&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#1f2328">}</span>
 </span></span></code></pre></div><h3 id="2-compute_transit_series">2. <code>compute_transit_series</code></h3>
 <p>Compute transit series for a time range.</p>
 <p><strong>Arguments:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;workspace_path&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;/path/to/workspace.yaml&#34;</span><span style="color:#1f2328">,</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;source_chart_id&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;source-chart-id&#34;</span><span style="color:#1f2328">,</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;start_datetime&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;2024-01-01T00:00:00+01:00&#34;</span><span style="color:#1f2328">,</span>
@@ -641,7 +667,7 @@ Response:" />
 </span></span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;include_topocentric&#34;</span><span style="color:#1f2328">:</span> <span style="color:#cf222e">false</span>       <span style="color:#57606a">// Optional
 </span></span></span><span style="display:flex;"><span><span style="color:#1f2328">}</span>
 </span></span></code></pre></div><p><strong>Response:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;source_chart_id&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;source-chart-id&#34;</span><span style="color:#1f2328">,</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;time_range&#34;</span><span style="color:#1f2328">:</span> <span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#0550ae">&#34;start&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;2024-01-01T00:00:00+01:00&#34;</span><span style="color:#1f2328">,</span>
@@ -660,11 +686,11 @@ Response:" />
 </span></span></code></pre></div><h3 id="3-get_workspace_settings">3. <code>get_workspace_settings</code></h3>
 <p>Get workspace settings and defaults.</p>
 <p><strong>Arguments:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;workspace_path&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;/path/to/workspace.yaml&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#1f2328">}</span>
 </span></span></code></pre></div><p><strong>Response:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;owner&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;user@example.com&#34;</span><span style="color:#1f2328">,</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;active_model&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;western&#34;</span><span style="color:#1f2328">,</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;default&#34;</span><span style="color:#1f2328">:</span> <span style="color:#1f2328">{</span>
@@ -681,11 +707,11 @@ Response:" />
 </span></span></code></pre></div><h3 id="4-list_charts">4. <code>list_charts</code></h3>
 <p>List all charts in workspace.</p>
 <p><strong>Arguments:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;workspace_path&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;/path/to/workspace.yaml&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#1f2328">}</span>
 </span></span></code></pre></div><p><strong>Response:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;charts&#34;</span><span style="color:#1f2328">:</span> <span style="color:#1f2328">[</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>      <span style="color:#0550ae">&#34;id&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;chart-1&#34;</span><span style="color:#1f2328">,</span>
@@ -702,12 +728,12 @@ Response:" />
 </span></span></code></pre></div><h3 id="5-get_chart">5. <code>get_chart</code></h3>
 <p>Get chart details by ID.</p>
 <p><strong>Arguments:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;workspace_path&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;/path/to/workspace.yaml&#34;</span><span style="color:#1f2328">,</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;chart_id&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;chart-id&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#1f2328">}</span>
 </span></span></code></pre></div><p><strong>Response:</strong></p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span><span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;id&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;chart-id&#34;</span><span style="color:#1f2328">,</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#0550ae">&#34;subject&#34;</span><span style="color:#1f2328">:</span> <span style="color:#1f2328">{</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#0550ae">&#34;id&#34;</span><span style="color:#1f2328">:</span> <span style="color:#0a3069">&#34;subject-id&#34;</span><span style="color:#1f2328">,</span>
@@ -740,16 +766,16 @@ Response:" />
 </ul>
 <h2 id="testing">Testing</h2>
 <p>Run tests:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m pytest tests/test_cli.py -v
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m pytest tests/test_cli.py -v
 </span></span></code></pre></div><p>Or with unittest:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m unittest tests.test_cli
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m unittest tests.test_cli
 </span></span></code></pre></div><h2 id="examples">Examples</h2>
 <h3 id="compute-chart-positions">Compute chart positions</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m module.cli compute_chart <span style="color:#0a3069">&#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;my-chart&#34;}&#39;</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m module.cli compute_chart <span style="color:#0a3069">&#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;my-chart&#34;}&#39;</span>
 </span></span></code></pre></div><h3 id="get-workspace-settings">Get workspace settings</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m module.cli get_workspace_settings <span style="color:#0a3069">&#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;}&#39;</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m module.cli get_workspace_settings <span style="color:#0a3069">&#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;}&#39;</span>
 </span></span></code></pre></div><h3 id="list-all-charts">List all charts</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m module.cli list_charts <span style="color:#0a3069">&#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;}&#39;</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python -m module.cli list_charts <span style="color:#0a3069">&#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;}&#39;</span>
 </span></span></code></pre></div></section>
   
   <style>
@@ -855,7 +881,7 @@ Response:" />
   class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
 >
   <div class="mr-auto">&copy;2026
-    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
+    <a class="link" href="https://kefer-astrology.github.io/function-wrapper/">Kefer Astrology Documentation</a></div>
   <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
     >powered by hugo️️</a
   >️

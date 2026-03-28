@@ -2,6 +2,10 @@ baseURL = 'https://kefer-astrology.github.io/function-wrapper/'
 languageCode = 'en-us'
 title = 'Kefer Astrology Documentation'
 theme = 'hugo-paper'
+disableKinds = ['taxonomy', 'term']
+
+[author]
+  name = 'Kefer Astrology'
 
 [params]
   description = "Complete documentation for Kefer Astrology function-wrapper"

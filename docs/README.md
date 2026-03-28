@@ -5,9 +5,11 @@ This directory contains documentation for using the Kefer Astrology sidecar modu
 ## User Documentation
 
 ### References
-- **`cli_reference.md`** - Complete CLI command reference
-- **`installation.md`** - Environment setup and venv strategy
-- **`architecture.md`** - System architecture (includes storage responsibilities)
+- **`docs/site/content/readme.md`** - Project overview and quickstart
+- **`docs/site/content/installation.md`** - Environment setup and venv strategy
+- **`docs/site/content/architecture.md`** - System architecture (includes storage responsibilities)
+- **`docs/site/content/cli_reference.md`** - Complete CLI command reference
+- **`docs/site/content/fastapi_tauri.md`** - Recommended integration for React + FastAPI + Tauri
 
 ### Auto-Generated Docs
 - **`auto/`** - Module documentation generated from docstrings
@@ -19,11 +21,13 @@ This directory contains documentation for using the Kefer Astrology sidecar modu
 
 ## Developer Documentation
 
-- **`architecture.md`** - System architecture overview
-- **`enums.md`** - Enumeration reference
-- **`models.mmd`** - Mermaid class diagram
-- **`installation.md`** - Environment setup and doc generation
-- **`testing_guide.md`** - How to write and run tests
+- **`docs/site/content/enums.md`** - Enumeration reference
+- **`docs/site/content/models.mmd`** - Mermaid class diagram
+- **`docs/site/content/testing_guide.md`** - How to write and run tests
+- **`docs/site/content/performance_bottleneck_analysis.md`** - Performance investigation notes
+- **`docs/site/content/performance_fix_summary.md`** - Performance remediation summary
+- **`docs/site/content/industry_standards_audit.md`** - Code quality audit status
+- **`docs/site/content/industry_standards_issues.md`** - Condensed outstanding issues
 
 ## Generating Documentation
 
@@ -46,13 +50,17 @@ Hugo sources live under `docs/site/` and the built site is written to `docs/` vi
 Full setup steps are in `installation.md` under "Generating Documentation".
 
 ### Manual Documentation
-User guides and integration docs are maintained manually in this directory.
+User guides and integration docs are maintained manually under
+`docs/site/content/` so the Hugo site is the main documentation source of
+truth.
 
 When linking images from content pages, prefer `../example.png` so links resolve at the site root during local and hosted builds.
 
 ## Quick Links
 
-- **For Installation**: See `installation.md`
-- **For CLI Usage**: See `cli_reference.md`
-- **For Storage**: See `architecture.md`
-- **For Reference**: See `auto/` directory
+- **For Project Overview**: See `docs/site/content/readme.md`
+- **For Installation**: See `docs/site/content/installation.md`
+- **For CLI Usage**: See `docs/site/content/cli_reference.md`
+- **For React/FastAPI/Tauri Integration**: See `docs/site/content/fastapi_tauri.md`
+- **For Storage**: See `docs/site/content/architecture.md`
+- **For API Reference**: See `docs/site/content/auto/`

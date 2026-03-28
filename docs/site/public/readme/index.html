@@ -11,7 +11,7 @@
   style="--bg:#faf8f1"
   lang="en-us"
   dir="ltr"
-><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+><head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta
@@ -20,48 +20,42 @@
   />
 
   
-  <title> - Kefer Astrology Documentation</title>
+  <title>Project Overview - Kefer Astrology Documentation</title>
 
   
   <meta name="theme-color" />
 
-  <meta name="description" content="Documentation
-This directory contains documentation for using the Kefer Astrology sidecar module.
-User Documentation
-References
+  <meta name="description" content="Function layer for Kefer Astrology
+Quickstart
+Get up and running in 3 steps:
+# 1. Create and activate virtual environment
+python3 -m venv venv
+# alternatively use makefile
+source ./venv/bin/activate  # Linux/Mac
+venv\Scripts\activate  # Windows
 
-CLI_API_REFERENCE.md - Complete CLI command reference
-installation.md - Environment setup and venv strategy
-architecture.md - System architecture (includes storage responsibilities)
+# 2. Install dependencies (choose your UI)
+pip install -r requirements/base.txt  # for base package
+pip install -r requirements/streamlit.txt  # For Streamlit UI (browser)
+pip install -r requirements/kivy.txt  # For Kivy UI (desktop)
 
-Auto-Generated Docs
+# Or install by package extras
+pip install .  # core computation/storage package
+pip install .[api]  # FastAPI backend for Tauri/web frontends
+pip install .[streamlit]  # Streamlit UI &#43; chart rendering
+pip install .[kivy]  # Kivy desktop UI &#43; chart rendering
 
-auto/ - Module documentation generated from docstrings
-
-auto/cli.md - CLI module
-auto/storage.md - Storage module
-auto/services.md - Services module
-auto/workspace.md - Workspace module
-etc.
-
-
-
-Developer Documentation
-
-architecture.md - System architecture overview
-enums.md - Enumeration reference
-models.mmd - Mermaid class diagram
-installation.md - Environment setup and doc generation
-testing_guide.md - How to write and run tests
-
-Generating Documentation
-Auto-Generate Docs
-make docs
-This generates:" />
-  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.4d6e4063acd5362e811e595b8dda7b07c6d8d9afb1f0c67fd37159fb016bec64.css" integrity="sha256-TW5AY6zVNi6BHllbjdp7B8bY2a&#43;x8MZ/03FZ&#43;wFr7GQ=" />
+# 3. Run the application
+python3 -m module --streamlit  # Streamlit UI (browser)
+python3 -m module --kivy  # Kivy UI (desktop)
+python3 -m module --tui   # Text UI (terminal)
+python3 -m module         # Default: TUI
+For detailed setup instructions, troubleshooting, and advanced options, see the
+Installation and Venvs." />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://kefer-astrology.github.io/function-wrapper/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
-  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
+  <link rel="preload" as="image" href="https://kefer-astrology.github.io/function-wrapper/theme.png" />
 
   
 
@@ -69,21 +63,35 @@ This generates:" />
 
   <script
     defer
-    src="http://localhost:1313/highlight.min.js"
+    src="https://kefer-astrology.github.io/function-wrapper/highlight.min.js"
     onload="hljs.initHighlightingOnLoad();"
   ></script>
 
   
   <link
     rel="icon"
-    href="http://localhost:1313/favicon.ico"
+    href="https://kefer-astrology.github.io/function-wrapper/favicon.ico"
   />
   <link
     rel="apple-touch-icon"
-    href="http://localhost:1313/apple-touch-icon.png"
+    href="https://kefer-astrology.github.io/function-wrapper/apple-touch-icon.png"
   />
 
-  <meta name="generator" content="Hugo 0.154.2">
+  <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="Project Overview">
+  <meta itemprop="description" content="Repository overview, quickstart, and high-level architecture">
+  <meta itemprop="wordCount" content="817"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/readme/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="Project Overview">
+  <meta property="og:description" content="Repository overview, quickstart, and high-level architecture">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Project Overview">
+  <meta name="twitter:description" content="Repository overview, quickstart, and high-level architecture">
+
+  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/readme/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -94,7 +102,7 @@ This generates:" />
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="http://localhost:1313/"
+        href="https://kefer-astrology.github.io/function-wrapper/"
         >Kefer Astrology Documentation</a
       >
       <div
@@ -590,59 +598,199 @@ This generates:" />
       class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
       style="max-width: 90% !important;"
     ><article class="pt-6">
-  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="documentation">Documentation</h1>
-<p>This directory contains documentation for using the Kefer Astrology sidecar module.</p>
-<h2 id="user-documentation">User Documentation</h2>
-<h3 id="references">References</h3>
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="function-layer-for-kefer-astrology">Function layer for Kefer Astrology</h1>
+<h2 id="quickstart">Quickstart</h2>
+<p>Get up and running in 3 steps:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#57606a"># 1. Create and activate virtual environment</span>
+</span></span><span style="display:flex;"><span>python3 -m venv venv
+</span></span><span style="display:flex;"><span><span style="color:#57606a"># alternatively use makefile</span>
+</span></span><span style="display:flex;"><span><span style="color:#6639ba">source</span> ./venv/bin/activate  <span style="color:#57606a"># Linux/Mac</span>
+</span></span><span style="display:flex;"><span>venv<span style="color:#0a3069">\S</span>cripts<span style="color:#0a3069">\a</span>ctivate  <span style="color:#57606a"># Windows</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#57606a"># 2. Install dependencies (choose your UI)</span>
+</span></span><span style="display:flex;"><span>pip install -r requirements/base.txt  <span style="color:#57606a"># for base package</span>
+</span></span><span style="display:flex;"><span>pip install -r requirements/streamlit.txt  <span style="color:#57606a"># For Streamlit UI (browser)</span>
+</span></span><span style="display:flex;"><span>pip install -r requirements/kivy.txt  <span style="color:#57606a"># For Kivy UI (desktop)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#57606a"># Or install by package extras</span>
+</span></span><span style="display:flex;"><span>pip install .  <span style="color:#57606a"># core computation/storage package</span>
+</span></span><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>api<span style="color:#0550ae">]</span>  <span style="color:#57606a"># FastAPI backend for Tauri/web frontends</span>
+</span></span><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>streamlit<span style="color:#0550ae">]</span>  <span style="color:#57606a"># Streamlit UI + chart rendering</span>
+</span></span><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>kivy<span style="color:#0550ae">]</span>  <span style="color:#57606a"># Kivy desktop UI + chart rendering</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#57606a"># 3. Run the application</span>
+</span></span><span style="display:flex;"><span>python3 -m module --streamlit  <span style="color:#57606a"># Streamlit UI (browser)</span>
+</span></span><span style="display:flex;"><span>python3 -m module --kivy  <span style="color:#57606a"># Kivy UI (desktop)</span>
+</span></span><span style="display:flex;"><span>python3 -m module --tui   <span style="color:#57606a"># Text UI (terminal)</span>
+</span></span><span style="display:flex;"><span>python3 -m module         <span style="color:#57606a"># Default: TUI</span>
+</span></span></code></pre></div><p>For detailed setup instructions, troubleshooting, and advanced options, see the
+<a href="installation">Installation and Venvs</a>.</p>
+<h2 id="suggested-runtime-split">Suggested Runtime Split</h2>
 <ul>
-<li><strong><code>CLI_API_REFERENCE.md</code></strong> - Complete CLI command reference</li>
-<li><strong><code>installation.md</code></strong> - Environment setup and venv strategy</li>
-<li><strong><code>architecture.md</code></strong> - System architecture (includes storage responsibilities)</li>
+<li><code>core</code>: install <code>pip install .</code> for computation, workspace, and storage helpers</li>
+<li><code>api</code>: install <code>pip install .[api]</code> for a FastAPI sidecar/backend without UI dependencies</li>
+<li><code>streamlit</code>: install <code>pip install .[streamlit]</code> for the browser UI</li>
+<li><code>kivy</code>: install <code>pip install .[kivy]</code> for the native Python desktop UI</li>
 </ul>
-<h3 id="auto-generated-docs">Auto-Generated Docs</h3>
-<ul>
-<li><strong><code>auto/</code></strong> - Module documentation generated from docstrings
-<ul>
-<li><code>auto/cli.md</code> - CLI module</li>
-<li><code>auto/storage.md</code> - Storage module</li>
-<li><code>auto/services.md</code> - Services module</li>
-<li><code>auto/workspace.md</code> - Workspace module</li>
-<li>etc.</li>
-</ul>
-</li>
-</ul>
-<h2 id="developer-documentation">Developer Documentation</h2>
-<ul>
-<li><strong><code>architecture.md</code></strong> - System architecture overview</li>
-<li><strong><code>enums.md</code></strong> - Enumeration reference</li>
-<li><strong><code>models.mmd</code></strong> - Mermaid class diagram</li>
-<li><strong><code>installation.md</code></strong> - Environment setup and doc generation</li>
-<li><strong><code>testing_guide.md</code></strong> - How to write and run tests</li>
-</ul>
-<h2 id="generating-documentation">Generating Documentation</h2>
-<h3 id="auto-generate-docs">Auto-Generate Docs</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make docs
-</span></span></code></pre></div><p>This generates:</p>
-<ul>
-<li><code>docs/site/content/auto/*.md</code> - Module API documentation from docstrings</li>
-<li><code>docs/site/content/models.mmd</code> - Class diagram</li>
-<li><code>docs/site/content/enums.md</code> - Enum reference</li>
-</ul>
-<h3 id="serve-docs-locally-hugo">Serve Docs Locally (Hugo)</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hugo server --source docs/site --config hugo.toml --baseURL http://localhost:1313/ --appendPort<span style="color:#0550ae">=</span><span style="color:#6639ba">false</span>
-</span></span></code></pre></div><p>Hugo sources live under <code>docs/site/</code> and the built site is written to <code>docs/</code> via <code>--destination docs</code>.
-Full setup steps are in <code>installation.md</code> under &ldquo;Generating Documentation&rdquo;.</p>
-<h3 id="manual-documentation">Manual Documentation</h3>
-<p>User guides and integration docs are maintained manually in this directory.</p>
-<p>When linking images from content pages, prefer <code>../example.png</code> so links resolve at the site root during local and hosted builds.</p>
-<h2 id="quick-links">Quick Links</h2>
-<ul>
-<li><strong>For Installation</strong>: See <code>installation.md</code></li>
-<li><strong>For CLI Usage</strong>: See <code>CLI_API_REFERENCE.md</code></li>
-<li><strong>For Storage</strong>: See <code>architecture.md</code></li>
-<li><strong>For Reference</strong>: See <code>auto/</code> directory</li>
-</ul>
-</section>
+<p>For a <code>React frontend from Figma + FastAPI backend + Tauri packaging</code> setup,
+prefer <code>core + api</code> and keep the <code>ui_*</code> modules as optional developer-only
+frontends. See <a href="fastapi_tauri">FastAPI + React + Tauri</a>.</p>
+<h2 id="how-it-works">How it works</h2>
+<p>All the heavy lifting is made by
+<a href="https://github.com/g-battaglia/kerykeion">g-battaglia/kerykeion</a>, a
+manipulation layer over
+<a href="https://github.com/astrorigin/pyswisseph">astrorigin/pyswisseph</a> (also known
+as <a href="https://www.astro.com/swisseph/swephinfo_e.htm">Swiss Ephemerides</a>), thus
+the license is inherited (GNU Affero GPL v3.0). Other dependencies are tracked
+in <code>requirements/base.in</code>.</p>
+<p>For NASA JPL ephemerides we use
+<a href="https://github.com/skyfielders/python-skyfield">skyfielders/python-skyfield</a>,
+which is MIT-licensed.</p>
+<h2 id="high-level-system-overview">High Level System Overview</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>┌─────────────────────────────────────────────────────────────────┐
+</span></span><span style="display:flex;"><span>│                             UI Layer                            │
+</span></span><span style="display:flex;"><span>│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+</span></span><span style="display:flex;"><span>│  │ Streamlit UI │  │  Kivy UI     │  │   CLI/TUI    │          │
+</span></span><span style="display:flex;"><span>│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘          │
+</span></span><span style="display:flex;"><span>│         │                  │                  │                 │
+</span></span><span style="display:flex;"><span>│         └──────────────────┼──────────────────┘                 │
+</span></span><span style="display:flex;"><span>│                            │                                    │
+</span></span><span style="display:flex;"><span>│                    ┌───────▼────────┐                           │
+</span></span><span style="display:flex;"><span>│                    │  module.* APIs │                           │
+</span></span><span style="display:flex;"><span>│                    │  - services    │                           │
+</span></span><span style="display:flex;"><span>│                    │  - workspace   │                           │
+</span></span><span style="display:flex;"><span>│                    │  - storage     │                           │
+</span></span><span style="display:flex;"><span>│                    └───────┬────────┘                           │
+</span></span><span style="display:flex;"><span>└────────────────────────────┼─────────────────────────────────────┘
+</span></span><span style="display:flex;"><span>                             │
+</span></span><span style="display:flex;"><span>                             │ Python calls (in-process)
+</span></span><span style="display:flex;"><span>                             │
+</span></span><span style="display:flex;"><span>┌────────────────────────────▼─────────────────────────────────────┐
+</span></span><span style="display:flex;"><span>│                         Backend (Python)                         │
+</span></span><span style="display:flex;"><span>│  ┌────────────────────────────────────────────────────────────┐  │
+</span></span><span style="display:flex;"><span>│  │                    Core Modules                           │  │
+</span></span><span style="display:flex;"><span>│  │  - module.services                                        │  │
+</span></span><span style="display:flex;"><span>│  │  - module.workspace                                       │  │
+</span></span><span style="display:flex;"><span>│  │  - module.storage (optional)                              │  │
+</span></span><span style="display:flex;"><span>│  └────────────────────────────────────────────────────────────┘  │
+</span></span><span style="display:flex;"><span>│                             │                                    │
+</span></span><span style="display:flex;"><span>│  ┌──────────────────────────┼──────────────────────────┐         │
+</span></span><span style="display:flex;"><span>│  │                          │                           │         │
+</span></span><span style="display:flex;"><span>│  │  ┌──────────────┐        │      ┌──────────────┐    │         │
+</span></span><span style="display:flex;"><span>│  │  │  DuckDB      │        │      │   YAML       │    │         │
+</span></span><span style="display:flex;"><span>│  │  │  Storage     │        │      │   Workspace  │    │         │
+</span></span><span style="display:flex;"><span>│  │  └──────┬───────┘        │      └──────┬───────┘    │         │
+</span></span><span style="display:flex;"><span>│  │         │                │             │            │         │
+</span></span><span style="display:flex;"><span>│  │  ┌──────▼──────────┐     │    ┌───────▼────────┐    │         │
+</span></span><span style="display:flex;"><span>│  │  │ workspace.db    │     │    │ workspace.yaml │    │         │
+</span></span><span style="display:flex;"><span>│  │  │ - positions     │     │    │ charts/*.yaml  │    │         │
+</span></span><span style="display:flex;"><span>│  │  │ - metadata      │     │    │ subjects/*.yaml│    │         │
+</span></span><span style="display:flex;"><span>│  │  └─────────────────┘     │    └────────────────┘    │         │
+</span></span><span style="display:flex;"><span>│  │         │                │                           │         │
+</span></span><span style="display:flex;"><span>│  │  ┌──────▼──────────┐     │                           │         │
+</span></span><span style="display:flex;"><span>│  │  │ parquet/        │     │                           │         │
+</span></span><span style="display:flex;"><span>│  │  │ - chart_*.parquet│    │                           │         │
+</span></span><span style="display:flex;"><span>│  │  └─────────────────┘     │                           │         │
+</span></span><span style="display:flex;"><span>│  └──────────────────────────┼───────────────────────────┘         │
+</span></span><span style="display:flex;"><span>└─────────────────────────────┼─────────────────────────────────────┘
+</span></span><span style="display:flex;"><span>                              │
+</span></span><span style="display:flex;"><span>                              │ Files on disk
+</span></span><span style="display:flex;"><span>                              │
+</span></span><span style="display:flex;"><span>┌─────────────────────────────▼─────────────────────────────────────┐
+</span></span><span style="display:flex;"><span>│                         Local File System                         │
+</span></span><span style="display:flex;"><span>│                                                                   │
+</span></span><span style="display:flex;"><span>│  workspace/                                                       │
+</span></span><span style="display:flex;"><span>│  ├── workspace.yaml          (Metadata)                           │
+</span></span><span style="display:flex;"><span>│  ├── charts/                  (Chart definitions)                 │
+</span></span><span style="display:flex;"><span>│  │   ├── chart_001.yaml                                           │
+</span></span><span style="display:flex;"><span>│  │   └── chart_002.yaml                                           │
+</span></span><span style="display:flex;"><span>│  ├── subjects/                (Subject definitions)               │
+</span></span><span style="display:flex;"><span>│  │   └── subject_001.yaml                                         │
+</span></span><span style="display:flex;"><span>│  └── data/                    (Computed data)                     │
+</span></span><span style="display:flex;"><span>│      ├── workspace.db        (DuckDB)                             │
+</span></span><span style="display:flex;"><span>│      └── parquet/            (Parquet files)                      │
+</span></span><span style="display:flex;"><span>│          ├── chart_001.parquet                                    │
+</span></span><span style="display:flex;"><span>│          └── chart_002.parquet                                    │
+</span></span><span style="display:flex;"><span>└───────────────────────────────────────────────────────────────────┘
+</span></span></code></pre></div><h2 id="data-flow-chart-creation">Data Flow: Chart Creation</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>User Input
+</span></span><span style="display:flex;"><span>    │
+</span></span><span style="display:flex;"><span>    ▼
+</span></span><span style="display:flex;"><span>┌─────────────────┐
+</span></span><span style="display:flex;"><span>│  UI/CLI Input   │  (Name, Date, Location, Settings)
+</span></span><span style="display:flex;"><span>└────────┬────────┘
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         │ build chart + workspace
+</span></span><span style="display:flex;"><span>         ▼
+</span></span><span style="display:flex;"><span>┌──────────────────┐
+</span></span><span style="display:flex;"><span>│ module.workspace │
+</span></span><span style="display:flex;"><span>│ - load/save      │
+</span></span><span style="display:flex;"><span>│ - chart config   │
+</span></span><span style="display:flex;"><span>└────────┬─────────┘
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         ├──► module.services.compute_positions
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         └──► module.storage (optional)
+</span></span><span style="display:flex;"><span>              │
+</span></span><span style="display:flex;"><span>              ▼
+</span></span><span style="display:flex;"><span>         ┌─────────────────┐
+</span></span><span style="display:flex;"><span>         │  DuckDB/Parquet │
+</span></span><span style="display:flex;"><span>         │  - positions    │
+</span></span><span style="display:flex;"><span>         └────────┬────────┘
+</span></span><span style="display:flex;"><span>                  │
+</span></span><span style="display:flex;"><span>                  ▼
+</span></span><span style="display:flex;"><span>         ┌─────────────────┐
+</span></span><span style="display:flex;"><span>         │  Return to UI   │
+</span></span><span style="display:flex;"><span>         │  - chart_id     │
+</span></span><span style="display:flex;"><span>         │  - positions    │
+</span></span><span style="display:flex;"><span>         └─────────────────┘
+</span></span></code></pre></div><h2 id="data-flow-transit-computation">Data Flow: Transit Computation</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>User Input
+</span></span><span style="display:flex;"><span>    │
+</span></span><span style="display:flex;"><span>    ▼
+</span></span><span style="display:flex;"><span>┌─────────────────┐
+</span></span><span style="display:flex;"><span>│  Transit Panel  │  (Source chart, Time range, Objects)
+</span></span><span style="display:flex;"><span>└────────┬────────┘
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         │ compute series
+</span></span><span style="display:flex;"><span>         ▼
+</span></span><span style="display:flex;"><span>┌─────────────────┐
+</span></span><span style="display:flex;"><span>│ module.services │
+</span></span><span style="display:flex;"><span>│ - series loop   │
+</span></span><span style="display:flex;"><span>│ - positions     │
+</span></span><span style="display:flex;"><span>│ - aspects (on   │
+</span></span><span style="display:flex;"><span>│   demand)       │
+</span></span><span style="display:flex;"><span>└────────┬────────┘
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         │ batch store (optional)
+</span></span><span style="display:flex;"><span>         ▼
+</span></span><span style="display:flex;"><span>┌─────────────────┐
+</span></span><span style="display:flex;"><span>│  DuckDB/Parquet │
+</span></span><span style="display:flex;"><span>│  - positions    │
+</span></span><span style="display:flex;"><span>└────────┬────────┘
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         │ query results
+</span></span><span style="display:flex;"><span>         ▼
+</span></span><span style="display:flex;"><span>┌─────────────────┐
+</span></span><span style="display:flex;"><span>│  UI Updates     │
+</span></span><span style="display:flex;"><span>│  - Progress     │
+</span></span><span style="display:flex;"><span>│  - Results      │
+</span></span><span style="display:flex;"><span>└─────────────────┘
+</span></span></code></pre></div><h2 id="storage-schema-relationships">Storage Schema Relationships</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>┌──────────────────────────────┐
+</span></span><span style="display:flex;"><span>│  computed_positions          │
+</span></span><span style="display:flex;"><span>│                              │
+</span></span><span style="display:flex;"><span>│  - chart_id                  │
+</span></span><span style="display:flex;"><span>│  - datetime                  │
+</span></span><span style="display:flex;"><span>│  - object_id                 │
+</span></span><span style="display:flex;"><span>│  - longitude/latitude        │
+</span></span><span style="display:flex;"><span>│  - speed/retrograde          │
+</span></span><span style="display:flex;"><span>│  - engine/ephemeris_file     │
+</span></span><span style="display:flex;"><span>│  - ... (optional fields)     │
+</span></span><span style="display:flex;"><span>└──────────────────────────────┘
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Aspects are computed on demand from positions (not stored by default).
+</span></span></code></pre></div></section>
   
   <style>
      
@@ -747,7 +895,7 @@ Full setup steps are in <code>installation.md</code> under &ldquo;Generating Doc
   class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
 >
   <div class="mr-auto">&copy;2026
-    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
+    <a class="link" href="https://kefer-astrology.github.io/function-wrapper/">Kefer Astrology Documentation</a></div>
   <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
     >powered by hugo️️</a
   >️

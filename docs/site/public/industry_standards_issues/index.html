@@ -11,7 +11,7 @@
   style="--bg:#faf8f1"
   lang="en-us"
   dir="ltr"
-><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+><head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta
@@ -20,38 +20,84 @@
   />
 
   
-  <title>Tags - Kefer Astrology Documentation</title>
+  <title>Industry Standards Issues - Kefer Astrology Documentation</title>
 
   
   <meta name="theme-color" />
 
-  
-  <meta
-    name="description"
-    content="Complete documentation for Kefer Astrology function-wrapper"
-  />
-  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.4d6e4063acd5362e811e595b8dda7b07c6d8d9afb1f0c67fd37159fb016bec64.css" integrity="sha256-TW5AY6zVNi6BHllbjdp7B8bY2a&#43;x8MZ/03FZ&#43;wFr7GQ=" />
+  <meta name="description" content="Industry Standards and Code Quality Issues - Current
+This is the condensed list of outstanding issues after recent fixes.
+Resolved
+
+bare except: clauses removed
+debug prints replaced by logging
+logging infrastructure in use
+generic except Exception removed or narrowed
+path traversal and sensitive logging cleaned up
+error return policy aligned for public services
+TODO comments removed or implemented
+hardcoded aspect definitions moved to config
+
+Outstanding
+High priority
+
+Magic numbers
+Move 360.0, 23.4392911, 0.0001, and 1e-4 into shared constants.
+
+Medium priority
+
+Missing type hints
+Import organization
+
+Next Suggested Steps
+
+add module/constants.py and replace magic numbers
+standardize imports and add missing type hints
+
+Related Notes
+
+Industry Standards Audit
+" />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://kefer-astrology.github.io/function-wrapper/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
-  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
+  <link rel="preload" as="image" href="https://kefer-astrology.github.io/function-wrapper/theme.png" />
 
   
 
   
 
-  
+  <script
+    defer
+    src="https://kefer-astrology.github.io/function-wrapper/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
 
   
   <link
     rel="icon"
-    href="http://localhost:1313/favicon.ico"
+    href="https://kefer-astrology.github.io/function-wrapper/favicon.ico"
   />
   <link
     rel="apple-touch-icon"
-    href="http://localhost:1313/apple-touch-icon.png"
+    href="https://kefer-astrology.github.io/function-wrapper/apple-touch-icon.png"
   />
 
-  <meta name="generator" content="Hugo 0.154.2">
+  <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="Industry Standards Issues">
+  <meta itemprop="description" content="Condensed list of outstanding code-quality issues">
+  <meta itemprop="wordCount" content="106"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/industry_standards_issues/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="Industry Standards Issues">
+  <meta property="og:description" content="Condensed list of outstanding code-quality issues">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Industry Standards Issues">
+  <meta name="twitter:description" content="Condensed list of outstanding code-quality issues">
+
+  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/industry_standards_issues/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -62,7 +108,7 @@
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="http://localhost:1313/"
+        href="https://kefer-astrology.github.io/function-wrapper/"
         >Kefer Astrology Documentation</a
       >
       <div
@@ -557,11 +603,146 @@
 <main
       class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
       style="max-width: 90% !important;"
-    ></main><footer
+    ><article class="pt-6">
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="industry-standards-and-code-quality-issues---current">Industry Standards and Code Quality Issues - Current</h1>
+<p>This is the condensed list of outstanding issues after recent fixes.</p>
+<h2 id="resolved">Resolved</h2>
+<ul>
+<li>bare <code>except:</code> clauses removed</li>
+<li>debug prints replaced by logging</li>
+<li>logging infrastructure in use</li>
+<li>generic <code>except Exception</code> removed or narrowed</li>
+<li>path traversal and sensitive logging cleaned up</li>
+<li>error return policy aligned for public services</li>
+<li>TODO comments removed or implemented</li>
+<li>hardcoded aspect definitions moved to config</li>
+</ul>
+<h2 id="outstanding">Outstanding</h2>
+<h3 id="high-priority">High priority</h3>
+<ol>
+<li>Magic numbers
+Move <code>360.0</code>, <code>23.4392911</code>, <code>0.0001</code>, and <code>1e-4</code> into shared constants.</li>
+</ol>
+<h3 id="medium-priority">Medium priority</h3>
+<ol start="2">
+<li>Missing type hints</li>
+<li>Import organization</li>
+</ol>
+<h2 id="next-suggested-steps">Next Suggested Steps</h2>
+<ul>
+<li>add <code>module/constants.py</code> and replace magic numbers</li>
+<li>standardize imports and add missing type hints</li>
+</ul>
+<h2 id="related-notes">Related Notes</h2>
+<ul>
+<li><a href="industry_standards_audit">Industry Standards Audit</a></li>
+</ul>
+</section>
+  
+  <style>
+     
+    .prose {
+      color: #374151 !important;  
+    }
+    .prose p, .prose li, .prose td, .prose th {
+      color: #4b5563 !important;  
+    }
+    .prose h1 {
+      font-size: 2.5rem !important;
+      font-weight: 700 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.5rem;
+      color: #111827 !important;  
+    }
+    .prose h2 {
+      font-size: 2rem !important;
+      font-weight: 600 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 0.25rem;
+      color: #1f2937 !important;  
+    }
+    .prose h3 {
+      font-size: 1.5rem !important;
+      font-weight: 600 !important;
+      margin-top: 1.5rem !important;
+      margin-bottom: 0.75rem !important;
+      color: #374151 !important;  
+    }
+    .prose a {
+      color: #2563eb !important;  
+    }
+    .prose a:hover {
+      color: #1d4ed8 !important;  
+    }
+    .dark .prose {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose p, .dark .prose li, .dark .prose td, .dark .prose th {
+      color: #d1d5db !important;  
+    }
+    .dark .prose h1 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      color: #f9fafb !important;  
+    }
+    .dark .prose h2 {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      color: #f3f4f6 !important;  
+    }
+    .dark .prose h3 {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose a {
+      color: #60a5fa !important;  
+    }
+     
+    .prose h4 {
+      color: #b8860b !important;  
+    }
+    .prose ul li strong,
+    .prose ol li strong {
+      color: #b8860b !important;  
+    }
+    .dark .prose h4 {
+      color: #b8860b !important;  
+    }
+    .dark .prose ul li strong,
+    .dark .prose ol li strong {
+      color: #b8860b !important;  
+    }
+     
+    .prose code {
+      color: #92400e !important;  
+      background-color: #fef3c7 !important;  
+    }
+    .prose pre {
+      background-color: #1f2937 !important;  
+    }
+    .prose pre code {
+      color: #fbbf24 !important;  
+      background-color: transparent !important;
+    }
+    .dark .prose code {
+      color: #fbbf24 !important;  
+      background-color: rgba(251, 191, 36, 0.1) !important;  
+    }
+    .dark .prose pre {
+      background-color: #111827 !important;  
+    }
+    .dark .prose pre code {
+      color: #fbbf24 !important;  
+    }
+  </style>
+
+  
+</article></main><footer
   class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
 >
   <div class="mr-auto">&copy;2026
-    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
+    <a class="link" href="https://kefer-astrology.github.io/function-wrapper/">Kefer Astrology Documentation</a></div>
   <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
     >powered by hugo️️</a
   >️

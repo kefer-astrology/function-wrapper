@@ -2,42 +2,50 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/</loc>
   </url><url>
-    <loc>http://localhost:1313/ui_streamlit/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/readme/</loc>
   </url><url>
-    <loc>http://localhost:1313/ui_kivy/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/ui_streamlit/</loc>
   </url><url>
-    <loc>http://localhost:1313/auto/cli/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/ui_kivy/</loc>
   </url><url>
-    <loc>http://localhost:1313/auto/models/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/auto/cli/</loc>
   </url><url>
-    <loc>http://localhost:1313/auto/services/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/auto/models/</loc>
   </url><url>
-    <loc>http://localhost:1313/auto/storage/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/auto/services/</loc>
   </url><url>
-    <loc>http://localhost:1313/auto/ui_streamlit/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/auto/storage/</loc>
   </url><url>
-    <loc>http://localhost:1313/auto/utils/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/auto/ui_streamlit/</loc>
   </url><url>
-    <loc>http://localhost:1313/auto/workspace/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/auto/utils/</loc>
   </url><url>
-    <loc>http://localhost:1313/auto/z_visual/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/auto/workspace/</loc>
   </url><url>
-    <loc>http://localhost:1313/architecture/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/auto/z_visual/</loc>
   </url><url>
-    <loc>http://localhost:1313/cli_reference/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/performance_bottleneck_analysis/</loc>
   </url><url>
-    <loc>http://localhost:1313/enums/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/performance_fix_summary/</loc>
   </url><url>
-    <loc>http://localhost:1313/installation/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/industry_standards_audit/</loc>
   </url><url>
-    <loc>http://localhost:1313/testing_guide/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/industry_standards_issues/</loc>
   </url><url>
-    <loc>http://localhost:1313/auto/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/architecture/</loc>
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/cli_reference/</loc>
   </url><url>
-    <loc>http://localhost:1313/tags/</loc>
+    <loc>https://kefer-astrology.github.io/function-wrapper/enums/</loc>
+  </url><url>
+    <loc>https://kefer-astrology.github.io/function-wrapper/fastapi_tauri/</loc>
+  </url><url>
+    <loc>https://kefer-astrology.github.io/function-wrapper/installation/</loc>
+  </url><url>
+    <loc>https://kefer-astrology.github.io/function-wrapper/testing_guide/</loc>
+  </url><url>
+    <loc>https://kefer-astrology.github.io/function-wrapper/auto/</loc>
   </url>
 </urlset>

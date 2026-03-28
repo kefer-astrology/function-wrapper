@@ -20,32 +20,30 @@
   />
 
   
-  <title>Performance Bottleneck Analysis - Kefer Astrology Documentation</title>
+  <title>Industry Standards Audit - Kefer Astrology Documentation</title>
 
   
   <meta name="theme-color" />
 
-  <meta name="description" content="Performance Bottleneck Analysis: Why 20 Minutes for a Day?
-Problem
-Expected: Swisseph can compute a whole day in a fraction of a second
-Actual: Taking 20 minutes to compute a whole day
-Root Cause Analysis
-Current Implementation Flow
-For each timestamp in compute_and_store_series():
+  <meta name="description" content="Industry Standards Audit - Status Update
+Scope: module/ directory
+Last Updated: 2026-01-24
+This page reflects the current remediation status for the code-quality scan.
+Resolved
 
-Call compute_positions()
-compute_positions() calls compute_subject()
-compute_subject() creates a new AstrologicalSubject
-AstrologicalSubject initialization does full computation
-Extract positions via the Subject wrapper and data extraction
-Call store_positions() which does an individual INSERT
+bare except: clauses removed
+debug prints removed or migrated to logging
+logging infrastructure in place and used
+broad except Exception reduced across services, ui_streamlit, ui_kivy
+path traversal hardening and sensitive logging cleanup
 
-Bottlenecks
-1. AstrologicalSubject creation overhead
-# This happens for EVERY timestamp!
-subj = compute_subject(name, dt_str, loc_str)  # Creates new AstrologicalSubject
-Even though the Swisseph math is fast, creating the full
-AstrologicalSubject object adds heavy overhead:" />
+Remaining
+High priority
+
+
+Magic numbers
+Recommendation: centralize 360.0, 23.4392911, 0.0001, and 1e-4
+into shared constants." />
   <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://kefer-astrology.github.io/function-wrapper/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
@@ -72,20 +70,20 @@ AstrologicalSubject object adds heavy overhead:" />
   />
 
   <meta name="generator" content="Hugo 0.157.0">
-  <meta itemprop="name" content="Performance Bottleneck Analysis">
-  <meta itemprop="description" content="Root-cause analysis of slow batch transit computation">
-  <meta itemprop="wordCount" content="401"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/performance_bottleneck_analysis/">
+  <meta itemprop="name" content="Industry Standards Audit">
+  <meta itemprop="description" content="Current remediation status for code-quality and engineering standards">
+  <meta itemprop="wordCount" content="129"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/industry_standards_audit/">
   <meta property="og:site_name" content="Kefer Astrology Documentation">
-  <meta property="og:title" content="Performance Bottleneck Analysis">
-  <meta property="og:description" content="Root-cause analysis of slow batch transit computation">
+  <meta property="og:title" content="Industry Standards Audit">
+  <meta property="og:description" content="Current remediation status for code-quality and engineering standards">
   <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
 
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Performance Bottleneck Analysis">
-  <meta name="twitter:description" content="Root-cause analysis of slow batch transit computation">
+  <meta name="twitter:title" content="Industry Standards Audit">
+  <meta name="twitter:description" content="Current remediation status for code-quality and engineering standards">
 
-  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/performance_bottleneck_analysis/" />
+  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/industry_standards_audit/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -592,97 +590,48 @@ AstrologicalSubject object adds heavy overhead:" />
       class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
       style="max-width: 90% !important;"
     ><article class="pt-6">
-  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="performance-bottleneck-analysis-why-20-minutes-for-a-day">Performance Bottleneck Analysis: Why 20 Minutes for a Day?</h1>
-<h2 id="problem">Problem</h2>
-<p><strong>Expected</strong>: Swisseph can compute a whole day in a fraction of a second<br>
-<strong>Actual</strong>: Taking 20 minutes to compute a whole day</p>
-<h2 id="root-cause-analysis">Root Cause Analysis</h2>
-<h3 id="current-implementation-flow">Current Implementation Flow</h3>
-<p>For each timestamp in <code>compute_and_store_series()</code>:</p>
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="industry-standards-audit---status-update">Industry Standards Audit - Status Update</h1>
+<p><strong>Scope</strong>: <code>module/</code> directory<br>
+<strong>Last Updated</strong>: 2026-01-24</p>
+<p>This page reflects the current remediation status for the code-quality scan.</p>
+<h2 id="resolved">Resolved</h2>
+<ul>
+<li>bare <code>except:</code> clauses removed</li>
+<li>debug prints removed or migrated to logging</li>
+<li>logging infrastructure in place and used</li>
+<li>broad <code>except Exception</code> reduced across <code>services</code>, <code>ui_streamlit</code>, <code>ui_kivy</code></li>
+<li>path traversal hardening and sensitive logging cleanup</li>
+</ul>
+<h2 id="remaining">Remaining</h2>
+<h3 id="high-priority">High priority</h3>
 <ol>
-<li>Call <code>compute_positions()</code></li>
-<li><code>compute_positions()</code> calls <code>compute_subject()</code></li>
-<li><code>compute_subject()</code> creates a new <code>AstrologicalSubject</code></li>
-<li><code>AstrologicalSubject</code> initialization does full computation</li>
-<li>Extract positions via the <code>Subject</code> wrapper and data extraction</li>
-<li>Call <code>store_positions()</code> which does an individual <code>INSERT</code></li>
+<li>
+<p>Magic numbers
+Recommendation: centralize <code>360.0</code>, <code>23.4392911</code>, <code>0.0001</code>, and <code>1e-4</code>
+into shared constants.</p>
+</li>
+<li>
+<p>Inconsistent error return values
+Recommendation: define one error-handling policy and refactor callers to
+follow it consistently.</p>
+</li>
 </ol>
-<h3 id="bottlenecks">Bottlenecks</h3>
-<h4 id="1-astrologicalsubject-creation-overhead">1. <code>AstrologicalSubject</code> creation overhead</h4>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#57606a"># This happens for EVERY timestamp!</span>
-</span></span><span style="display:flex;"><span>subj <span style="color:#0550ae">=</span> compute_subject<span style="color:#1f2328">(</span>name<span style="color:#1f2328">,</span> dt_str<span style="color:#1f2328">,</span> loc_str<span style="color:#1f2328">)</span>  <span style="color:#57606a"># Creates new AstrologicalSubject</span>
-</span></span></code></pre></div><p>Even though the Swisseph math is fast, creating the full
-<code>AstrologicalSubject</code> object adds heavy overhead:</p>
-<ul>
-<li>object initialization</li>
-<li>data structure building</li>
-<li>multiple method calls</li>
-<li>repeated memory allocation</li>
-</ul>
-<h4 id="2-individual-insert-statements">2. Individual <code>INSERT</code> statements</h4>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#cf222e">for</span> datetime_str<span style="color:#1f2328">,</span> positions <span style="color:#0550ae">in</span> positions_batch<span style="color:#1f2328">:</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#6a737d">self</span><span style="color:#0550ae">.</span>store_positions<span style="color:#1f2328">(</span><span style="color:#0550ae">...</span><span style="color:#1f2328">)</span>  <span style="color:#57606a"># Individual INSERT per timestamp</span>
-</span></span></code></pre></div><p>Even though values are logically batched, storage still performs one insert per
-timestamp instead of using <code>executemany()</code> with a single large row set.</p>
-<h4 id="3-subject-wrapper-overhead">3. Subject wrapper overhead</h4>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>subject_wrapper <span style="color:#0550ae">=</span> Subject<span style="color:#1f2328">(</span>name<span style="color:#1f2328">)</span>
-</span></span><span style="display:flex;"><span>subject_wrapper<span style="color:#0550ae">.</span>computed <span style="color:#0550ae">=</span> subj
-</span></span><span style="display:flex;"><span>object_list<span style="color:#1f2328">,</span> degrees_list<span style="color:#1f2328">,</span> labels <span style="color:#0550ae">=</span> subject_wrapper<span style="color:#0550ae">.</span>data<span style="color:#1f2328">()</span>
-</span></span></code></pre></div><p>This is smaller than the first two issues, but still adds avoidable object
-creation and method dispatch in a hot loop.</p>
-<h2 id="performance-math">Performance Math</h2>
-<p>For 1 day with 1-minute intervals:</p>
-<ul>
-<li>timestamps: 1,440</li>
-<li>current runtime: 20 minutes = 1,200 seconds</li>
-<li>per timestamp: about <code>0.83s</code></li>
-</ul>
-<p>Expected if computation dominated:</p>
-<ul>
-<li>Swisseph computation: about <code>0.001s</code> per timestamp</li>
-<li>total expected: about <code>1.4s</code></li>
-</ul>
-<p>That implies the run time is mostly overhead rather than astronomy math.</p>
-<h2 id="candidate-solutions">Candidate Solutions</h2>
-<h3 id="option-1-direct-swisseph-access">Option 1: direct Swisseph access</h3>
-<p>Bypass Kerykeion&rsquo;s <code>AstrologicalSubject</code> and call Swisseph directly:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#cf222e">import</span> <span style="color:#24292e">swisseph</span> <span style="color:#cf222e">as</span> <span style="color:#24292e">swe</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#cf222e">def</span> <span style="color:#6639ba">compute_positions_swisseph_direct</span><span style="color:#1f2328">(</span>dt<span style="color:#1f2328">,</span> location<span style="color:#1f2328">,</span> planets<span style="color:#1f2328">):</span>
-</span></span><span style="display:flex;"><span>    jd <span style="color:#0550ae">=</span> swe<span style="color:#0550ae">.</span>julday<span style="color:#1f2328">(</span>
-</span></span><span style="display:flex;"><span>        dt<span style="color:#0550ae">.</span>year<span style="color:#1f2328">,</span> dt<span style="color:#0550ae">.</span>month<span style="color:#1f2328">,</span> dt<span style="color:#0550ae">.</span>day<span style="color:#1f2328">,</span>
-</span></span><span style="display:flex;"><span>        dt<span style="color:#0550ae">.</span>hour <span style="color:#0550ae">+</span> dt<span style="color:#0550ae">.</span>minute <span style="color:#0550ae">/</span> <span style="color:#0550ae">60.0</span> <span style="color:#0550ae">+</span> dt<span style="color:#0550ae">.</span>second <span style="color:#0550ae">/</span> <span style="color:#0550ae">3600.0</span><span style="color:#1f2328">,</span>
-</span></span><span style="display:flex;"><span>        swe<span style="color:#0550ae">.</span>GREG_CAL<span style="color:#1f2328">,</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#1f2328">)</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#0550ae">...</span>
-</span></span></code></pre></div><p>This should be the fastest path for bulk transit work.</p>
-<h3 id="option-2-reuse-astrologicalsubject">Option 2: reuse <code>AstrologicalSubject</code></h3>
-<p>If Kerykeion supports it safely, reuse one object and mutate time rather than
-recreating it for each timestamp.</p>
-<h3 id="option-3-batch-inserts">Option 3: batch inserts</h3>
-<p>Collect rows first, then store with one <code>executemany()</code> call:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#6a737d">self</span><span style="color:#0550ae">.</span>conn<span style="color:#0550ae">.</span>executemany<span style="color:#1f2328">(</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#0a3069">&#34;INSERT OR REPLACE INTO computed_positions (...) VALUES (?, ?, ?, ...)&#34;</span><span style="color:#1f2328">,</span>
-</span></span><span style="display:flex;"><span>    rows<span style="color:#1f2328">,</span>
-</span></span><span style="display:flex;"><span><span style="color:#1f2328">)</span>
-</span></span></code></pre></div><h2 id="recommended-solution">Recommended Solution</h2>
-<p>Use a hybrid approach:</p>
-<ol>
-<li>Direct Swisseph for bulk Kerykeion/Swisseph series work</li>
-<li>Batch insert storage writes</li>
-<li>Keep the current object-oriented path for single interactive chart
-computations where readability matters more than hot-path speed</li>
+<h3 id="medium-priority">Medium priority</h3>
+<ol start="3">
+<li>TODO comments in production</li>
+<li>Hardcoded aspect definitions</li>
+<li>Missing type hints</li>
+<li>Import organization</li>
 </ol>
-<h2 id="expected-improvement">Expected Improvement</h2>
+<h2 id="next-pass-suggestions">Next Pass Suggestions</h2>
 <ul>
-<li>current: 20 minutes for 1 day</li>
-<li>target: about 1.4 seconds for 1 day</li>
-<li>rough speedup: hundreds of times faster</li>
+<li>create <code>module/constants.py</code> and replace magic numbers</li>
+<li>standardize the error-return policy in <code>services.py</code></li>
+<li>move aspects to config and clean remaining TODOs</li>
 </ul>
 <h2 id="related-notes">Related Notes</h2>
 <ul>
-<li><a href="performance_fix_summary">Performance Fix Summary</a></li>
-<li><a href="architecture">Architecture</a></li>
+<li><a href="industry_standards_issues">Industry Standards Issues</a></li>
 </ul>
 </section>
   

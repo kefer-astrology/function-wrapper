@@ -9,8 +9,10 @@ Welcome to the auto-generated documentation for the Kefer Astrology function-wra
 
 ## Documentation Structure
 
+- **[Project Overview](readme)** - Quickstart, runtime split, and high-level system view
 - **[Installation and Venvs](installation)** - Environment setup and multi-venv workflow
 - **[Architecture](architecture)** - Backend responsibilities and storage model
+- **[FastAPI + React + Tauri](fastapi_tauri)** - Recommended integration for the target desktop/web stack
 - **[Models Overview](models.mmd)** - Mermaid class diagram showing all dataclasses and their relationships
 - **[Enums Overview](enums)** - Complete list of all enumerations and their members
 - **User Interfaces**
@@ -24,6 +26,11 @@ Welcome to the auto-generated documentation for the Kefer Astrology function-wra
   - [utils](auto/utils) - Utility functions
   - [workspace](auto/workspace) - Workspace management
   - [z_visual](auto/z_visual) - Visualization utilities
+- **Engineering Notes**
+  - [Performance Bottleneck Analysis](performance_bottleneck_analysis) - Root-cause notes for slow batch computations
+  - [Performance Fix Summary](performance_fix_summary) - Summary of the optimization approach
+  - [Industry Standards Audit](industry_standards_audit) - Current remediation status
+  - [Industry Standards Issues](industry_standards_issues) - Condensed outstanding issues
 
 ## Model Class Diagram
 
@@ -336,4 +343,3 @@ WorkspaceDefaults --> ElementColorSettings
 WorkspaceDefaults --> Location
 WorkspaceDefaults --> RadixPointColorSettings
 ```
-

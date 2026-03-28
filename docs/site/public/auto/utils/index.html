@@ -11,7 +11,7 @@
   style="--bg:#faf8f1"
   lang="en-us"
   dir="ltr"
-><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+><head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta
@@ -57,10 +57,10 @@ observer: Skyfield Topos observer object
 
 
 ts: Skyfield timescale object" />
-  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.4d6e4063acd5362e811e595b8dda7b07c6d8d9afb1f0c67fd37159fb016bec64.css" integrity="sha256-TW5AY6zVNi6BHllbjdp7B8bY2a&#43;x8MZ/03FZ&#43;wFr7GQ=" />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://kefer-astrology.github.io/function-wrapper/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
-  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
+  <link rel="preload" as="image" href="https://kefer-astrology.github.io/function-wrapper/theme.png" />
 
   
 
@@ -68,21 +68,36 @@ ts: Skyfield timescale object" />
 
   <script
     defer
-    src="http://localhost:1313/highlight.min.js"
+    src="https://kefer-astrology.github.io/function-wrapper/highlight.min.js"
     onload="hljs.initHighlightingOnLoad();"
   ></script>
 
   
   <link
     rel="icon"
-    href="http://localhost:1313/favicon.ico"
+    href="https://kefer-astrology.github.io/function-wrapper/favicon.ico"
   />
   <link
     rel="apple-touch-icon"
-    href="http://localhost:1313/apple-touch-icon.png"
+    href="https://kefer-astrology.github.io/function-wrapper/apple-touch-icon.png"
   />
 
-  <meta name="generator" content="Hugo 0.154.2">
+  <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="utils Module">
+  <meta itemprop="description" content="documentation for utils module">
+  <meta itemprop="wordCount" content="1059"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/auto/utils/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="utils Module">
+  <meta property="og:description" content="documentation for utils module">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="auto">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="utils Module">
+  <meta name="twitter:description" content="documentation for utils module">
+
+  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/auto/utils/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -93,7 +108,7 @@ ts: Skyfield timescale object" />
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="http://localhost:1313/"
+        href="https://kefer-astrology.github.io/function-wrapper/"
         >Kefer Astrology Documentation</a
       >
       <div
@@ -592,7 +607,7 @@ ts: Skyfield timescale object" />
   <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="utils-module"><code>utils</code> module</h1>
 <h2 id="functions">Functions</h2>
 <h2 id="combine_date_time"><code>combine_date_time</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>combine_date_time<span style="color:#1f2328">(</span>input_date<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>date<span style="color:#1f2328">,</span> input_time<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>time<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>combine_date_time<span style="color:#1f2328">(</span>input_date<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>date<span style="color:#1f2328">,</span> input_time<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>time<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
 </span></span></code></pre></div><p>Combine a date and time into a naive datetime (no timezone).</p>
 <h4 id="parameters">Parameters</h4>
 <ul>
@@ -606,7 +621,7 @@ ts: Skyfield timescale object" />
 <h4 id="returns">Returns</h4>
 <p>Naive datetime combining date and time</p>
 <h2 id="compute_vernal_equinox_offset"><code>compute_vernal_equinox_offset</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>compute_vernal_equinox_offset<span style="color:#1f2328">(</span>year<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span><span style="color:#1f2328">,</span> eph<span style="color:#1f2328">,</span> observer<span style="color:#1f2328">,</span> ts<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">float</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>compute_vernal_equinox_offset<span style="color:#1f2328">(</span>year<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span><span style="color:#1f2328">,</span> eph<span style="color:#1f2328">,</span> observer<span style="color:#1f2328">,</span> ts<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">float</span>
 </span></span></code></pre></div><p>Compute the vernal equinox offset for tropical astrology adjustment.</p>
 <h4 id="parameters-1">Parameters</h4>
 <ul>
@@ -626,12 +641,12 @@ ts: Skyfield timescale object" />
 <h4 id="returns-1">Returns</h4>
 <p>The ecliptic longitude offset in degrees [0, 360)</p>
 <h2 id="default_ephemeris_path"><code>default_ephemeris_path</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>default_ephemeris_path<span style="color:#1f2328">()</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">str</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>default_ephemeris_path<span style="color:#1f2328">()</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">str</span>
 </span></span></code></pre></div><p>Return the default path to the local JPL ephemeris file.</p>
 <h4 id="returns-2">Returns</h4>
 <p>Absolute path to de421.bsp file in source/ directory</p>
 <h2 id="ensure_aware"><code>ensure_aware</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>ensure_aware<span style="color:#1f2328">(</span>dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> tz_name<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>ensure_aware<span style="color:#1f2328">(</span>dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> tz_name<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
 </span></span></code></pre></div><p>Return a timezone-aware datetime.</p>
 <h4 id="parameters-2">Parameters</h4>
 <ul>
@@ -646,7 +661,7 @@ ts: Skyfield timescale object" />
 <p>Timezone-aware datetime. If dt is already aware, returns unchanged.
 If tz_name provided, localizes to that timezone. Otherwise uses UTC.</p>
 <h2 id="expand_range"><code>expand_range</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>expand_range<span style="color:#1f2328">(</span>center<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> days<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>DateRange
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>expand_range<span style="color:#1f2328">(</span>center<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> days<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>DateRange
 </span></span></code></pre></div><p>Create a DateRange centered on a datetime extending days on both sides.</p>
 <h4 id="parameters-3">Parameters</h4>
 <ul>
@@ -660,7 +675,7 @@ If tz_name provided, localizes to that timezone. Otherwise uses UTC.</p>
 <h4 id="returns-4">Returns</h4>
 <p>DateRange from (center - days) to (center + days)</p>
 <h2 id="export_chart_yaml"><code>export_chart_yaml</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>export_chart_yaml<span style="color:#1f2328">(</span>chart<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance<span style="color:#1f2328">,</span> dest_dir<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">str</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>export_chart_yaml<span style="color:#1f2328">(</span>chart<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance<span style="color:#1f2328">,</span> dest_dir<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">str</span>
 </span></span></code></pre></div><p>Export a ChartInstance as YAML into dest_dir.</p>
 <h4 id="parameters-4">Parameters</h4>
 <ul>
@@ -674,7 +689,7 @@ If tz_name provided, localizes to that timezone. Otherwise uses UTC.</p>
 <h4 id="returns-5">Returns</h4>
 <p>Absolute file path to exported YAML file</p>
 <h2 id="export_workspace_yaml"><code>export_workspace_yaml</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>export_workspace_yaml<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> dest_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>export_workspace_yaml<span style="color:#1f2328">(</span>ws<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Workspace<span style="color:#1f2328">,</span> dest_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
 </span></span></code></pre></div><p>Export a Workspace as YAML to dest_path.</p>
 <h4 id="parameters-5">Parameters</h4>
 <ul>
@@ -691,7 +706,7 @@ If tz_name provided, localizes to that timezone. Otherwise uses UTC.</p>
 <p>Uses the local serializer to convert dataclasses, enums, and datetimes
 to primitives. Ensures parent directory exists.</p>
 <h2 id="find_vernal_equinox_datetime"><code>find_vernal_equinox_datetime</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>find_vernal_equinox_datetime<span style="color:#1f2328">(</span>year<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>find_vernal_equinox_datetime<span style="color:#1f2328">(</span>year<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
 </span></span></code></pre></div><p>Find the approximate datetime of the vernal equinox for a given year.</p>
 <h4 id="parameters-6">Parameters</h4>
 <ul>
@@ -700,7 +715,7 @@ to primitives. Ensures parent directory exists.</p>
 <h4 id="returns-7">Returns</h4>
 <p>A timezone-aware UTC datetime for the approximate vernal equinox</p>
 <h2 id="import_chart_yaml"><code>import_chart_yaml</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>import_chart_yaml<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>import_chart_yaml<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance
 </span></span></code></pre></div><p>Read a chart YAML file from disk and parse into a ChartInstance.</p>
 <h4 id="parameters-7">Parameters</h4>
 <ul>
@@ -709,7 +724,7 @@ to primitives. Ensures parent directory exists.</p>
 <h4 id="returns-8">Returns</h4>
 <p>ChartInstance parsed from YAML file</p>
 <h2 id="in_range"><code>in_range</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>in_range<span style="color:#1f2328">(</span>dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> dr<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>DateRange<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">bool</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>in_range<span style="color:#1f2328">(</span>dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> dr<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>DateRange<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">bool</span>
 </span></span></code></pre></div><p>Check if datetime lies within the inclusive DateRange.</p>
 <h4 id="parameters-8">Parameters</h4>
 <ul>
@@ -723,7 +738,7 @@ to primitives. Ensures parent directory exists.</p>
 <h4 id="returns-9">Returns</h4>
 <p>True if dt is within [start, end] (inclusive), False otherwise</p>
 <h2 id="load_sfs_models_from_dir"><code>load_sfs_models_from_dir</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>load_sfs_models_from_dir<span style="color:#1f2328">(</span>dir_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AstroModel<span style="color:#1f2328">]</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>load_sfs_models_from_dir<span style="color:#1f2328">(</span>dir_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AstroModel<span style="color:#1f2328">]</span>
 </span></span></code></pre></div><p>Scan a directory for StarFisher .sfs files and build AstroModel catalogs.</p>
 <h4 id="parameters-9">Parameters</h4>
 <ul>
@@ -733,7 +748,7 @@ to primitives. Ensures parent directory exists.</p>
 <p>Dictionary mapping model name (from file stem or parsed model.name) to AstroModel.
 Files that cannot be decoded or parsed are skipped.</p>
 <h2 id="location_equals"><code>location_equals</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>location_equals<span style="color:#1f2328">(</span>loc1<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location<span style="color:#1f2328">,</span> loc2<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">bool</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>location_equals<span style="color:#1f2328">(</span>loc1<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location<span style="color:#1f2328">,</span> loc2<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location<span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">bool</span>
 </span></span></code></pre></div><p>Check approximate equality of two Location objects.</p>
 <h4 id="parameters-10">Parameters</h4>
 <ul>
@@ -747,7 +762,7 @@ Files that cannot be decoded or parsed are skipped.</p>
 <h4 id="returns-11">Returns</h4>
 <p>True if locations are approximately equal, False otherwise</p>
 <h2 id="location_from_coords"><code>location_from_coords</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>location_from_coords<span style="color:#1f2328">(</span>lat<span style="color:#1f2328">:</span> <span style="color:#6639ba">float</span><span style="color:#1f2328">,</span> lon<span style="color:#1f2328">:</span> <span style="color:#6639ba">float</span><span style="color:#1f2328">,</span> name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;&#39;</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>location_from_coords<span style="color:#1f2328">(</span>lat<span style="color:#1f2328">:</span> <span style="color:#6639ba">float</span><span style="color:#1f2328">,</span> lon<span style="color:#1f2328">:</span> <span style="color:#6639ba">float</span><span style="color:#1f2328">,</span> name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;&#39;</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location
 </span></span></code></pre></div><p>Build a Location from raw coordinates, inferring timezone via TimezoneFinder.</p>
 <h4 id="parameters-11">Parameters</h4>
 <ul>
@@ -764,10 +779,10 @@ Files that cannot be decoded or parsed are skipped.</p>
 <h4 id="returns-12">Returns</h4>
 <p>Location instance with inferred timezone</p>
 <h2 id="now_utc"><code>now_utc</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>now_utc<span style="color:#1f2328">()</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>now_utc<span style="color:#1f2328">()</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
 </span></span></code></pre></div><p>Return current time as a timezone-aware UTC datetime.</p>
 <h2 id="parse_chart_yaml"><code>parse_chart_yaml</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>parse_chart_yaml<span style="color:#1f2328">(</span>data<span style="color:#1f2328">:</span> <span style="color:#6639ba">dict</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>parse_chart_yaml<span style="color:#1f2328">(</span>data<span style="color:#1f2328">:</span> <span style="color:#6639ba">dict</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance
 </span></span></code></pre></div><p>Construct a ChartInstance from a YAML-mapped dict with safe coercions.</p>
 <h4 id="parameters-12">Parameters</h4>
 <ul>
@@ -780,7 +795,7 @@ Files that cannot be decoded or parsed are skipped.</p>
 <h4 id="warnings">Warnings</h4>
 <p>⚠️ ValueError: If subject data is invalid</p>
 <h2 id="parse_sfs_content"><code>parse_sfs_content</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>parse_sfs_content<span style="color:#1f2328">(</span>content<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> Tuple<span style="color:#1f2328">[</span>module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AstroModel<span style="color:#1f2328">,</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> Any<span style="color:#1f2328">]]</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>parse_sfs_content<span style="color:#1f2328">(</span>content<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> Tuple<span style="color:#1f2328">[</span>module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>AstroModel<span style="color:#1f2328">,</span> Dict<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> Any<span style="color:#1f2328">]]</span>
 </span></span></code></pre></div><p>Parse the content of a StarFisher .sfs file and map to AstroModel.</p>
 <h4 id="parameters-13">Parameters</h4>
 <ul>
@@ -790,7 +805,7 @@ Files that cannot be decoded or parsed are skipped.</p>
 <p>Tuple of (AstroModel, display_config_dict) where display_config_dict
 contains display-related settings from the .sfs file</p>
 <h2 id="parse_yaml_content"><code>parse_yaml_content</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>parse_yaml_content<span style="color:#1f2328">(</span>data<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> <span style="color:#6639ba">bytes</span><span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">dict</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>parse_yaml_content<span style="color:#1f2328">(</span>data<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> <span style="color:#6639ba">bytes</span><span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">dict</span>
 </span></span></code></pre></div><p>Parse YAML from a string or bytes and return a dict.</p>
 <h4 id="parameters-14">Parameters</h4>
 <ul>
@@ -801,7 +816,7 @@ contains display-related settings from the .sfs file</p>
 <h4 id="notes-2">Notes</h4>
 <p>Useful for handling uploaded files or in-memory YAML content uniformly.</p>
 <h2 id="prepare_horoscope"><code>prepare_horoscope</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>prepare_horoscope<span style="color:#1f2328">(</span>name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;&#39;</span><span style="color:#1f2328">,</span> dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> loc<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> engine<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span>module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>EngineType<span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> ephemeris_path<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> zodiac<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ZodiacType <span style="color:#0550ae">=</span> <span style="color:#0550ae">&lt;</span>ZodiacType<span style="color:#0550ae">.</span>TROPICAL<span style="color:#1f2328">:</span> <span style="color:#0a3069">&#39;Tropical&#39;</span><span style="color:#0550ae">&gt;</span><span style="color:#1f2328">,</span> house<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>HouseSystem <span style="color:#0550ae">=</span> <span style="color:#0550ae">&lt;</span>HouseSystem<span style="color:#0550ae">.</span>PLACIDUS<span style="color:#1f2328">:</span> <span style="color:#0a3069">&#39;Placidus&#39;</span><span style="color:#0550ae">&gt;</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>prepare_horoscope<span style="color:#1f2328">(</span>name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span> <span style="color:#0550ae">=</span> <span style="color:#0a3069">&#39;&#39;</span><span style="color:#1f2328">,</span> dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> loc<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>Location <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> engine<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span>module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>EngineType<span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> ephemeris_path<span style="color:#1f2328">:</span> Optional<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">,</span> zodiac<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ZodiacType <span style="color:#0550ae">=</span> <span style="color:#0550ae">&lt;</span>ZodiacType<span style="color:#0550ae">.</span>TROPICAL<span style="color:#1f2328">:</span> <span style="color:#0a3069">&#39;Tropical&#39;</span><span style="color:#0550ae">&gt;</span><span style="color:#1f2328">,</span> house<span style="color:#1f2328">:</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>HouseSystem <span style="color:#0550ae">=</span> <span style="color:#0550ae">&lt;</span>HouseSystem<span style="color:#0550ae">.</span>PLACIDUS<span style="color:#1f2328">:</span> <span style="color:#0a3069">&#39;Placidus&#39;</span><span style="color:#0550ae">&gt;</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> module<span style="color:#0550ae">.</span>models<span style="color:#0550ae">.</span>ChartInstance
 </span></span></code></pre></div><p>Create a ChartInstance with basic configuration.</p>
 <h4 id="parameters-15">Parameters</h4>
 <ul>
@@ -830,7 +845,7 @@ contains display-related settings from the .sfs file</p>
 <h4 id="returns-16">Returns</h4>
 <p>ChartInstance with configured ChartSubject and ChartConfig</p>
 <h2 id="read_yaml_file"><code>read_yaml_file</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>read_yaml_file<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">dict</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>read_yaml_file<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#6639ba">dict</span>
 </span></span></code></pre></div><p>Read a YAML file and return a dict.</p>
 <h4 id="parameters-16">Parameters</h4>
 <ul>
@@ -841,7 +856,7 @@ contains display-related settings from the .sfs file</p>
 <h4 id="notes-3">Notes</h4>
 <p>This is a thin wrapper around yaml.safe_load that always returns a dict.</p>
 <h2 id="resolve_under_base"><code>resolve_under_base</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>resolve_under_base<span style="color:#1f2328">(</span>base<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> rel_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>resolve_under_base<span style="color:#1f2328">(</span>base<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> rel_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
 </span></span></code></pre></div><p>Resolve rel_path against base and ensure the result stays within base.</p>
 <h4 id="parameters-17">Parameters</h4>
 <ul>
@@ -856,11 +871,11 @@ contains display-related settings from the .sfs file</p>
 <p>Resolved Path that is contained within base</p>
 <h4 id="warnings-1">Warnings</h4>
 <p>⚠️ ValueError: If path is absolute or attempts directory traversal outside base</p>
-<h2 id="resolve_user_path"><code>resolve_user_path</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>resolve_user_path<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> <span style="color:#0550ae">*</span><span style="color:#1f2328">,</span> base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">,</span> NoneType<span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
+<h3 id="to_timezone"><code>to_timezone</code></h3>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>resolve_user_path<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> <span style="color:#0550ae">*</span><span style="color:#1f2328">,</span> base_dir<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">,</span> NoneType<span style="color:#1f2328">]</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">None</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
 </span></span></code></pre></div><p>Resolve a user-provided path safely.</p>
-<h2 id="to_timezone"><code>to_timezone</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>to_timezone<span style="color:#1f2328">(</span>dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> tz_name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
+<h2 id="to_timezone-1"><code>to_timezone</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>to_timezone<span style="color:#1f2328">(</span>dt<span style="color:#1f2328">:</span> datetime<span style="color:#0550ae">.</span>datetime<span style="color:#1f2328">,</span> tz_name<span style="color:#1f2328">:</span> <span style="color:#6639ba">str</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> datetime<span style="color:#0550ae">.</span>datetime
 </span></span></code></pre></div><p>Convert a timezone-aware datetime to the target timezone by name.</p>
 <h4 id="parameters-18">Parameters</h4>
 <ul>
@@ -874,7 +889,7 @@ contains display-related settings from the .sfs file</p>
 <h4 id="returns-19">Returns</h4>
 <p>Datetime converted to target timezone</p>
 <h2 id="write_json_file"><code>write_json_file</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>write_json_file<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> data<span style="color:#1f2328">:</span> <span style="color:#6639ba">dict</span><span style="color:#1f2328">,</span> <span style="color:#0550ae">*</span><span style="color:#1f2328">,</span> indent<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span> <span style="color:#0550ae">=</span> <span style="color:#0550ae">2</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#cf222e">None</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>write_json_file<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> data<span style="color:#1f2328">:</span> <span style="color:#6639ba">dict</span><span style="color:#1f2328">,</span> <span style="color:#0550ae">*</span><span style="color:#1f2328">,</span> indent<span style="color:#1f2328">:</span> <span style="color:#6639ba">int</span> <span style="color:#0550ae">=</span> <span style="color:#0550ae">2</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#cf222e">None</span>
 </span></span></code></pre></div><p>Write a dict to a JSON file.</p>
 <h4 id="parameters-19">Parameters</h4>
 <ul>
@@ -891,7 +906,7 @@ contains display-related settings from the .sfs file</p>
 <h4 id="notes-4">Notes</h4>
 <p>Ensures parent directory exists before writing.</p>
 <h2 id="write_yaml_file"><code>write_yaml_file</code></h2>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>write_yaml_file<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> data<span style="color:#1f2328">:</span> <span style="color:#6639ba">dict</span><span style="color:#1f2328">,</span> <span style="color:#0550ae">*</span><span style="color:#1f2328">,</span> sort_keys<span style="color:#1f2328">:</span> <span style="color:#6639ba">bool</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">False</span><span style="color:#1f2328">,</span> allow_unicode<span style="color:#1f2328">:</span> <span style="color:#6639ba">bool</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">True</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#cf222e">None</span>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>write_yaml_file<span style="color:#1f2328">(</span>path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">],</span> data<span style="color:#1f2328">:</span> <span style="color:#6639ba">dict</span><span style="color:#1f2328">,</span> <span style="color:#0550ae">*</span><span style="color:#1f2328">,</span> sort_keys<span style="color:#1f2328">:</span> <span style="color:#6639ba">bool</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">False</span><span style="color:#1f2328">,</span> allow_unicode<span style="color:#1f2328">:</span> <span style="color:#6639ba">bool</span> <span style="color:#0550ae">=</span> <span style="color:#cf222e">True</span><span style="color:#1f2328">)</span> <span style="color:#0550ae">-&gt;</span> <span style="color:#cf222e">None</span>
 </span></span></code></pre></div><p>Write a dict to a YAML file using yaml.safe_dump.</p>
 <h4 id="parameters-20">Parameters</h4>
 <ul>
@@ -1033,7 +1048,7 @@ Useful for normalizing user input and controlling shiftable dimensions in astrol
   class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
 >
   <div class="mr-auto">&copy;2026
-    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
+    <a class="link" href="https://kefer-astrology.github.io/function-wrapper/">Kefer Astrology Documentation</a></div>
   <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
     >powered by hugo️️</a
   >️
