@@ -16,6 +16,12 @@ pip install -r requirements/base.txt  # for base package
 pip install -r requirements/streamlit.txt  # For Streamlit UI (browser)
 pip install -r requirements/kivy.txt  # For Kivy UI (desktop)
 
+# Or install by package extras
+pip install .  # core computation/storage package
+pip install .[api]  # FastAPI backend for Tauri/web frontends
+pip install .[streamlit]  # Streamlit UI + chart rendering
+pip install .[kivy]  # Kivy desktop UI + chart rendering
+
 # 3. Run the application
 python3 -m module --streamlit  # Streamlit UI (browser)
 python3 -m module --kivy  # Kivy UI (desktop)
@@ -26,6 +32,15 @@ python3 -m module         # Default: TUI
 For detailed setup instructions, troubleshooting, and advanced options, see the [Installation manual](./docs/site/content/installation.md).
 
 You can also explore [Documentation](./docs/README.md) to see more detailed overview.
+
+## Suggested Runtime Split
+
+- `core`: install `pip install .` for computation, workspace, and storage helpers
+- `api`: install `pip install .[api]` for a FastAPI sidecar/backend without UI dependencies
+- `streamlit`: install `pip install .[streamlit]` for the browser UI
+- `kivy`: install `pip install .[kivy]` for the native Python desktop UI
+
+For a `React frontend from Figma + FastAPI backend + Tauri packaging` setup, prefer `core + api` and keep the `ui_*` modules as optional developer-only frontends.
 
 ## How it works
 
@@ -193,4 +208,3 @@ User Input
 
 Aspects are computed on demand from positions (not stored by default).
 ```
-
