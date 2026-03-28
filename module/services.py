@@ -33,12 +33,11 @@ try:
 except ImportError:
     from utils import Actual, default_ephemeris_path, ensure_aware, prepare_horoscope, compute_vernal_equinox_offset, _safe_get_attr
 
-try:
-    from module.z_visual import build_radix_figure
-except ImportError:
-    from z_visual import build_radix_figure
-
 from kerykeion import AstrologicalSubject, KerykeionChartSVG
+try:
+    from kerykeion import AstrologicalSubjectFactory
+except ImportError:
+    AstrologicalSubjectFactory = None
 # KerykeionPointModel and Report may have different import paths in different versions
 try:
     from kerykeion import KerykeionPointModel
@@ -102,16 +101,23 @@ def _get_kerykeion_object_mapping() -> Dict[str, str]:
         "descendant": "desc",
         "mc": "mc",
         "midheaven": "mc",
+        "medium_coeli": "mc",
         "ic": "ic",
         "imum_coeli": "ic",
-        # Lunar nodes
+        # Lunar nodes (v4 legacy names + v5 names)
         "north_node": "north_node",
         "south_node": "south_node",
         "true_north_node": "true_north_node",
         "true_south_node": "true_south_node",
+        "mean_north_lunar_node": "north_node",
+        "true_north_lunar_node": "true_north_node",
+        "mean_south_lunar_node": "south_node",
+        "true_south_lunar_node": "true_south_node",
         # Calculated points
         "lilith": "lilith",
         "black_moon_lilith": "lilith",
+        "mean_lilith": "lilith",
+        "true_lilith": "true_lilith",
         "chiron": "chiron",
         "ceres": "ceres",
         "pallas": "pallas",
@@ -131,6 +137,88 @@ def _get_kerykeion_object_mapping() -> Dict[str, str]:
         "house_11": "house_11",
         "house_12": "house_12",
     }
+
+
+def _normalize_kerykeion_zodiac(zodiac: Optional[str]) -> str:
+    """Normalize zodiac type values to the Kerykeion v5 canonical format."""
+    if not zodiac:
+        return "Tropical"
+    zodiac_str = str(zodiac)
+    if zodiac_str.lower() in ("tropic", "tropical"):
+        return "Tropical"
+    if zodiac_str.lower() == "sidereal":
+        return "Sidereal"
+    return zodiac_str
+
+
+def _build_kerykeion_subject(name: str, time: Actual, place: Actual, zodiac: Optional[str]) -> Any:
+    """Create a Kerykeion subject using the factory when available."""
+    zodiac_type = _normalize_kerykeion_zodiac(zodiac)
+    lng = place.value.longitude if place.value else None
+    lat = place.value.latitude if place.value else None
+    tz_str = place.tz if place.value else "UTC"
+    city = place.value.address if place.value else ""
+    online = not (lng is not None and lat is not None and tz_str)
+
+    if AstrologicalSubjectFactory is not None:
+        try:
+            return AstrologicalSubjectFactory.from_birth_data(
+                name=name,
+                year=time.value.year,
+                month=time.value.month,
+                day=time.value.day,
+                hour=time.value.hour,
+                minute=time.value.minute,
+                seconds=time.value.second,
+                city=city or None,
+                nation="GB",
+                lng=lng,
+                lat=lat,
+                tz_str=tz_str,
+                online=online,
+                zodiac_type=zodiac_type,
+                suppress_geonames_warning=True,
+            )
+        except Exception as e:
+            logger.debug("AstrologicalSubjectFactory failed; falling back to legacy AstrologicalSubject: %s", e)
+
+    return AstrologicalSubject(
+        name,
+        time.value.year,
+        time.value.month,
+        time.value.day,
+        time.value.hour,
+        time.value.minute,
+        lng=lng if lng is not None else 0.0,
+        lat=lat if lat is not None else 0.0,
+        tz_str=tz_str,
+        city=city,
+        zodiac_type=zodiac_type,
+        nation="GB",
+        online=online,
+    )
+
+
+def _get_kerykeion_calc_point_names(subj: Any) -> List[str]:
+    """Select calculated point attribute names without triggering deprecations."""
+    calc_points = ["chiron"]
+
+    if hasattr(subj, "mean_lilith") or hasattr(subj, "true_lilith"):
+        calc_points.extend(["mean_lilith", "true_lilith"])
+    else:
+        calc_points.extend(["lilith", "black_moon_lilith"])
+
+    if hasattr(subj, "mean_north_lunar_node") or hasattr(subj, "true_north_lunar_node"):
+        calc_points.extend([
+            "mean_north_lunar_node",
+            "true_north_lunar_node",
+            "mean_south_lunar_node",
+            "true_south_lunar_node",
+        ])
+    else:
+        calc_points.extend(["north_node", "south_node", "true_north_node", "true_south_node"])
+
+    return calc_points
 
 
 def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_objects: Optional[List[str]] = None, model: Optional[AstroModel] = None) -> Dict[str, float]:
@@ -218,6 +306,7 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
             'desc': 'desc',
             'midheaven': 'mc',
             'mc': 'mc',
+            'medium_coeli': 'mc',
             'imum_coeli': 'ic',
             'ic': 'ic',
         }
@@ -265,7 +354,7 @@ def _extract_kerykeion_observable_objects(subj: AstrologicalSubject, requested_o
                     logger.debug("  Failed to extract %s as direct numeric: %s", house_attr, e, exc_info=True)
         
         # Also try chiron and other calculated points
-        calc_points = ['chiron', 'lilith', 'north_node', 'south_node', 'true_north_node', 'true_south_node']
+        calc_points = _get_kerykeion_calc_point_names(subj)
         for point_name in calc_points:
             if hasattr(subj, point_name):
                 try:
@@ -847,12 +936,12 @@ class Subject:
     - Call at_place() then at_time() to prepare `self.computed`.
     - Use data() to extract names, degrees, and labels for plotting.
     """
-    def __init__(self, s_name: str, s_type: str = "Tropic") -> None:
+    def __init__(self, s_name: str, s_type: str = "Tropical") -> None:
         self.computed = None
         self.name = s_name
         self.place = None
         self.time = None
-        self.type = s_type
+        self.type = _normalize_kerykeion_zodiac(s_type)
 
     def at_place(self, location: object) -> None:
         """Set place from a free-text location or coordinates string."""
@@ -861,26 +950,24 @@ class Subject:
     def at_time(self, time: str) -> None:
         """Set event time from a free-text datetime string and build computed subject."""
         self.time = Actual(time, t="date")
-        self.computed = AstrologicalSubject(
-            self.name,
-            self.time.value.year,
-            self.time.value.month,
-            self.time.value.day,
-            self.time.value.hour,
-            self.time.value.minute,
-            lng=self.place.value.longitude if self.place.value else 0.0,
-            lat=self.place.value.latitude if self.place.value else 0.0,
-            tz_str=self.place.tz if self.place.value else "UTC",
-            city=self.place.value.address if self.place.value else "",
-            zodiac_type=self.type,
-            nation="GB",
+        self.computed = _build_kerykeion_subject(
+            name=self.name,
+            time=self.time,
+            place=self.place,
+            zodiac=self.type,
         )
 
     def data(self):
         """Return (object_names, degrees, labels) extracted from computed planets list."""
-        object_list = [x["name"] for x in self.computed.planets_list]
-        label_list = [x["emoji"] for x in self.computed.planets_list]
-        return object_list, self.computed.planets_degrees_ut, label_list
+        if self.computed is None:
+            return [], [], []
+        planets_list = getattr(self.computed, "planets_list", None)
+        planets_degrees = getattr(self.computed, "planets_degrees_ut", None)
+        if not planets_list or not planets_degrees:
+            return [], [], []
+        object_list = [x["name"] for x in planets_list]
+        label_list = [x["emoji"] for x in planets_list]
+        return object_list, planets_degrees, label_list
 
     def report(self):
         """Build a Kerykeion textual Report for the computed subject."""
@@ -889,34 +976,21 @@ class Subject:
         return Report(self.computed)
 
 
-def compute_subject(name: str, dt_str: str, loc_str: str, zodiac: str = "Tropic") -> AstrologicalSubject:
-    """Construct a Kerykeion AstrologicalSubject from strings.
+def compute_subject(name: str, dt_str: str, loc_str: str, zodiac: str = "Tropical") -> Any:
+    """Construct a Kerykeion astrological subject from strings.
     
     Args:
         name: Subject name (human-readable identifier)
         dt_str: Datetime string (parsed by utils.Actual)
         loc_str: Location string (parsed by utils.Actual)
-        zodiac: Zodiac type, defaults to "Tropic"
+        zodiac: Zodiac type, defaults to "Tropical"
         
     Returns:
-        AstrologicalSubject instance with computed positions
+        Astrological subject instance with computed positions
     """
     time = Actual(dt_str, t="date")
     place = Actual(loc_str, t="loc")
-    return AstrologicalSubject(
-        name,
-        time.value.year,
-        time.value.month,
-        time.value.day,
-        time.value.hour,
-        time.value.minute,
-        lng=place.value.longitude if place.value else 0.0,
-        lat=place.value.latitude if place.value else 0.0,
-        tz_str=place.tz if place.value else "UTC",
-        city=place.value.address if place.value else "",
-        zodiac_type=zodiac,
-        nation="GB"
-    )
+    return _build_kerykeion_subject(name=name, time=time, place=place, zodiac=zodiac)
 
 def extract_kerykeion_points(obj: Any) -> DataFrame:
     """Extract KerykeionPointModel attributes from an object into a DataFrame.
@@ -1900,6 +1974,10 @@ def build_radix_figure_for_chart(chart: ChartInstance, engine_override: Optional
             f"Positions: {positions}"
         )
     
+    try:
+        from module.z_visual import build_radix_figure
+    except ImportError:
+        from z_visual import build_radix_figure
     return build_radix_figure(positions)
 
 
