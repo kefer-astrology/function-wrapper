@@ -12,11 +12,8 @@ requires-python = ">=3.10,<4"
 dependencies = [
     "duckdb>=1.4.3",
     "geopy>=2.4.1",
-    "kaleido>=0.2.1",
     "kerykeion>=4.26.0",
-    "matplotlib>=3.10.0",
     "pandas>=2.3.1",
-    "plotly>=6.2.0",
     "pyarrow>=21.0.0",
     "PyYAML>=6.0.2",
     "skyfield>=1.48",
@@ -24,8 +21,22 @@ dependencies = [
     "urllib3>=2.6.0",
 ]
 [project.optional-dependencies]
+api = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+]
+
+visuals = [
+    "kaleido>=0.2.1",
+    "matplotlib>=3.10.0",
+    "plotly>=6.2.0",
+]
+
 streamlit = [
     "streamlit>=1.50.0",
+    "kaleido>=0.2.1",
+    "matplotlib>=3.10.0",
+    "plotly>=6.2.0",
 ]
 
 kivy = [
@@ -33,22 +44,35 @@ kivy = [
     "kivymd @ git+https://github.com/kivymd/KivyMD.git@master",
     "pywebview>=4.4",
     "kivy-garden>=0.1.5",
+    "kaleido>=0.2.1",
+    "matplotlib>=3.10.0",
+    "plotly>=6.2.0",
+]
+
+desktop = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
 ]
 
 docs = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
     "streamlit>=1.50.0",
     "kivy>=2.3.1",
     "kivymd @ git+https://github.com/kivymd/KivyMD.git@master",
     "pywebview>=4.4",
     "kivy-garden>=0.1.5",
+    "kaleido>=0.2.1",
+    "matplotlib>=3.10.0",
+    "plotly>=6.2.0",
 ]
-[tool.setuptools]
-# Explicitly specify that the 'module' directory is the package
-packages = ["module"]
+[tool.setuptools.packages.find]
+include = ["module*"]
 
 [project.scripts]
 # Optional: gives you a `kefer` command too (keeps -m working)
 kefer = "module.__main__:main"
+kefer-api = "module.api.__main__:main"
 
 # Disable Poetry package mode for Streamlit Cloud
 # This tells Poetry to only manage dependencies, not package the project
@@ -59,20 +83,30 @@ package-mode = false
 python = ">=3.10,<4"
 duckdb = ">=1.4.3"
 geopy = ">=2.4.1"
-kaleido = ">=0.2.1"
 kerykeion = ">=4.26.0"
-matplotlib = ">=3.10.0"
 pandas = ">=2.3.1"
-plotly = ">=6.2.0"
 pyarrow = ">=21.0.0"
 PyYAML = ">=6.0.2"
 skyfield = ">=1.48"
 timezonefinder = ">=6.6.2"
 urllib3 = ">=2.6.0"
+[tool.poetry.group.api.dependencies]
+fastapi = ">=0.115.0"
+uvicorn = ">=0.34.0"
+[tool.poetry.group.visuals.dependencies]
+kaleido = ">=0.2.1"
+matplotlib = ">=3.10.0"
+plotly = ">=6.2.0"
 [tool.poetry.group.streamlit.dependencies]
 streamlit = ">=1.50.0"
+kaleido = ">=0.2.1"
+matplotlib = ">=3.10.0"
+plotly = ">=6.2.0"
 [tool.poetry.group.kivy.dependencies]
 kivy = ">=2.3.1"
 kivymd = {git = "https://github.com/kivymd/KivyMD.git", branch = "master"}
 pywebview = ">=4.4"
 kivy-garden = ">=0.1.5"
+kaleido = ">=0.2.1"
+matplotlib = ">=3.10.0"
+plotly = ">=6.2.0"
