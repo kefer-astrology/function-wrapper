@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException, Query
 
 try:
     from module.cli import (
+        _build_chart_response,
         cmd_compute_chart,
         cmd_compute_transit_series,
         cmd_export_parquet,
@@ -14,13 +15,17 @@ try:
     )
     from module.api.schemas import (
         ComputeChartRequest,
+        ComputeChartFromDataRequest,
         ComputeTransitSeriesRequest,
         ExportParquetRequest,
         HealthResponse,
         SyncWorkspaceRequest,
     )
+    from module.utils import parse_chart_yaml
+    from module.services import compute_positions_for_chart, compute_aspects_for_chart
 except ImportError:
     from cli import (
+        _build_chart_response,
         cmd_compute_chart,
         cmd_compute_transit_series,
         cmd_export_parquet,
@@ -31,11 +36,14 @@ except ImportError:
     )
     from api.schemas import (
         ComputeChartRequest,
+        ComputeChartFromDataRequest,
         ComputeTransitSeriesRequest,
         ExportParquetRequest,
         HealthResponse,
         SyncWorkspaceRequest,
     )
+    from utils import parse_chart_yaml
+    from services import compute_positions_for_chart, compute_aspects_for_chart
 
 
 def _raise_for_error(result: Dict[str, Any]) -> Dict[str, Any]:
@@ -89,6 +97,19 @@ def create_app() -> FastAPI:
     def compute_chart(payload: ComputeChartRequest):
         return _raise_for_error(cmd_compute_chart(payload.model_dump()))
 
+    @app.post("/charts/compute-from-data")
+    def compute_chart_from_data(payload: ComputeChartFromDataRequest):
+        try:
+            chart = parse_chart_yaml(payload.chart_json)
+            positions = compute_positions_for_chart(chart)
+            aspects = compute_aspects_for_chart(chart)
+            return _build_chart_response(chart, positions or {}, aspects or [], chart.id, False)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=400,
+                detail={"type": "ComputationError", "message": str(exc)},
+            )
+
     @app.post("/transits/compute-series")
     def compute_transit_series(payload: ComputeTransitSeriesRequest):
         return _raise_for_error(cmd_compute_transit_series(payload.model_dump()))
@@ -105,4 +126,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-

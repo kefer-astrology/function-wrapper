@@ -29,9 +29,14 @@ except ImportError:
     )
 
 try:
-    from module.utils import Actual, default_ephemeris_path, ensure_aware, prepare_horoscope, compute_vernal_equinox_offset, _safe_get_attr
+    from module.astronomy import ChartData, backend_for_chart
 except ImportError:
-    from utils import Actual, default_ephemeris_path, ensure_aware, prepare_horoscope, compute_vernal_equinox_offset, _safe_get_attr
+    from astronomy import ChartData, backend_for_chart
+
+try:
+    from module.utils import Actual, default_ephemeris_path, ensure_aware, prepare_horoscope, compute_vernal_equinox_offset, _safe_get_attr, to_timezone
+except ImportError:
+    from utils import Actual, default_ephemeris_path, ensure_aware, prepare_horoscope, compute_vernal_equinox_offset, _safe_get_attr, to_timezone
 
 from kerykeion import AstrologicalSubject, KerykeionChartSVG
 try:
@@ -159,17 +164,23 @@ def _build_kerykeion_subject(name: str, time: Actual, place: Actual, zodiac: Opt
     tz_str = place.tz if place.value else "UTC"
     city = place.value.address if place.value else ""
     online = not (lng is not None and lat is not None and tz_str)
+    localized_time = ensure_aware(time.value, tz_str)
+    if tz_str:
+        try:
+            localized_time = to_timezone(localized_time, tz_str)
+        except Exception as e:
+            logger.debug("Could not convert subject time to timezone %s: %s", tz_str, e)
 
     if AstrologicalSubjectFactory is not None:
         try:
             return AstrologicalSubjectFactory.from_birth_data(
                 name=name,
-                year=time.value.year,
-                month=time.value.month,
-                day=time.value.day,
-                hour=time.value.hour,
-                minute=time.value.minute,
-                seconds=time.value.second,
+                year=localized_time.year,
+                month=localized_time.month,
+                day=localized_time.day,
+                hour=localized_time.hour,
+                minute=localized_time.minute,
+                seconds=localized_time.second,
                 city=city or None,
                 nation="GB",
                 lng=lng,
@@ -184,11 +195,11 @@ def _build_kerykeion_subject(name: str, time: Actual, place: Actual, zodiac: Opt
 
     return AstrologicalSubject(
         name,
-        time.value.year,
-        time.value.month,
-        time.value.day,
-        time.value.hour,
-        time.value.minute,
+        localized_time.year,
+        localized_time.month,
+        localized_time.day,
+        localized_time.hour,
+        localized_time.minute,
         lng=lng if lng is not None else 0.0,
         lat=lat if lat is not None else 0.0,
         tz_str=tz_str,
@@ -1547,6 +1558,133 @@ def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_
         return {}
 
 
+def compute_swiss_positions_for_chart(
+    chart: ChartInstance,
+    ws: Optional['Workspace'] = None,
+) -> Dict[str, Union[float, Dict[str, float]]]:
+    """Compute Swiss/Kerykeion-backed chart positions through the backend seam."""
+    cfg = _safe_get_attr(chart, 'config')
+
+    requested_objects = _safe_get_attr(cfg, 'observable_objects') if cfg else None
+    if not requested_objects and ws:
+        try:
+            model = get_active_model(ws)
+            if model:
+                eff = resolve_effective_defaults(ws, model)
+                requested_objects = eff.get('observable_objects')
+        except (AttributeError, KeyError, TypeError) as e:
+            logger.warning("Could not resolve observable objects from workspace: %s", e)
+
+    name, dt_str, loc_str = _extract_chart_compute_inputs(chart)
+    return compute_positions(
+        EngineType.SWISSEPH,
+        name,
+        dt_str,
+        loc_str,
+        ephemeris_path=None,
+        requested_objects=requested_objects,
+    )
+
+
+def compute_jpl_positions_for_chart(
+    chart: ChartInstance,
+    ws: Optional['Workspace'] = None,
+    include_physical: bool = False,
+    include_topocentric: bool = False,
+    ephemeris_path: Optional[str] = None,
+) -> Dict[str, Union[float, Dict[str, float]]]:
+    """Compute JPL-backed chart positions through the backend seam."""
+    cfg = _safe_get_attr(chart, 'config')
+
+    requested_objects = _safe_get_attr(cfg, 'observable_objects') if cfg else None
+    if not requested_objects and ws:
+        try:
+            model = get_active_model(ws)
+            if model:
+                eff = resolve_effective_defaults(ws, model)
+                requested_objects = eff.get('observable_objects')
+        except (AttributeError, KeyError, TypeError) as e:
+            logger.warning("Could not resolve observable objects from workspace: %s", e)
+
+    name, dt_str, loc_str = _extract_chart_compute_inputs(chart)
+    result = compute_jpl_positions(
+        name,
+        dt_str,
+        loc_str,
+        ephemeris_path=ephemeris_path,
+        requested_objects=requested_objects,
+        include_physical=include_physical,
+        include_topocentric=include_topocentric,
+        extended=True,
+    )
+
+    if requested_objects:
+        jpl_planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
+        non_planet_objects = [obj for obj in requested_objects if obj not in jpl_planets]
+
+        if non_planet_objects:
+            try:
+                subj = compute_subject(name, dt_str, loc_str)
+                model = get_active_model(ws)
+                kerykeion_positions = _extract_kerykeion_observable_objects(
+                    subj,
+                    requested_objects=non_planet_objects,
+                    model=model,
+                )
+                for obj_id, lon in kerykeion_positions.items():
+                    if obj_id not in result:
+                        result[obj_id] = lon
+            except (ValueError, AttributeError, KeyError) as e:
+                logger.warning("Could not compute non-planet objects with Kerykeion: %s", e)
+
+    return result
+
+
+def _extract_chart_compute_inputs(chart: ChartInstance) -> tuple[str, str, str]:
+    """Extract canonical compute inputs from a chart object."""
+    subj = _safe_get_attr(chart, 'subject')
+    if subj is None:
+        raise ValueError("Chart has no subject")
+
+    name = _safe_get_attr(subj, 'name')
+    if not name:
+        if isinstance(subj, dict):
+            name = subj.get('name') or subj.get('id') or 'chart'
+        else:
+            name = 'chart'
+
+    event_time = _safe_get_attr(subj, 'event_time')
+    if event_time is None:
+        raise ValueError(f"Chart subject has no event_time (subject type: {type(subj)})")
+    if isinstance(event_time, datetime):
+        dt_str = event_time.isoformat()
+    else:
+        dt_str = str(event_time)
+
+    loc = _safe_get_attr(subj, 'location')
+    if loc is None:
+        raise ValueError("Chart subject has no location")
+
+    lat = _safe_get_attr(loc, 'latitude')
+    lon = _safe_get_attr(loc, 'longitude')
+    if lat is None and isinstance(loc, dict):
+        lat = loc.get('latitude')
+    if lon is None and isinstance(loc, dict):
+        lon = loc.get('longitude')
+
+    if lat is not None and lon is not None:
+        loc_str = f"{lat},{lon}"
+    else:
+        loc_str = _safe_get_attr(loc, 'name')
+        if not loc_str and isinstance(loc, dict):
+            loc_str = loc.get('name') or ''
+
+    if not loc_str:
+        raise ValueError(f"Could not determine location name (location type: {type(loc)})")
+
+    return name, dt_str, loc_str
+
+
 def compute_positions_for_chart(
     chart: ChartInstance, 
     ws: Optional['Workspace'] = None,
@@ -1585,128 +1723,46 @@ def compute_positions_for_chart(
     Raises:
         ValueError: If chart is missing required subject or location data
     """
-    # Get engine and ephemeris from config
-    cfg = _safe_get_attr(chart, 'config')
-    engine = _safe_get_attr(cfg, 'engine') if cfg else None
-    eph = _safe_get_attr(cfg, 'override_ephemeris') if cfg else None
-    
-    # If engine is None but override_ephemeris is set, infer that we should use JPL
-    if engine is None and eph:
-        engine = EngineType.JPL
-    
-    # SWISSEPH doesn't use BSP files - clear ephemeris path if engine is SWISSEPH
-    # BSP files are only for JPL/Skyfield engine
-    if engine == EngineType.SWISSEPH:
-        eph = None
-    
-    # Get observable objects: prefer chart config, then workspace defaults, then model defaults
-    requested_objects = _safe_get_attr(cfg, 'observable_objects') if cfg else None
-    if not requested_objects and ws:
-        try:
-            model = get_active_model(ws)
-            if model:
-                eff = resolve_effective_defaults(ws, model)
-                requested_objects = eff.get('observable_objects')
-        except (AttributeError, KeyError, TypeError) as e:
-            # Log but don't fail - use None as fallback (will compute all objects)
-            logger.warning("Could not resolve observable objects from workspace: %s", e)
-    
-    
-    # Get subject data safely
-    subj = _safe_get_attr(chart, 'subject')
-    if subj is None:
-        raise ValueError("Chart has no subject")
-    
-    # Get name - handle both object and dict
-    name = _safe_get_attr(subj, 'name')
-    if not name:
-        # Try alternative access patterns
-        if isinstance(subj, dict):
-            name = subj.get('name') or subj.get('id') or 'chart'
-        else:
-            name = 'chart'
-    
-    # Get event_time
-    event_time = _safe_get_attr(subj, 'event_time')
-    if event_time is None:
-        raise ValueError(f"Chart subject has no event_time (subject type: {type(subj)})")
-    # Convert datetime to ISO format string for reliable parsing
-    if isinstance(event_time, datetime):
-        dt_str = event_time.isoformat()
-    else:
-        dt_str = str(event_time)
-    
-    # Get location name - handle both object and dict
-    loc = _safe_get_attr(subj, 'location')
-    if loc is None:
-        raise ValueError("Chart subject has no location")
-    
-    loc_str = _safe_get_attr(loc, 'name')
-    if not loc_str:
-        # Try alternative access patterns
-        if isinstance(loc, dict):
-            loc_str = loc.get('name') or ''
-        # If still no name, try to construct from lat/lon if available
-        if not loc_str:
-            lat = _safe_get_attr(loc, 'latitude')
-            lon = _safe_get_attr(loc, 'longitude')
-            if lat is not None and lon is not None:
-                loc_str = f"{lat},{lon}"
-    
-    if not loc_str:
-        raise ValueError(f"Could not determine location name (location type: {type(loc)})")
-    
-    # Check if we should use extended format for JPL
-    use_extended = (engine == EngineType.JPL)
-    
-    # Call compute_positions with the extracted parameters
-    
-    if use_extended:
-        # For JPL, use extended format
-        result = compute_jpl_positions(
-            name, dt_str, loc_str, 
-            ephemeris_path=eph, 
-            requested_objects=requested_objects,
-            include_physical=include_physical,
-            include_topocentric=include_topocentric,
-            extended=True
-        )
-        
-        # Merge with non-planet objects from kerykeion if needed
-        if requested_objects:
-            jpl_planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
-            non_planet_objects = [obj for obj in requested_objects if obj not in jpl_planets]
-            
-            if non_planet_objects:
-                # Get additional objects from kerykeion (angles, houses, etc.)
-                try:
-                    subj = compute_subject(name, dt_str, loc_str)
-                    # Get model for constants
-                    model = None
-                    model = get_active_model(ws)
-                    kerykeion_positions = _extract_kerykeion_observable_objects(subj, requested_objects=non_planet_objects, model=model)
-                    # Kerykeion returns simple floats, but we need to maintain extended format for JPL
-                    # For non-planets, we'll keep them as floats (they don't have extended properties)
-                    for obj_id, lon in kerykeion_positions.items():
-                        if obj_id not in result:
-                            result[obj_id] = lon  # Keep as float for non-planets
-                except (ValueError, AttributeError, KeyError) as e:
-                    logger.warning("Could not compute non-planet objects with Kerykeion: %s", e)
-    else:
-        # For non-JPL engines, use standard format
-        result = compute_positions(engine, name, dt_str, loc_str, ephemeris_path=eph, requested_objects=requested_objects)
-    
+    chart_data = compute_chart_data_for_chart(
+        chart,
+        ws=ws,
+        include_physical=include_physical,
+        include_topocentric=include_topocentric,
+    )
+
+    result = chart_data.positions
+
     # Ensure we return a dict
     if not isinstance(result, dict):
         logger.warning("compute_positions returned non-dict: %s = %s", type(result), result)
         return {}
-    
+
     # Return empty dict if no positions found
     if not result:
-        logger.warning("compute_positions returned empty dict for %s at %s in %s", name, dt_str, loc_str)
+        try:
+            name, dt_str, loc_str = _extract_chart_compute_inputs(chart)
+            logger.warning("compute_positions returned empty dict for %s at %s in %s", name, dt_str, loc_str)
+        except Exception:
+            logger.warning("compute_positions returned empty dict for chart %s", getattr(chart, 'id', '<unknown>'))
         return {}
-    
+
     return result
+
+
+def compute_chart_data_for_chart(
+    chart: ChartInstance,
+    ws: Optional['Workspace'] = None,
+    include_physical: bool = False,
+    include_topocentric: bool = False,
+) -> ChartData:
+    """Compute structured chart data using the active backend seam."""
+    backend = backend_for_chart(chart)
+    return backend.compute_chart_data(
+        chart,
+        ws=ws,
+        include_physical=include_physical,
+        include_topocentric=include_topocentric,
+    )
 
 
 # ─────────────────────

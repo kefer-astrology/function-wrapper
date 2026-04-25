@@ -33,6 +33,7 @@ from dateutil.parser import parse
 try:
     from module.workspace import load_workspace
     from module.services import (
+        compute_chart_data_for_chart,
         compute_positions_for_chart,
         compute_aspects_for_chart,
         build_chart_instance,
@@ -48,6 +49,7 @@ try:
 except ImportError:
     from workspace import load_workspace
     from services import (
+        compute_chart_data_for_chart,
         compute_positions_for_chart,
         compute_aspects_for_chart,
         build_chart_instance,
@@ -60,6 +62,133 @@ except ImportError:
         STORAGE_AVAILABLE = True
     except ImportError:
         STORAGE_AVAILABLE = False
+
+
+def _extract_longitude(value: Any) -> Optional[float]:
+    """Return a normalized longitude value from either float or extended dict payloads."""
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, dict):
+        lon = value.get("longitude")
+        if isinstance(lon, (int, float)):
+            return float(lon)
+    return None
+
+
+def _build_axes_and_house_cusps(positions: Dict[str, Any]) -> tuple[Dict[str, float], List[float], List[str]]:
+    """Derive radix geometry payload fields from computed positions when available."""
+    warnings: List[str] = []
+
+    axes: Dict[str, float] = {}
+    for key in ("asc", "desc", "mc", "ic"):
+        lon = _extract_longitude(positions.get(key))
+        if lon is not None:
+            axes[key] = lon
+    if len(axes) not in (0, 4):
+        warnings.append("partial_axes")
+
+    house_cusps: List[float] = []
+    partial_houses = False
+    for index in range(1, 13):
+        lon = _extract_longitude(positions.get(f"house_{index}"))
+        if lon is None:
+            partial_houses = partial_houses or bool(house_cusps)
+            house_cusps = []
+            break
+        house_cusps.append(lon)
+    if partial_houses:
+        warnings.append("partial_house_cusps")
+
+    return axes, house_cusps, warnings
+
+
+def _resolve_backend_used(chart: Any) -> Optional[str]:
+    """Infer the backend label used for computation from chart config."""
+    cfg = getattr(chart, "config", None)
+    engine = getattr(cfg, "engine", None) if cfg else None
+    if engine is not None:
+        return _enum_value(engine)
+    override_ephemeris = getattr(cfg, "override_ephemeris", None) if cfg else None
+    if override_ephemeris:
+        return "jpl"
+    return None
+
+
+def _resolve_ephemeris_source(chart: Any) -> Optional[str]:
+    """Return the active ephemeris source path when it can be determined."""
+    cfg = getattr(chart, "config", None)
+    override_ephemeris = getattr(cfg, "override_ephemeris", None) if cfg else None
+    if override_ephemeris:
+        return str(override_ephemeris)
+
+    backend_used = _resolve_backend_used(chart)
+    if backend_used == "jpl":
+        try:
+            return str(default_ephemeris_path())
+        except Exception:
+            return None
+    return None
+
+
+def _build_chart_response(chart: Any, positions: Dict[str, Any], aspects: List[Dict[str, Any]], chart_id: str, stored: bool) -> Dict[str, Any]:
+    """Build the normalized chart response payload shared by CLI and API paths."""
+    axes, house_cusps, warnings = _build_axes_and_house_cusps(positions)
+
+    return {
+        "positions": positions,
+        "aspects": aspects,
+        "axes": axes,
+        "house_cusps": house_cusps,
+        "chart_id": chart_id,
+        "stored": stored,
+        "backend_used": _resolve_backend_used(chart),
+        "fallback_used": False,
+        "ephemeris_source": _resolve_ephemeris_source(chart),
+        "warnings": warnings,
+    }
+
+
+def _build_chart_response_from_chart_data(chart: Any, chart_data: Any, aspects: List[Dict[str, Any]], chart_id: str, stored: bool) -> Dict[str, Any]:
+    """Build the normalized chart response payload from structured chart data."""
+    warnings = list(getattr(chart_data, "warnings", []) or [])
+    return {
+        "positions": getattr(chart_data, "positions", {}) or {},
+        "aspects": aspects,
+        "axes": getattr(chart_data, "axes", {}) or {},
+        "house_cusps": getattr(chart_data, "house_cusps", []) or [],
+        "chart_id": chart_id,
+        "stored": stored,
+        "backend_used": _resolve_backend_used(chart),
+        "fallback_used": False,
+        "ephemeris_source": _resolve_ephemeris_source(chart),
+        "warnings": warnings,
+    }
+
+
+def _build_transit_series_response(
+    source_chart: Any,
+    source_chart_id: str,
+    start_str: str,
+    end_str: str,
+    time_step: str,
+    results: List[Dict[str, Any]],
+    stored_in_db: bool,
+) -> Dict[str, Any]:
+    """Build the normalized transit-series response payload."""
+    return {
+        "source_chart_id": source_chart_id,
+        "time_range": {
+            "start": start_str,
+            "end": end_str,
+        },
+        "time_step": time_step,
+        "results": results,
+        "stored_in_db": stored_in_db,
+        "backend_used": _resolve_backend_used(source_chart),
+        "fallback_used": False,
+        "ephemeris_source": _resolve_ephemeris_source(source_chart),
+        "warnings": [],
+    }
 
 
 def _json_output(result: Dict[str, Any]) -> None:
@@ -114,12 +243,13 @@ def cmd_compute_chart(args: Dict[str, Any]) -> Dict[str, Any]:
             return {"error": f"Chart {chart_id} not found", "type": "ChartNotFound"}
         
         # Compute positions
-        positions = compute_positions_for_chart(
+        chart_data = compute_chart_data_for_chart(
             chart, 
             ws=ws,
             include_physical=include_physical,
             include_topocentric=include_topocentric
         )
+        positions = chart_data.positions
         
         # Compute aspects
         aspects = compute_aspects_for_chart(chart, ws=ws)
@@ -157,12 +287,7 @@ def cmd_compute_chart(args: Dict[str, Any]) -> Dict[str, Any]:
                 # Don't fail if storage fails, just log
                 print(f"Warning: Failed to store in DuckDB: {e}", file=sys.stderr)
         
-        return {
-            "positions": positions,
-            "aspects": aspects,
-            "chart_id": chart_id,
-            "stored": stored
-        }
+        return _build_chart_response_from_chart_data(chart, chart_data, aspects, chart_id, stored)
     except Exception as e:
         return {"error": str(e), "type": "ComputationError"}
 
@@ -283,15 +408,21 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
             loc = getattr(subj, 'location', None) if subj else None
             
             if loc:
-                # Try to get location name, or construct from lat/lon
-                loc_str = getattr(loc, 'name', '') if hasattr(loc, 'name') else ''
-                if not loc_str:
-                    # Try to construct from coordinates
-                    lat = getattr(loc, 'latitude', None) if hasattr(loc, 'latitude') else None
-                    lon = getattr(loc, 'longitude', None) if hasattr(loc, 'longitude') else None
-                    if lat is not None and lon is not None:
-                        loc_str = f"{lat},{lon}"
-                    else:
+                # Prefer stored coordinates over place names to avoid a geocoding round trip.
+                lat = getattr(loc, 'latitude', None) if hasattr(loc, 'latitude') else None
+                lon = getattr(loc, 'longitude', None) if hasattr(loc, 'longitude') else None
+                if isinstance(loc, dict):
+                    if lat is None:
+                        lat = loc.get('latitude')
+                    if lon is None:
+                        lon = loc.get('longitude')
+                if lat is not None and lon is not None:
+                    loc_str = f"{lat},{lon}"
+                else:
+                    loc_str = getattr(loc, 'name', '') if hasattr(loc, 'name') else ''
+                    if not loc_str and isinstance(loc, dict):
+                        loc_str = loc.get('name', '')
+                    if not loc_str:
                         # Fallback to workspace default location
                         if ws and ws.default:
                             loc_str = getattr(ws.default, 'location_name', '') or 'Prague'
@@ -347,16 +478,15 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
         if storage:
             storage.close()
         
-        return {
-            "source_chart_id": source_chart_id,
-            "time_range": {
-                "start": start_str,
-                "end": end_str
-            },
-            "time_step": time_step,
-            "results": results,
-            "stored_in_db": use_storage
-        }
+        return _build_transit_series_response(
+            source_chart,
+            source_chart_id,
+            start_str,
+            end_str,
+            time_step,
+            results,
+            use_storage,
+        )
     except Exception as e:
         return {"error": str(e), "type": "ComputationError"}
 
