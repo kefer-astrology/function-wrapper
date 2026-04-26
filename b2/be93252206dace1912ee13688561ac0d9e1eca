@@ -1,0 +1,38 @@
+docs/site/public/auto/models/index.html
+  5f3e30a14c236664 14,31,36,52-53,56,64,71,75,89,588,593,609,617-622,630-635,638,646-648,660,666,670,687,697-702,705,711,723,730,805,812-815,823,827-832,919,924,932-942,945,1051
+docs/site/content/auto/workspace.md
+  5f3e30a14c236664 19,46,54,80,110,135,155,202,254,276,301,346,375,387,401,419
+docs/site/content/auto/models.md
+  5f3e30a14c236664 18,24,45,54-59,69-74,78,87-89,105,112,116,136,147-152,156,163,179,187,284,292-295,306,311-316,432,437,448-458
+docs/site/public/auto/workspace/index.html
+  5f3e30a14c236664 14,31,51,53,56,64,71,75,89,588,608,611,630,654,677,692,720,748,759,776,803,823,830,839,849,912-913,1019
+docs/site/content/auto/storage.md
+  5f3e30a14c236664 44,73,77,81,85,89,93,97,101
+docs/site/public/auto/cli/index.html
+  5f3e30a14c236664 14,46,49,57,64,68,82,844
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "b2be93252206dace1912ee13688561ac0d9e1eca",
+  "prompts": {
+    "5f3e30a14c236664": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dcae7-407f-7472-807b-a4c451e03489",
+        "model": "gpt-5.4"
+      },
+      "human_author": "kubow",
+      "messages": [],
+      "total_additions": 189,
+      "total_deletions": 232,
+      "accepted_lines": 3171,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_48e40f5ab776de": {
+      "author": "kubow"
+    }
+  }
+}
