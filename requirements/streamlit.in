@@ -3,4 +3,5 @@
 
 # exporting PNG from Plotly
 kaleido>=0.2.1
-streamlit>=1.50.0
+protobuf>=6.33.5
+streamlit>=1.56.0

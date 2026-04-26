@@ -1,11 +1,14 @@
 duckdb>=1.4.3
+fonttools>=4.60.2
 geopy>=2.4.1
 kaleido>=0.2.1
 kerykeion>=4.26.0
 matplotlib>=3.10.0
 pandas>=2.3.1
+pillow>=12.1.1
 pip-tools>=7.4.1
 plotly>=6.2.0
+
 pyarrow>=21.0.0
 PyYAML>=6.0.2
 skyfield>=1.48
