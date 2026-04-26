@@ -41,12 +41,23 @@ This generates:
 - `docs/site/content/models.mmd` - Class diagram
 - `docs/site/content/enums.md` - Enum reference
 
+`make docs` only refreshes Hugo content sources. It does not build or serve the
+HTML site by itself.
+
 ### Serve Docs Locally (Hugo)
 ```bash
 hugo server --source docs/site --config hugo.toml --baseURL http://localhost:1313/ --appendPort=false
 ```
 
-Hugo sources live under `docs/site/` and the built site is written to `docs/` via `--destination docs`.
+Open `http://localhost:1313/function-wrapper/` in a browser when using the
+configured `baseURL`.
+
+If you build static files locally with plain `hugo`, the generated site will be
+written to `docs/site/public/` by default. The repository-level `docs/README.md`
+is just a guide for humans, not the rendered Hugo homepage.
+
+GitHub Pages uses a special build step that outputs the final site into `docs/`
+for deployment, while preserving `docs/site/` as the Hugo source tree.
 Full setup steps are in `installation.md` under "Generating Documentation".
 
 ### Manual Documentation

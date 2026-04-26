@@ -25,113 +25,16 @@
   
   <meta name="theme-color" />
 
-  <meta name="description" content="Installation and Venvs
-This project uses multiple virtual environments so the core backend stays lean while UI wrappers remain optional.
-Recommended venvs
+  <meta name="description" content="Ephemeris files
+Default file: de440s.bsp
+The default JPL ephemeris was upgraded from de421.bsp to de440s.bsp.
+default_ephemeris_path() in module/utils.py resolves the file in this order:
+source/de440s.bsp   # preferred
+source/de421.bsp    # legacy fallback
+The old de421.bsp remains in source/ as a fallback for environments that have not yet received de440s.bsp. Once de440s.bsp is present, it is used automatically — no configuration change needed.
 
-venv (base): core backend only
-venv-streamlit: Streamlit UI
-venv-kivy: Kivy UI
-venv-docs: documentation export (imports UI modules)
-
-Makefile targets
-Use the Makefile to create isolated environments with pinned dependencies:
-
-make venv (creates venv with requirements/base.txt)
-make venv-streamlit (creates venv-streamlit with requirements/streamlit.txt)
-make venv-kivy (creates venv-kivy with requirements/kivy.txt)
-make venv-docs (creates venv-docs with .[docs] extras)
-
-Notes
-
-A single venv cannot switch environments without uninstalling packages.
-Separate venvs avoid heavy or conflicting UI dependencies.
-
-Environment preparation
-
-Create virtual environment:
-
-python3 -m venv venv
-
-Activate virtual environment:
-
-
-Windows: venv\Scripts\activate
-Linux: source ./venv/bin/activate
-
-
-Install libraries:
-
-
-Using precompiled lockfiles (recommended):
-
-Base only: pip install -r requirements/base.txt
-Streamlit UI: pip install -r requirements/streamlit.txt
-Kivy UI: pip install -r requirements/kivy.txt
-Dev all‑in: pip install -r requirements/dev.txt (or top‑level requirements.txt if present)
-
-
-To (re)compile lockfiles with pip‑tools:
-
-Base: pip-compile requirements/base.in -o requirements/base.txt
-Streamlit: pip-compile requirements/streamlit.in -o requirements/streamlit.txt
-Kivy: pip-compile requirements/kivy.in -o requirements/kivy.txt
-Dev all‑in: create requirements/dev.in that includes -r requirements/streamlit.in and -r requirements/kivy.in, then:
-pip-compile requirements/dev.in -o requirements/dev.txt
-
-
-
-
-Run the application:
-
-
-Default: python3 -m module (runs TUI)
-Streamlit UI: python3 -m module --streamlit
-Kivy UI: python3 -m module --kivy
-TUI explicitly: python3 -m module --tui
-
-
-Run tests:
-
-
-See docs/TESTING_GUIDE.md for detailed instructions
-Quick start: python3 -m unittest discover tests -v
-Or use Makefile: make run_tests
-
-
-Project structure (core modules):
-
-
-services.py — chart creation/selection and compute orchestration
-utils.py — utilities for date and location parsing
-workspace.py — workspace, chart and settings management
-z_visual.py — visualization
-
-Dependency management
-
-Dependency definitions live in requirements/ as .in files:
-
-requirements/base.in contains core runtime deps.
-requirements/streamlit.in and requirements/kivy.in should start with -r base.in.
-
-
-Reproducible installs use compiled lockfiles in requirements/*.txt.
-Dev/all‑in: keep requirements/dev.txt under requirements/. Optionally provide a root requirements.txt that contains -r requirements/dev.txt.
-
-Environment strategy (one venv vs multiple)
-
-A single venv cannot &ldquo;switch&rdquo; environments without uninstalling packages; once installed, they persist.
-Recommended: use separate venvs per UI target (base, streamlit, kivy, docs) to avoid heavy or conflicting deps.
-If you still want one venv, install the base first, then add extras:
-
-pip install -e . (core only)
-pip install -e &quot;.[streamlit]&quot; or pip install -e &quot;.[kivy]&quot;
-pip install -e &quot;.[docs]&quot; (includes UI deps so make docs can import UI modules)
-
-
-
-Sync pyproject from requirements
-pyproject.toml is derived from requirements/*.in (not from the compiled .txt lockfiles)." />
+What de440s actually provides
+de440s.bsp contains the same set of queryable bodies as de421.bsp:" />
   <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
@@ -664,256 +567,292 @@ pyproject.toml is derived from requirements/*.in (not from the compiled .txt loc
       class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
       style="max-width: 90% !important;"
     ><article class="pt-6">
-  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="installation-and-venvs">Installation and Venvs</h1>
-<p>This project uses multiple virtual environments so the core backend stays lean while UI wrappers remain optional.</p>
-<h2 id="recommended-venvs">Recommended venvs</h2>
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="ephemeris-files">Ephemeris files</h1>
+<h2 id="default-file-de440sbsp">Default file: de440s.bsp</h2>
+<p>The default JPL ephemeris was upgraded from <code>de421.bsp</code> to <code>de440s.bsp</code>.</p>
+<p><code>default_ephemeris_path()</code> in <code>module/utils.py</code> resolves the file in this order:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>source<span style="color:#0550ae">/</span>de440s<span style="color:#0550ae">.</span>bsp   <span style="color:#57606a"># preferred</span>
+</span></span><span style="display:flex;"><span>source<span style="color:#0550ae">/</span>de421<span style="color:#0550ae">.</span>bsp    <span style="color:#57606a"># legacy fallback</span>
+</span></span></code></pre></div><p>The old <code>de421.bsp</code> remains in <code>source/</code> as a fallback for environments that have not yet received <code>de440s.bsp</code>. Once <code>de440s.bsp</code> is present, it is used automatically — no configuration change needed.</p>
+<hr>
+<h2 id="what-de440s-actually-provides">What de440s actually provides</h2>
+<p><code>de440s.bsp</code> contains the same set of <strong>queryable bodies</strong> as <code>de421.bsp</code>:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Body</th>
+          <th>NAIF ID</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Sun</td>
+          <td>10</td>
+      </tr>
+      <tr>
+          <td>Moon</td>
+          <td>301</td>
+      </tr>
+      <tr>
+          <td>Mercury</td>
+          <td>199</td>
+      </tr>
+      <tr>
+          <td>Venus</td>
+          <td>299</td>
+      </tr>
+      <tr>
+          <td>Earth</td>
+          <td>399</td>
+      </tr>
+      <tr>
+          <td>Mars</td>
+          <td>499</td>
+      </tr>
+      <tr>
+          <td>Jupiter barycenter</td>
+          <td>5</td>
+      </tr>
+      <tr>
+          <td>Saturn barycenter</td>
+          <td>6</td>
+      </tr>
+      <tr>
+          <td>Uranus barycenter</td>
+          <td>7</td>
+      </tr>
+      <tr>
+          <td>Neptune barycenter</td>
+          <td>8</td>
+      </tr>
+      <tr>
+          <td>Pluto barycenter</td>
+          <td>9</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>The 343 asteroids integrated in DE440/441 are integration perturbers only.</strong>
+Their gravitational effects are baked into the planetary positions, but their own trajectories are <strong>not stored as queryable SPK segments</strong> in any of the DE planetary BSP files.
+Querying Ceres (NAIF <code>2000001</code>) from <code>de440s.bsp</code> will raise a Skyfield <code>ValueError</code> — a dedicated asteroid SPK kernel is required (see below).</p>
+<p>Why upgrade then? DE440 is a more accurate, more recent numerical solution (Park et al. 2021). For modern astrological dates it produces sub-arcsecond improvements over DE421, and it extends the reliable date range.</p>
+<hr>
+<h2 id="available-bsp-files-and-date-ranges">Available BSP files and date ranges</h2>
+<table>
+  <thead>
+      <tr>
+          <th>File</th>
+          <th>Size</th>
+          <th>Date range</th>
+          <th>Queryable bodies</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>de440s.bsp</code></td>
+          <td>32 MB</td>
+          <td>1900 – 2050</td>
+          <td>10 planets + Moon</td>
+      </tr>
+      <tr>
+          <td><code>de440.bsp</code></td>
+          <td>115 MB</td>
+          <td>1550 – 2650</td>
+          <td>10 planets + Moon</td>
+      </tr>
+      <tr>
+          <td><code>de441_part-1.bsp</code></td>
+          <td>~1.5 GB</td>
+          <td>−13 200 – 0 AD</td>
+          <td>10 planets + Moon</td>
+      </tr>
+      <tr>
+          <td><code>de441_part-2.bsp</code></td>
+          <td>~1.5 GB</td>
+          <td>0 – 17 191 AD</td>
+          <td>10 planets + Moon</td>
+      </tr>
+      <tr>
+          <td><code>de421.bsp</code></td>
+          <td>17 MB</td>
+          <td>~1899 – 2053</td>
+          <td>10 planets + Moon</td>
+      </tr>
+  </tbody>
+</table>
+<p>All files are publicly available from the NASA/JPL NAIF server:
+<code>https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/</code></p>
+<hr>
+<h2 id="date-range-overlaps">Date range overlaps</h2>
+<p>Some files cover the same epochs. This matters when choosing which file to load and when mixing files.</p>
+<h3 id="coverage-map">Coverage map</h3>
+<pre tabindex="0"><code>              -13200       0     1550  1900   2050  2650       17191
+                 │         │       │     │      │     │           │
+de441_part-1  ───────────────┤      │     │      │     │           │
+de441_part-2           │    ├───────────────────────────────────────┤
+de440                  │    │       ├─────────────────────┤         │
+de440s                 │    │       │     ├────────┤       │         │
+de421 (~)              │    │       │     ├────────┤       │         │
+</code></pre><h3 id="overlap-summary">Overlap summary</h3>
+<table>
+  <thead>
+      <tr>
+          <th>Pair</th>
+          <th>Overlapping range</th>
+          <th>Notes</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>de440s ∩ de441_part-2</td>
+          <td>1900 – 2050</td>
+          <td>de440s is entirely inside de441_part-2</td>
+      </tr>
+      <tr>
+          <td>de440 ∩ de441_part-2</td>
+          <td>1550 – 2650</td>
+          <td>de440 is entirely inside de441_part-2</td>
+      </tr>
+      <tr>
+          <td>de440s ∩ de440</td>
+          <td>1900 – 2050</td>
+          <td>de440s is entirely inside de440</td>
+      </tr>
+      <tr>
+          <td>de441_part-1 ∩ de440</td>
+          <td>none</td>
+          <td>part-1 ends at year 0; de440 starts at 1550</td>
+      </tr>
+      <tr>
+          <td>de441_part-1 ∩ de440s</td>
+          <td>none</td>
+          <td>same</td>
+      </tr>
+      <tr>
+          <td>de441_part-1 ∩ de421</td>
+          <td>none</td>
+          <td>de421 starts ~1899</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="behaviour-when-overlapping-files-are-loaded-together">Behaviour when overlapping files are loaded together</h3>
+<p>Skyfield (and the underlying SPICE convention) applies <strong>last-loaded wins</strong>: if two BSP files both contain a segment for the same body at the same time, the most recently loaded file takes effect.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>planets <span style="color:#0550ae">=</span> load<span style="color:#0550ae">.</span>open<span style="color:#1f2328">(</span><span style="color:#0a3069">&#39;de440s.bsp&#39;</span><span style="color:#1f2328">)</span>     <span style="color:#57606a"># loaded first</span>
+</span></span><span style="display:flex;"><span>extended <span style="color:#0550ae">=</span> load<span style="color:#0550ae">.</span>open<span style="color:#1f2328">(</span><span style="color:#0a3069">&#39;de441_part-2.bsp&#39;</span><span style="color:#1f2328">)</span>  <span style="color:#57606a"># loaded last → wins for 1900-2050</span>
+</span></span></code></pre></div><p>For normal astrological work (1900–2050) this is acceptable: DE441 was derived from the same initial conditions as DE440 and the accuracy difference in the modern era is sub-arcsecond.</p>
+<h3 id="when-you-need-each-file">When you need each file</h3>
+<table>
+  <thead>
+      <tr>
+          <th>Use case</th>
+          <th>File</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Modern charts (1900–2050)</td>
+          <td><code>de440s.bsp</code> — bundled, no download</td>
+      </tr>
+      <tr>
+          <td>Extended modern (1550–2650)</td>
+          <td><code>de440.bsp</code></td>
+      </tr>
+      <tr>
+          <td>Ancient / BC charts</td>
+          <td><code>de441_part-1.bsp</code></td>
+      </tr>
+      <tr>
+          <td>Far-future charts (after 2650)</td>
+          <td><code>de441_part-2.bsp</code></td>
+      </tr>
+  </tbody>
+</table>
+<p>You do <strong>not</strong> need <code>de441_part-2.bsp</code> for charts in the 1900–2050 window.</p>
+<hr>
+<h2 id="is_de421-flag-in-servicespy">is_de421 flag in services.py</h2>
+<p><code>services.py</code> inspects the loaded filename to decide whether to use barycenters for outer planets:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>is_de421 <span style="color:#0550ae">=</span> eph_file <span style="color:#0550ae">and</span> <span style="color:#0a3069">&#34;de421&#34;</span> <span style="color:#0550ae">in</span> Path<span style="color:#1f2328">(</span>eph_file<span style="color:#1f2328">)</span><span style="color:#0550ae">.</span>name<span style="color:#0550ae">.</span>lower<span style="color:#1f2328">()</span>
+</span></span></code></pre></div><p><code>de440s.bsp</code> does not match this check, so it follows the non-de421 path: direct planet names are tried first (<code>jupiter</code>, <code>saturn</code>, etc.) rather than barycenters. This is correct for DE440-series files, which expose individual planet objects directly.</p>
+<p>No code change is needed in <code>services.py</code> when switching from <code>de421</code> to <code>de440s</code>.</p>
+<hr>
+<h2 id="asteroid-bodies">Asteroid bodies</h2>
+<h3 id="current-status">Current status</h3>
+<p>Asteroids (Ceres, Pallas, Juno, Vesta, Chiron) are <strong>not available</strong> from any of the DE planetary files. A dedicated asteroid SPK kernel is required:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Option</th>
+          <th>Bodies</th>
+          <th>Source</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Individual files (<code>ceres_1900_2100.bsp</code> etc.)</td>
+          <td>one body per file</td>
+          <td>NAIF archive</td>
+      </tr>
+      <tr>
+          <td><code>codes_300ast_20100725.bsp</code> (59 MB)</td>
+          <td>300 main-belt asteroids</td>
+          <td>NAIF archive</td>
+      </tr>
+      <tr>
+          <td>JPL Horizons REST API</td>
+          <td>any numbered asteroid</td>
+          <td>on-demand query</td>
+      </tr>
+  </tbody>
+</table>
+<p>NAIF IDs for the main astrological asteroids:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Body</th>
+          <th>NAIF ID</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Ceres</td>
+          <td>2 000 001</td>
+      </tr>
+      <tr>
+          <td>Pallas</td>
+          <td>2 000 002</td>
+      </tr>
+      <tr>
+          <td>Juno</td>
+          <td>2 000 003</td>
+      </tr>
+      <tr>
+          <td>Vesta</td>
+          <td>2 000 004</td>
+      </tr>
+      <tr>
+          <td>Chiron</td>
+          <td>2 000 060</td>
+      </tr>
+  </tbody>
+</table>
+<p>These are <strong>not</strong> in <code>de440s.bsp</code> despite the 343-asteroid integration — those asteroids improve planetary accuracy as perturbers but are not output as SPK segments.</p>
+<h3 id="workaround-for-computed-points">Workaround for computed points</h3>
 <ul>
-<li><code>venv</code> (base): core backend only</li>
-<li><code>venv-streamlit</code>: Streamlit UI</li>
-<li><code>venv-kivy</code>: Kivy UI</li>
-<li><code>venv-docs</code>: documentation export (imports UI modules)</li>
+<li><strong>Part of Fortune</strong> — pure formula: <code>ASC + Moon - Sun</code> (day chart) or <code>ASC + Sun - Moon</code> (night chart); no BSP needed</li>
+<li><strong>Black Moon Lilith</strong> — mean lunar apogee; derivable from Moon orbital elements</li>
+<li><strong>South Node</strong> — North Node + 180°; already computed from the Mean Node formula</li>
 </ul>
-<h2 id="makefile-targets">Makefile targets</h2>
-<p>Use the Makefile to create isolated environments with pinned dependencies:</p>
-<ul>
-<li><code>make venv</code> (creates <code>venv</code> with <code>requirements/base.txt</code>)</li>
-<li><code>make venv-streamlit</code> (creates <code>venv-streamlit</code> with <code>requirements/streamlit.txt</code>)</li>
-<li><code>make venv-kivy</code> (creates <code>venv-kivy</code> with <code>requirements/kivy.txt</code>)</li>
-<li><code>make venv-docs</code> (creates <code>venv-docs</code> with <code>.[docs]</code> extras)</li>
-</ul>
-<h2 id="notes">Notes</h2>
-<ul>
-<li>A single venv cannot switch environments without uninstalling packages.</li>
-<li>Separate venvs avoid heavy or conflicting UI dependencies.</li>
-</ul>
-<h2 id="environment-preparation">Environment preparation</h2>
-<ol>
-<li>Create virtual environment:</li>
-</ol>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python3 -m venv venv
-</span></span></code></pre></div><ol start="2">
-<li>Activate virtual environment:</li>
-</ol>
-<ul>
-<li>Windows: <code>venv\Scripts\activate</code></li>
-<li>Linux: <code>source ./venv/bin/activate</code></li>
-</ul>
-<ol start="3">
-<li>Install libraries:</li>
-</ol>
-<ul>
-<li>Using precompiled lockfiles (recommended):
-<ul>
-<li>Base only: <code>pip install -r requirements/base.txt</code></li>
-<li>Streamlit UI: <code>pip install -r requirements/streamlit.txt</code></li>
-<li>Kivy UI: <code>pip install -r requirements/kivy.txt</code></li>
-<li>Dev all‑in: <code>pip install -r requirements/dev.txt</code> (or top‑level <code>requirements.txt</code> if present)</li>
-</ul>
-</li>
-<li>To (re)compile lockfiles with pip‑tools:
-<ul>
-<li>Base: <code>pip-compile requirements/base.in -o requirements/base.txt</code></li>
-<li>Streamlit: <code>pip-compile requirements/streamlit.in -o requirements/streamlit.txt</code></li>
-<li>Kivy: <code>pip-compile requirements/kivy.in -o requirements/kivy.txt</code></li>
-<li>Dev all‑in: create <code>requirements/dev.in</code> that includes <code>-r requirements/streamlit.in</code> and <code>-r requirements/kivy.in</code>, then:
-<code>pip-compile requirements/dev.in -o requirements/dev.txt</code></li>
-</ul>
-</li>
-</ul>
-<ol start="4">
-<li>Run the application:</li>
-</ol>
-<ul>
-<li>Default: <code>python3 -m module</code> (runs TUI)</li>
-<li>Streamlit UI: <code>python3 -m module --streamlit</code></li>
-<li>Kivy UI: <code>python3 -m module --kivy</code></li>
-<li>TUI explicitly: <code>python3 -m module --tui</code></li>
-</ul>
-<ol start="5">
-<li>Run tests:</li>
-</ol>
-<ul>
-<li>See <code>docs/TESTING_GUIDE.md</code> for detailed instructions</li>
-<li>Quick start: <code>python3 -m unittest discover tests -v</code></li>
-<li>Or use Makefile: <code>make run_tests</code></li>
-</ul>
-<ol start="6">
-<li>Project structure (core modules):</li>
-</ol>
-<ul>
-<li><code>services.py</code> — chart creation/selection and compute orchestration</li>
-<li><code>utils.py</code> — utilities for date and location parsing</li>
-<li><code>workspace.py</code> — workspace, chart and settings management</li>
-<li><code>z_visual.py</code> — visualization</li>
-</ul>
-<h2 id="dependency-management">Dependency management</h2>
-<ul>
-<li>Dependency definitions live in <code>requirements/</code> as <code>.in</code> files:
-<ul>
-<li><code>requirements/base.in</code> contains core runtime deps.</li>
-<li><code>requirements/streamlit.in</code> and <code>requirements/kivy.in</code> should start with <code>-r base.in</code>.</li>
-</ul>
-</li>
-<li>Reproducible installs use compiled lockfiles in <code>requirements/*.txt</code>.</li>
-<li>Dev/all‑in: keep <code>requirements/dev.txt</code> under <code>requirements/</code>. Optionally provide a root <code>requirements.txt</code> that contains <code>-r requirements/dev.txt</code>.</li>
-</ul>
-<h3 id="environment-strategy-one-venv-vs-multiple">Environment strategy (one venv vs multiple)</h3>
-<ul>
-<li>A single venv cannot &ldquo;switch&rdquo; environments without uninstalling packages; once installed, they persist.</li>
-<li>Recommended: use separate venvs per UI target (<code>base</code>, <code>streamlit</code>, <code>kivy</code>, <code>docs</code>) to avoid heavy or conflicting deps.</li>
-<li>If you still want one venv, install the base first, then add extras:
-<ul>
-<li><code>pip install -e .</code> (core only)</li>
-<li><code>pip install -e &quot;.[streamlit]&quot;</code> or <code>pip install -e &quot;.[kivy]&quot;</code></li>
-<li><code>pip install -e &quot;.[docs]&quot;</code> (includes UI deps so <code>make docs</code> can import UI modules)</li>
-</ul>
-</li>
-</ul>
-<h3 id="sync-pyproject-from-requirements">Sync pyproject from requirements</h3>
-<p><code>pyproject.toml</code> is derived from <code>requirements/*.in</code> (not from the compiled <code>.txt</code> lockfiles).</p>
-<p>To regenerate the dependency sections after updating <code>.in</code> files:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make sync-pyproject
-</span></span></code></pre></div><h2 id="ui-quickstart">UI Quickstart</h2>
-<h3 id="streamlit-ui-interactive-in-browser">Streamlit UI (interactive, in browser)</h3>
-<ul>
-<li>
-<p>Install dependencies (choose one):</p>
-<ul>
-<li>Option A: using pip‑tools
-<ul>
-<li><code>pip-compile requirements/streamlit.in -o requirements/streamlit.txt</code></li>
-<li><code>pip install -r requirements/streamlit.txt</code>  # contains base via <code>-r base.in</code></li>
-</ul>
-</li>
-<li>Option B: directly from the precompiled lockfile
-<ul>
-<li><code>pip install -r requirements/streamlit.txt</code></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p>Run Streamlit:</p>
-<ul>
-<li><code>python3 -m module --streamlit</code></li>
-</ul>
-</li>
-<li>
-<p>Features:</p>
-<ul>
-<li>Engine switcher (Kerykeion default vs JPL/Skyfield) in Advanced settings.</li>
-<li>Default JPL ephemeris file: <code>source/de421.bsp</code> (override via the ephemeris path field).</li>
-<li>Standardized Radix chart rendered with Plotly interactively.</li>
-</ul>
-</li>
-</ul>
-<h3 id="kivy-ui-desktop-app">Kivy UI (desktop app)</h3>
-<ul>
-<li>
-<p>Install dependencies (choose one):</p>
-<ul>
-<li>Option A: using pip‑tools
-<ul>
-<li><code>pip-compile requirements/kivy.in -o requirements/kivy.txt</code></li>
-<li><code>pip install -r requirements/kivy.txt</code>  # contains base via <code>-r base.in</code></li>
-</ul>
-</li>
-<li>Option B: directly from the precompiled lockfile
-<ul>
-<li><code>pip install -r requirements/kivy.txt</code></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p>Enable embedded interactive Plotly inside Kivy (recommended):</p>
-<ul>
-<li>Install Kivy Garden tooling and the WebView widget:
-<ul>
-<li><code>pip install kivy-garden</code></li>
-<li><code>garden install kivy_garden.webview</code></li>
-</ul>
-</li>
-<li>If WebView is unavailable, the app falls back to opening the chart in the browser.</li>
-</ul>
-</li>
-<li>
-<p>Run Kivy:</p>
-<ul>
-<li><code>python3 -m module --kivy</code></li>
-</ul>
-</li>
-<li>
-<p>Features:</p>
-<ul>
-<li>JPL engine toggle in the top toolbar (JPL on/off).</li>
-<li>Standardized Radix chart renderer.</li>
-<li>Default JPL ephemeris file path: <code>source/de421.bsp</code>.</li>
-</ul>
-</li>
-</ul>
-<h3 id="troubleshooting">Troubleshooting</h3>
-<ul>
-<li>
-<p>Unknown class <code>WebView</code> in KV:</p>
-<ul>
-<li>Install the widget via Kivy Garden: <code>pip install kivy-garden</code> then <code>garden install kivy_garden.webview</code>.</li>
-<li>Alternatively, rely on the browser fallback.</li>
-</ul>
-</li>
-<li>
-<p>Kerykeion Geonames warning:</p>
-<ul>
-<li>Set a custom geonames username to avoid default shared rate limits. See the Kerykeion docs.</li>
-</ul>
-</li>
-<li>
-<p>JPL not active / ephemeris file not found:</p>
-<ul>
-<li>Ensure <code>skyfield</code> is installed and that <code>source/de421.bsp</code> is present.</li>
-<li>You can change the path in Advanced settings (Streamlit) or in Kivy code.</li>
-</ul>
-</li>
-<li>
-<p>Streamlit not updating:</p>
-<ul>
-<li>Clear the browser cache or stop/restart the Streamlit server.</li>
-</ul>
-</li>
-</ul>
-<h2 id="generating-documentation">Generating Documentation</h2>
-<p>The Hugo site sources live under <code>docs/site/</code> and the build output is written to <code>docs/</code>.</p>
-<h3 id="1-generate-auto-docs">1) Generate auto-docs</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#57606a"># Create docs venv (includes extras needed for doc export)</span>
-</span></span><span style="display:flex;"><span>make venv-docs
-</span></span><span style="display:flex;"><span><span style="color:#6639ba">source</span> venv-docs/bin/activate
+<hr>
+<h2 id="overriding-the-ephemeris-file">Overriding the ephemeris file</h2>
+<p>Pass <code>ephemeris_path</code> explicitly to <code>compute_jpl_positions()</code> or set <code>chart.config.override_ephemeris</code>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#cf222e">from</span> <span style="color:#24292e">module.services</span> <span style="color:#cf222e">import</span> compute_jpl_positions
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#57606a"># Generate docs/site/content/auto, docs/site/content/models.mmd, docs/site/content/enums.md</span>
-</span></span><span style="display:flex;"><span>make docs
-</span></span></code></pre></div><p>If you created <code>venv-docs</code> before syncing <code>pyproject.toml</code>, re-run
-<code>make venv-docs</code> to force-reinstall dependencies (this installs new base deps
-like <code>duckdb</code>).</p>
-<h3 id="2-run-hugo-locally">2) Run Hugo locally</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#57606a"># From repo root</span>
-</span></span><span style="display:flex;"><span>hugo server --source docs/site --config hugo.toml --baseURL http://localhost:1313/ --appendPort<span style="color:#0550ae">=</span><span style="color:#6639ba">false</span>
-</span></span></code></pre></div><p>This serves the docs site locally at http://localhost:1313.
-If you skip the override, Hugo uses the GitHub Pages baseURL and you&rsquo;ll need
-to open http://localhost:1313/function-wrapper/ instead.</p>
-<h3 id="3-build-static-site">3) Build static site</h3>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hugo --source docs/site --config hugo.toml --destination docs
-</span></span></code></pre></div><p>The static site is generated in <code>docs/</code> (the GitHub Pages publishing root).</p>
-<h3 id="4-github-pages-checklist-docs-folder-hosting">4) GitHub Pages checklist (docs folder hosting)</h3>
-<ul>
-<li>Repository Settings → Pages → Source: <strong>Deploy from a branch</strong></li>
-<li>Branch: <code>main</code> (or your default branch)</li>
-<li>Folder: <code>/docs</code></li>
-<li>Save and wait for the Pages deployment to finish</li>
-</ul>
-<p>Notes:</p>
-<ul>
-<li><code>docs/</code> contains the built site; Hugo sources live in <code>docs/site/</code>.</li>
-<li>Because the source tree is under <code>docs/</code>, the raw source files are also publicly visible.</li>
-</ul>
+</span></span><span style="display:flex;"><span>result <span style="color:#0550ae">=</span> compute_jpl_positions<span style="color:#1f2328">(</span>
+</span></span><span style="display:flex;"><span>    name<span style="color:#0550ae">=</span><span style="color:#0a3069">&#34;Test&#34;</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    dt_str<span style="color:#0550ae">=</span><span style="color:#0a3069">&#34;2000-01-01 12:00:00&#34;</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    loc_str<span style="color:#0550ae">=</span><span style="color:#0a3069">&#34;51.4779,0.0&#34;</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    ephemeris_path<span style="color:#0550ae">=</span><span style="color:#0a3069">&#34;/path/to/de441_part-2.bsp&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#1f2328">)</span>
+</span></span></code></pre></div><p>If <code>ephemeris_path</code> is <code>None</code>, <code>default_ephemeris_path()</code> is called, which returns <code>de440s.bsp</code> if present, otherwise <code>de421.bsp</code>.</p>
 </section>
   
   <style>
