@@ -463,6 +463,7 @@ def prepare_horoscope(
             aspect_orbs={'a': 1.5},
             display_style="",
             color_theme="",
+            selected_aspects=None,
             override_ephemeris=ephemeris_path,
             engine=engine,
         )
@@ -688,12 +689,16 @@ def location_equals(loc1: Location, loc2: Location) -> bool:
 
 def default_ephemeris_path() -> str:
     """Return the default path to the local JPL ephemeris file.
-    
-    Returns:
-        Absolute path to de421.bsp file in source/ directory
+
+    Prefers de440s.bsp (343-asteroid integration, 1900-2050) when present,
+    falling back to the legacy de421.bsp.
     """
     base_dir = Path(__file__).resolve().parent.parent  # .../function-wrapper/module -> .../function-wrapper
-    return str(base_dir / 'source' / 'de421.bsp')
+    source_dir = base_dir / 'source'
+    de440s = source_dir / 'de440s.bsp'
+    if de440s.exists():
+        return str(de440s)
+    return str(source_dir / 'de421.bsp')
 
 def ensure_aware(dt: datetime, tz_name: Optional[str] = None) -> datetime:
     """Return a timezone-aware datetime.
@@ -936,6 +941,7 @@ def parse_chart_yaml(data: dict) -> ChartInstance:
         aspect_orbs=dict(cfg_d.get('aspect_orbs', {}) or {}),
         display_style=str(cfg_d.get('display_style', '') or ''),
         color_theme=str(cfg_d.get('color_theme', '') or ''),
+        selected_aspects=list(cfg_d.get('selected_aspects', []) or []) or None,
         override_ephemeris=cfg_d.get('override_ephemeris'),
         model=cfg_d.get('model'),
         engine=_enum_or(cfg_d.get('engine'), EngineType, None),
