@@ -35,14 +35,14 @@
   {{- $custom := resources.Get "custom.css" -}}
   <!---->
   {{- $css := slice $main $custom | resources.Concat "main.css" | minify | fingerprint -}}
-  <link rel="preload stylesheet" as="style" href="{{- $css.Permalink -}}" integrity="{{ $css.Data.Integrity }}" />
+  <link rel="preload stylesheet" as="style" href="{{- $css.RelPermalink | relURL -}}" integrity="{{ $css.Data.Integrity }}" />
 
   <!-- dark icon -->
   {{- $dark_icon := "theme.png" -}}
   <!---->
   {{- if site.Params.monoDarkIcon -}}{{- $dark_icon = "theme.svg" -}}{{- end -}}
   <!---->
-  <link rel="preload" as="image" href="{{- $dark_icon | absURL -}}" />
+  <link rel="preload" as="image" href="{{- $dark_icon | relURL -}}" />
 
   <!-- avatar -->
   {{- $avatar_url := $.Scratch.Get "avatar_url" -}}
@@ -54,7 +54,7 @@
 
   <!-- social list -->
   {{- range $.Scratch.Get "social_list" -}}
-  <link rel="preload" as="image" href="{{- printf `%s.svg` . | absURL -}}" />
+  <link rel="preload" as="image" href="{{- printf `%s.svg` . | relURL -}}" />
   {{- end -}}
   <!---->
 
@@ -62,7 +62,7 @@
   {{- if and .IsPage (not site.Params.disableHLJS) -}}
   <script
     defer
-    src="{{- `highlight.min.js` | absURL -}}"
+    src="{{- `highlight.min.js` | relURL -}}"
     onload="hljs.initHighlightingOnLoad();"
   ></script>
   {{- end -}}
@@ -78,11 +78,11 @@
   <!-- favicon -->
   <link
     rel="icon"
-    href="{{- site.Params.favicon | default `favicon.ico` | absURL -}}"
+    href="{{- site.Params.favicon | default `favicon.ico` | relURL -}}"
   />
   <link
     rel="apple-touch-icon"
-    href="{{- site.Params.appleTouchIcon | default `apple-touch-icon.png` | absURL -}}"
+    href="{{- site.Params.appleTouchIcon | default `apple-touch-icon.png` | relURL -}}"
   />
 
   <!-- generator -->

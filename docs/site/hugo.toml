@@ -3,6 +3,8 @@ languageCode = 'en-us'
 title = 'Kefer Astrology Documentation'
 theme = 'hugo-paper'
 disableKinds = ['taxonomy', 'term']
+relativeURLs = true
+canonifyURLs = false
 
 [author]
   name = 'Kefer Astrology'

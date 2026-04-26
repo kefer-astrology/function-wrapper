@@ -38,3 +38,12 @@
 .dark .prose h2 {
   border-bottom-color: rgba(255, 255, 255, 0.05);
 }
+
+.docs-theme-toggle {
+  background: url("theme.png") left center / auto 1.5rem no-repeat;
+  transition: background-position 0.4s steps(5);
+}
+
+.dark .docs-theme-toggle {
+  background-position: right;
+}

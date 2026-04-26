@@ -60,7 +60,7 @@ make docs-build-pages
 This builds the static site directly into `docs/` using the default Pages URL
 for this repository:
 
-`https://elkomod.github.io/AstroSmrk/`
+`https://kefer-astrology.github.io/function-wrapper/`
 
 If you need a different GitHub Pages URL, override it at build time:
 

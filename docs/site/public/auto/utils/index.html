@@ -57,10 +57,10 @@ observer: Skyfield Topos observer object
 
 
 ts: Skyfield timescale object" />
-  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://kefer-astrology.github.io/function-wrapper/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="../../main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
-  <link rel="preload" as="image" href="https://kefer-astrology.github.io/function-wrapper/theme.png" />
+  <link rel="preload" as="image" href="../../theme.png" />
 
   
 
@@ -68,24 +68,24 @@ ts: Skyfield timescale object" />
 
   <script
     defer
-    src="https://kefer-astrology.github.io/function-wrapper/highlight.min.js"
+    src="../../highlight.min.js"
     onload="hljs.initHighlightingOnLoad();"
   ></script>
 
   
   <link
     rel="icon"
-    href="https://kefer-astrology.github.io/function-wrapper/favicon.ico"
+    href="../../favicon.ico"
   />
   <link
     rel="apple-touch-icon"
-    href="https://kefer-astrology.github.io/function-wrapper/apple-touch-icon.png"
+    href="../../apple-touch-icon.png"
   />
 
   <meta name="generator" content="Hugo 0.157.0">
   <meta itemprop="name" content="utils Module">
   <meta itemprop="description" content="documentation for utils module">
-  <meta itemprop="wordCount" content="1059"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/auto/utils/">
+  <meta itemprop="wordCount" content="1059"><meta property="og:url" content="./auto/utils/">
   <meta property="og:site_name" content="Kefer Astrology Documentation">
   <meta property="og:title" content="utils Module">
   <meta property="og:description" content="documentation for utils module">
@@ -97,7 +97,7 @@ ts: Skyfield timescale object" />
   <meta name="twitter:title" content="utils Module">
   <meta name="twitter:description" content="documentation for utils module">
 
-  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/auto/utils/" />
+  <link rel="canonical" href="./auto/utils/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -108,11 +108,11 @@ ts: Skyfield timescale object" />
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="https://kefer-astrology.github.io/function-wrapper/"
+        href="../.././"
         >Kefer Astrology Documentation</a
       >
       <div
-        class="btn-dark text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right] invert"
+        class="btn-dark docs-theme-toggle text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer invert"
         role="button"
         aria-label="Dark"
       ></div>
@@ -124,24 +124,84 @@ ts: Skyfield timescale object" />
     id="search-input" 
     placeholder="Search documentation..." 
     class="w-full px-4 py-2 rounded-lg border text-sm"
-    style="background-color: #000000 !important; color: #b8860b !important; border-color: #b8860b !important;"
   />
-  <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 hidden" style="background-color: #1a1a1a !important; border-color: #4a4a4a !important;"></div>
+  <div id="search-results" class="absolute top-full left-0 right-0 mt-2 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 hidden"></div>
 </div>
 
 <style>
   #search-input {
-    background-color: #000000 !important;
-    color: #b8860b !important;
-    border-color: #b8860b !important;
+    background-color: #fffdf7 !important;
+    color: #1f2937 !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
   }
   #search-input::placeholder {
-    color: #b8860b !important;
-    opacity: 0.7;
+    color: #64748b !important;
+    opacity: 1;
   }
   #search-input:focus {
-    border-color: #b8860b !important;
-    ring-color: #b8860b !important;
+    border-color: #2563eb !important;
+    outline: 2px solid rgba(37, 99, 235, 0.2) !important;
+    outline-offset: 1px;
+  }
+  #search-results {
+    background-color: #fffdf8 !important;
+    border: 1px solid #d6d3d1 !important;
+  }
+  .search-results-summary {
+    color: #334155 !important;
+  }
+  .search-result-item {
+    background-color: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+  }
+  .search-result-item:hover {
+    background-color: #f8fafc !important;
+    border-color: #bfdbfe !important;
+  }
+  .search-result-title {
+    color: #1d4ed8 !important;
+  }
+  .search-result-snippet {
+    color: #475569 !important;
+  }
+  .search-empty {
+    color: #64748b !important;
+  }
+  .dark #search-input {
+    background-color: #111827 !important;
+    color: #f8fafc !important;
+    border-color: #475569 !important;
+    box-shadow: none;
+  }
+  .dark #search-input::placeholder {
+    color: #94a3b8 !important;
+  }
+  .dark #search-input:focus {
+    border-color: #60a5fa !important;
+    outline: 2px solid rgba(96, 165, 250, 0.2) !important;
+  }
+  .dark #search-results {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+  }
+  .dark .search-results-summary {
+    color: #e2e8f0 !important;
+  }
+  .dark .search-result-item {
+    background-color: #111827 !important;
+    border-color: #334155 !important;
+  }
+  .dark .search-result-item:hover {
+    background-color: #1e293b !important;
+    border-color: #60a5fa !important;
+  }
+  .dark .search-result-title {
+    color: #93c5fd !important;
+  }
+  .dark .search-result-snippet,
+  .dark .search-empty {
+    color: #cbd5e1 !important;
   }
 </style>
 
@@ -339,12 +399,12 @@ ts: Skyfield timescale object" />
         const resultsHtml = results.slice(0, 10).map((r, idx) => {
           const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' +
-            r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' +
-            safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+          return '<div class="p-3 rounded cursor-pointer search-result-item" data-url="' +
+            r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-sm search-result-title">' +
+            safeTitle + '</div><p class="text-xs mt-1 search-result-snippet">' + safeText + '</p></div>';
         }).join('');
 
-        searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+        searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm search-results-summary">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
 
         searchResults.querySelectorAll('.search-result-item').forEach(item => {
           item.addEventListener('click', function() {
@@ -357,7 +417,7 @@ ts: Skyfield timescale object" />
 
         searchResults.classList.remove('hidden');
       } else {
-        searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+        searchResults.innerHTML = '<div class="p-4"><p class="text-sm search-empty">No results found</p></div>';
         searchResults.classList.remove('hidden');
       }
       return;
@@ -948,10 +1008,10 @@ Useful for normalizing user input and controlling shiftable dimensions in astrol
   <style>
      
     .prose {
-      color: #374151 !important;  
+      color: #334155 !important;  
     }
     .prose p, .prose li, .prose td, .prose th {
-      color: #4b5563 !important;  
+      color: #334155 !important;  
     }
     .prose h1 {
       font-size: 2.5rem !important;
@@ -1006,18 +1066,18 @@ Useful for normalizing user input and controlling shiftable dimensions in astrol
     }
      
     .prose h4 {
-      color: #b8860b !important;  
+      color: #92400e !important;  
     }
     .prose ul li strong,
     .prose ol li strong {
-      color: #b8860b !important;  
+      color: #92400e !important;  
     }
     .dark .prose h4 {
-      color: #b8860b !important;  
+      color: #fbbf24 !important;  
     }
     .dark .prose ul li strong,
     .dark .prose ol li strong {
-      color: #b8860b !important;  
+      color: #fbbf24 !important;  
     }
      
     .prose code {
@@ -1048,7 +1108,7 @@ Useful for normalizing user input and controlling shiftable dimensions in astrol
   class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
 >
   <div class="mr-auto">&copy;2026
-    <a class="link" href="https://kefer-astrology.github.io/function-wrapper/">Kefer Astrology Documentation</a></div>
+    <a class="link" href="../.././">Kefer Astrology Documentation</a></div>
   <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
     >powered by hugo️️</a
   >️

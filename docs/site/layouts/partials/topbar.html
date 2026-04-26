@@ -4,11 +4,11 @@
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="{{- `` | absURL -}}"
+        href="{{- `` | relURL -}}"
         >{{ site.Title }}</a
       >
       <div
-        class="btn-dark text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right] invert"
+        class="btn-dark docs-theme-toggle text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer invert"
         role="button"
         aria-label="Dark"
       ></div>

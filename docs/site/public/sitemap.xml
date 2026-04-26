@@ -2,44 +2,44 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/</loc>
+    <loc>./</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/readme/</loc>
+    <loc>./readme/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/ui_streamlit/</loc>
+    <loc>./ui_streamlit/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/ui_kivy/</loc>
+    <loc>./ui_kivy/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/auto/cli/</loc>
+    <loc>./auto/cli/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/auto/models/</loc>
+    <loc>./auto/models/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/auto/services/</loc>
+    <loc>./auto/services/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/auto/storage/</loc>
+    <loc>./auto/storage/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/auto/ui_streamlit/</loc>
+    <loc>./auto/ui_streamlit/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/auto/utils/</loc>
+    <loc>./auto/utils/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/auto/workspace/</loc>
+    <loc>./auto/workspace/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/auto/z_visual/</loc>
+    <loc>./auto/z_visual/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/architecture/</loc>
+    <loc>./architecture/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/cli_reference/</loc>
+    <loc>./cli_reference/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/enums/</loc>
+    <loc>./enums/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/ephemeris/</loc>
+    <loc>./ephemeris/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/fastapi_tauri/</loc>
+    <loc>./fastapi_tauri/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/installation/</loc>
+    <loc>./installation/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/testing_guide/</loc>
+    <loc>./testing_guide/</loc>
   </url><url>
-    <loc>https://kefer-astrology.github.io/function-wrapper/auto/</loc>
+    <loc>./auto/</loc>
   </url>
 </urlset>
