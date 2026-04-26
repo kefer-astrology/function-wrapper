@@ -1,0 +1,47 @@
+module/storage.py
+  63528e3130c06ca4 395,399,402-409
+tests/test_comprehensive.py
+  63528e3130c06ca4 87-91
+tests/test_storage.py
+  63528e3130c06ca4 46,120-127,129-140
+module/services.py
+  63528e3130c06ca4 150,153
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "a726c57fad1cb4718ac39ecca194fb43ec2090ad",
+  "prompts": {
+    "5f3e30a14c236664": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dcae7-407f-7472-807b-a4c451e03489",
+        "model": "gpt-5.4"
+      },
+      "human_author": "kubow",
+      "messages": [],
+      "total_additions": 47012,
+      "total_deletions": 0,
+      "accepted_lines": 47012,
+      "overriden_lines": 0
+    },
+    "63528e3130c06ca4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7171ea4d-6806-403c-af13-c5054ddb198b",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "kubow",
+      "messages": [],
+      "total_additions": 94,
+      "total_deletions": 69,
+      "accepted_lines": 91,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_48e40f5ab776de": {
+      "author": "kubow"
+    }
+  }
+}
