@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import os
 from dataclasses import is_dataclass, fields
 from pathlib import Path
 from typing import Iterable, List, Tuple, Dict, Any
@@ -571,7 +572,6 @@ def write_all(out_dir: Path | str = "docs/site/content/auto", add_frontmatter: b
 
 def main(argv: List[str] | None = None) -> int:
     import argparse
-    import os
     
     # Set KIVY_NO_ARGS=1 to prevent Kivy from intercepting command-line arguments
     # This is needed because ui_kivy.py imports Kivy, which has its own argument parser

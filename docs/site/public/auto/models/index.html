@@ -11,7 +11,7 @@
   style="--bg:#faf8f1"
   lang="en-us"
   dir="ltr"
-><head>
+><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta
@@ -28,12 +28,12 @@
   <meta name="description" content="models module
 Classes
 class Annotation
-Annotation(title: str, content: str, created: Optional[datetime.datetime], author: str)
+Annotation(title: str, content: str, created: datetime.datetime | None, author: str)
 Dataclass fields
 
 title: str
 content: str
-created: Optional
+created: Union
 author: str
 
 class Aspect
@@ -49,11 +49,11 @@ orb: float
 class AspectContext (str, Enum)
 Contexts where an aspect can be used.
 class AspectDefinition
-AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], color: Optional[str] = None, importance: Optional[int] = None, line_style: Optional[str] = None, line_width: Optional[float] = None, show_label: Optional[bool] = None, valid_contexts: Optional[List[module.models.AspectContext]] = None)" />
-  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://kefer-astrology.github.io/function-wrapper/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
+AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], color: str | None = None, importance: int | None = None, line_style: str | None = None, line_width: float | None = None, show_label: bool | None = None, valid_contexts: List[module.models.AspectContext] | None = None)" />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
-  <link rel="preload" as="image" href="https://kefer-astrology.github.io/function-wrapper/theme.png" />
+  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
 
   
 
@@ -61,36 +61,21 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 
   <script
     defer
-    src="https://kefer-astrology.github.io/function-wrapper/highlight.min.js"
+    src="http://localhost:1313/highlight.min.js"
     onload="hljs.initHighlightingOnLoad();"
   ></script>
 
   
   <link
     rel="icon"
-    href="https://kefer-astrology.github.io/function-wrapper/favicon.ico"
+    href="http://localhost:1313/favicon.ico"
   />
   <link
     rel="apple-touch-icon"
-    href="https://kefer-astrology.github.io/function-wrapper/apple-touch-icon.png"
+    href="http://localhost:1313/apple-touch-icon.png"
   />
 
   <meta name="generator" content="Hugo 0.157.0">
-  <meta itemprop="name" content="models Module">
-  <meta itemprop="description" content="documentation for models module">
-  <meta itemprop="wordCount" content="1135"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/auto/models/">
-  <meta property="og:site_name" content="Kefer Astrology Documentation">
-  <meta property="og:title" content="models Module">
-  <meta property="og:description" content="documentation for models module">
-  <meta property="og:locale" content="en_us">
-  <meta property="og:type" content="article">
-    <meta property="article:section" content="auto">
-
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="models Module">
-  <meta name="twitter:description" content="documentation for models module">
-
-  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/auto/models/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -101,7 +86,7 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="https://kefer-astrology.github.io/function-wrapper/"
+        href="http://localhost:1313/"
         >Kefer Astrology Documentation</a
       >
       <div
@@ -600,12 +585,12 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
   <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="models-module"><code>models</code> module</h1>
 <h2 id="classes">Classes</h2>
 <h3 id="class-annotation">class <code>Annotation</code></h3>
-<p>Annotation(title: str, content: str, created: Optional[datetime.datetime], author: str)</p>
+<p>Annotation(title: str, content: str, created: datetime.datetime | None, author: str)</p>
 <h4 id="dataclass-fields">Dataclass fields</h4>
 <ul>
 <li><code>title: str</code></li>
 <li><code>content: str</code></li>
-<li><code>created: Optional</code></li>
+<li><code>created: Union</code></li>
 <li><code>author: str</code></li>
 </ul>
 <h3 id="class-aspect">class <code>Aspect</code></h3>
@@ -621,7 +606,7 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 <h3 id="class-aspectcontext-str-enum">class <code>AspectContext</code> (str, Enum)</h3>
 <p>Contexts where an aspect can be used.</p>
 <h3 id="class-aspectdefinition">class <code>AspectDefinition</code></h3>
-<p>AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], color: Optional[str] = None, importance: Optional[int] = None, line_style: Optional[str] = None, line_width: Optional[float] = None, show_label: Optional[bool] = None, valid_contexts: Optional[List[module.models.AspectContext]] = None)</p>
+<p>AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], color: str | None = None, importance: int | None = None, line_style: str | None = None, line_width: float | None = None, show_label: bool | None = None, valid_contexts: List[module.models.AspectContext] | None = None)</p>
 <h4 id="dataclass-fields-2">Dataclass fields</h4>
 <ul>
 <li><code>id: str</code></li>
@@ -629,12 +614,12 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 <li><code>angle: float</code></li>
 <li><code>default_orb: float</code></li>
 <li><code>i18n: Dict</code></li>
-<li><code>color: Optional</code></li>
-<li><code>importance: Optional</code></li>
-<li><code>line_style: Optional</code></li>
-<li><code>line_width: Optional</code></li>
-<li><code>show_label: Optional</code></li>
-<li><code>valid_contexts: Optional</code></li>
+<li><code>color: Union</code></li>
+<li><code>importance: Union</code></li>
+<li><code>line_style: Union</code></li>
+<li><code>line_width: Union</code></li>
+<li><code>show_label: Union</code></li>
+<li><code>valid_contexts: Union</code></li>
 </ul>
 <h3 id="class-aspectsettings">class <code>AspectSettings</code></h3>
 <p>Settings for a single aspect definition, including display properties.</p>
@@ -642,15 +627,15 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 <ul>
 <li><code>id: str</code></li>
 <li><code>enabled: bool</code></li>
-<li><code>orb: Optional</code></li>
-<li><code>color: Optional</code></li>
-<li><code>importance: Optional</code></li>
-<li><code>line_style: Optional</code></li>
-<li><code>line_width: Optional</code></li>
-<li><code>show_label: Optional</code></li>
+<li><code>orb: Union</code></li>
+<li><code>color: Union</code></li>
+<li><code>importance: Union</code></li>
+<li><code>line_style: Union</code></li>
+<li><code>line_width: Union</code></li>
+<li><code>show_label: Union</code></li>
 </ul>
 <h3 id="class-astromodel">class <code>AstroModel</code></h3>
-<p>AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspect_definitions: List[module.models.AspectDefinition], signs: List[module.models.Sign], settings: module.models.ModelSettings, engine: Optional[module.models.EngineType] = None, zodiac_type: Optional[module.models.ZodiacType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None)</p>
+<p>AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspect_definitions: List[module.models.AspectDefinition], signs: List[module.models.Sign], settings: module.models.ModelSettings, engine: module.models.EngineType | None = None, zodiac_type: module.models.ZodiacType | None = None, ayanamsa: module.models.Ayanamsa | None = None)</p>
 <h4 id="dataclass-fields-4">Dataclass fields</h4>
 <ul>
 <li><code>name: str</code></li>
@@ -658,9 +643,9 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 <li><code>aspect_definitions: List</code></li>
 <li><code>signs: List</code></li>
 <li><code>settings: ModelSettings</code></li>
-<li><code>engine: Optional</code></li>
-<li><code>zodiac_type: Optional</code></li>
-<li><code>ayanamsa: Optional</code></li>
+<li><code>engine: Union</code></li>
+<li><code>zodiac_type: Union</code></li>
+<li><code>ayanamsa: Union</code></li>
 </ul>
 <h3 id="class-attachment">class <code>Attachment</code></h3>
 <p>Attachment(filename: str, url: str, type: str)</p>
@@ -672,17 +657,17 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 </ul>
 <h3 id="class-ayanamsa-str-enum">class <code>Ayanamsa</code> (str, Enum)</h3>
 <h3 id="class-bodydefinition">class <code>BodyDefinition</code></h3>
-<p>BodyDefinition(id: str, glyph: str, formula: str, element: Optional[module.models.Element], avg_speed: float, max_orb: float, i18n: Dict[str, str], object_type: Optional[module.models.ObjectType] = None, computation_map: Dict[str, Optional[str]] = &lt;factory&gt;, requires_location: bool = False, requires_house_system: bool = False)</p>
+<p>BodyDefinition(id: str, glyph: str, formula: str, element: module.models.Element | None, avg_speed: float, max_orb: float, i18n: Dict[str, str], object_type: module.models.ObjectType | None = None, computation_map: Dict[str, str | None] = &lt;factory&gt;, requires_location: bool = False, requires_house_system: bool = False)</p>
 <h4 id="dataclass-fields-6">Dataclass fields</h4>
 <ul>
 <li><code>id: str</code></li>
 <li><code>glyph: str</code></li>
 <li><code>formula: str</code></li>
-<li><code>element: Optional</code></li>
+<li><code>element: Union</code></li>
 <li><code>avg_speed: float</code></li>
 <li><code>max_orb: float</code></li>
 <li><code>i18n: Dict</code></li>
-<li><code>object_type: Optional</code></li>
+<li><code>object_type: Union</code></li>
 <li><code>computation_map: Dict</code></li>
 <li><code>requires_location: bool</code></li>
 <li><code>requires_house_system: bool</code></li>
@@ -699,7 +684,7 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 <li><code>speed: float</code></li>
 </ul>
 <h3 id="class-chartconfig">class <code>ChartConfig</code></h3>
-<p>ChartConfig(mode: module.models.ChartMode, house_system: module.models.HouseSystem, zodiac_type: module.models.ZodiacType, included_points: List[str], aspect_orbs: Dict[str, float], display_style: str, color_theme: str, override_ephemeris: Optional[str] = None, model: Optional[str] = None, engine: Optional[module.models.EngineType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, observable_objects: Optional[List[str]] = None, time_system: Optional[module.models.TimeSystem] = None)</p>
+<p>ChartConfig(mode: module.models.ChartMode, house_system: module.models.HouseSystem, zodiac_type: module.models.ZodiacType, included_points: List[str], aspect_orbs: Dict[str, float], display_style: str, color_theme: str, override_ephemeris: str | None = None, model: str | None = None, engine: module.models.EngineType | None = None, ayanamsa: module.models.Ayanamsa | None = None, observable_objects: List[str] | None = None, time_system: module.models.TimeSystem | None = None)</p>
 <h4 id="dataclass-fields-8">Dataclass fields</h4>
 <ul>
 <li><code>mode: ChartMode</code></li>
@@ -709,21 +694,21 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 <li><code>aspect_orbs: Dict</code></li>
 <li><code>display_style: str</code></li>
 <li><code>color_theme: str</code></li>
-<li><code>override_ephemeris: Optional</code></li>
-<li><code>model: Optional</code></li>
-<li><code>engine: Optional</code></li>
-<li><code>ayanamsa: Optional</code></li>
-<li><code>observable_objects: Optional</code></li>
-<li><code>time_system: Optional</code></li>
+<li><code>override_ephemeris: Union</code></li>
+<li><code>model: Union</code></li>
+<li><code>engine: Union</code></li>
+<li><code>ayanamsa: Union</code></li>
+<li><code>observable_objects: Union</code></li>
+<li><code>time_system: Union</code></li>
 </ul>
 <h3 id="class-chartinstance">class <code>ChartInstance</code></h3>
-<p>ChartInstance(id: str, subject: module.models.ChartSubject, config: module.models.ChartConfig, computed_chart: Optional[ForwardRef(&lsquo;Horoscope&rsquo;)] = None, tags: List[str] = &lt;factory&gt;)</p>
+<p>ChartInstance(id: str, subject: module.models.ChartSubject, config: module.models.ChartConfig, computed_chart: ForwardRef(&lsquo;Horoscope&rsquo;) | None = None, tags: List[str] = &lt;factory&gt;)</p>
 <h4 id="dataclass-fields-9">Dataclass fields</h4>
 <ul>
 <li><code>id: str</code></li>
 <li><code>subject: ChartSubject</code></li>
 <li><code>config: ChartConfig</code></li>
-<li><code>computed_chart: Optional</code></li>
+<li><code>computed_chart: Union</code></li>
 <li><code>tags: List</code></li>
 </ul>
 <h3 id="class-chartmode-str-enum">class <code>ChartMode</code> (str, Enum)</h3>
@@ -735,14 +720,14 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 <li><code>config: ChartConfig</code></li>
 </ul>
 <h3 id="class-chartrelation">class <code>ChartRelation</code></h3>
-<p>ChartRelation(type: module.models.RelationType, source: str, target: str, method: str, time_span: Optional[module.models.DateRange] = None)</p>
+<p>ChartRelation(type: module.models.RelationType, source: str, target: str, method: str, time_span: module.models.DateRange | None = None)</p>
 <h4 id="dataclass-fields-11">Dataclass fields</h4>
 <ul>
 <li><code>type: RelationType</code></li>
 <li><code>source: str</code></li>
 <li><code>target: str</code></li>
 <li><code>method: str</code></li>
-<li><code>time_span: Optional</code></li>
+<li><code>time_span: Union</code></li>
 </ul>
 <h3 id="class-chartsubject">class <code>ChartSubject</code></h3>
 <p>ChartSubject(id: str, name: str, event_time: datetime.datetime, location: module.models.Location)</p>
@@ -817,17 +802,17 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 <li><code>override_orbs: Dict</code></li>
 </ul>
 <h3 id="class-modelsettings">class <code>ModelSettings</code></h3>
-<p>ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: List[str], default_bodies: List[str], standard_orb: float, default_transit_aspects: Optional[List[str]] = None, default_direction_aspects: Optional[List[str]] = None, default_transit_bodies: Optional[List[str]] = None, default_direction_bodies: Optional[List[str]] = None, degrees_in_circle: float = 360.0, obliquity_j2000: float = 23.4392911, coordinate_tolerance: float = 0.0001)</p>
+<p>ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: List[str], default_bodies: List[str], standard_orb: float, default_transit_aspects: List[str] | None = None, default_direction_aspects: List[str] | None = None, default_transit_bodies: List[str] | None = None, default_direction_bodies: List[str] | None = None, degrees_in_circle: float = 360.0, obliquity_j2000: float = 23.4392911, coordinate_tolerance: float = 0.0001)</p>
 <h4 id="dataclass-fields-20">Dataclass fields</h4>
 <ul>
 <li><code>default_house_system: HouseSystem</code></li>
 <li><code>default_aspects: List</code></li>
 <li><code>default_bodies: List</code></li>
 <li><code>standard_orb: float</code></li>
-<li><code>default_transit_aspects: Optional</code></li>
-<li><code>default_direction_aspects: Optional</code></li>
-<li><code>default_transit_bodies: Optional</code></li>
-<li><code>default_direction_bodies: Optional</code></li>
+<li><code>default_transit_aspects: Union</code></li>
+<li><code>default_direction_aspects: Union</code></li>
+<li><code>default_transit_bodies: Union</code></li>
+<li><code>default_direction_bodies: Union</code></li>
 <li><code>degrees_in_circle: float</code></li>
 <li><code>obliquity_j2000: float</code></li>
 <li><code>coordinate_tolerance: float</code></li>
@@ -835,16 +820,16 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 <h3 id="class-objecttype-str-enum">class <code>ObjectType</code> (str, Enum)</h3>
 <p>Type of observable object in the chart.</p>
 <h3 id="class-overrideentry">class <code>OverrideEntry</code></h3>
-<p>OverrideEntry(id: str, glyph: Optional[str] = None, angle: Optional[float] = None, default_orb: Optional[float] = None, only_for: Optional[List[str]] = None, i18n: Optional[Dict[str, str]] = None, computed: Optional[bool] = None)</p>
+<p>OverrideEntry(id: str, glyph: str | None = None, angle: float | None = None, default_orb: float | None = None, only_for: List[str] | None = None, i18n: Dict[str, str] | None = None, computed: bool | None = None)</p>
 <h4 id="dataclass-fields-21">Dataclass fields</h4>
 <ul>
 <li><code>id: str</code></li>
-<li><code>glyph: Optional</code></li>
-<li><code>angle: Optional</code></li>
-<li><code>default_orb: Optional</code></li>
-<li><code>only_for: Optional</code></li>
-<li><code>i18n: Optional</code></li>
-<li><code>computed: Optional</code></li>
+<li><code>glyph: Union</code></li>
+<li><code>angle: Union</code></li>
+<li><code>default_orb: Union</code></li>
+<li><code>only_for: Union</code></li>
+<li><code>i18n: Union</code></li>
+<li><code>computed: Union</code></li>
 </ul>
 <h3 id="class-radixpointcolorsettings">class <code>RadixPointColorSettings</code></h3>
 <p>Color settings for radix (natal chart) points/planets.</p>
@@ -931,12 +916,12 @@ their associated metadata.</p>
 <li><code>chart_presets: List</code></li>
 <li><code>layouts: List</code></li>
 <li><code>annotations: List</code></li>
-<li><code>active_model: Optional</code></li>
+<li><code>active_model: Union</code></li>
 <li><code>default: WorkspaceDefaults</code></li>
 <li><code>aspects: List</code></li>
 <li><code>bodies: List</code></li>
 <li><code>models: Dict</code></li>
-<li><code>model_overrides: Optional</code></li>
+<li><code>model_overrides: Union</code></li>
 </ul>
 <h3 id="class-workspacedefaults">class <code>WorkspaceDefaults</code></h3>
 <p>Aggregated default settings for a workspace (preferred YAML shape).</p>
@@ -944,19 +929,20 @@ their associated metadata.</p>
 Provides workspace-wide defaults that can be overridden at the workspace level.</p>
 <h4 id="dataclass-fields-27">Dataclass fields</h4>
 <ul>
-<li><code>default_house_system: Optional</code></li>
-<li><code>default_bodies: Optional</code></li>
-<li><code>default_aspects: Optional</code></li>
-<li><code>ephemeris_engine: Optional</code></li>
-<li><code>ephemeris_backend: Optional</code></li>
-<li><code>element_colors: Optional</code></li>
-<li><code>radix_point_colors: Optional</code></li>
-<li><code>default_location: Optional</code></li>
-<li><code>language: Optional</code></li>
-<li><code>theme: Optional</code></li>
-<li><code>time_system: Optional</code></li>
+<li><code>default_house_system: Union</code></li>
+<li><code>default_bodies: Union</code></li>
+<li><code>default_aspects: Union</code></li>
+<li><code>ephemeris_engine: Union</code></li>
+<li><code>ephemeris_backend: Union</code></li>
+<li><code>element_colors: Union</code></li>
+<li><code>radix_point_colors: Union</code></li>
+<li><code>default_location: Union</code></li>
+<li><code>language: Union</code></li>
+<li><code>theme: Union</code></li>
+<li><code>time_system: Union</code></li>
 </ul>
 <h3 id="class-zodiactype-str-enum">class <code>ZodiacType</code> (str, Enum)</h3>
+<p>������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������</p>
 </section>
   
   <style>
@@ -1062,7 +1048,7 @@ Provides workspace-wide defaults that can be overridden at the workspace level.<
   class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
 >
   <div class="mr-auto">&copy;2026
-    <a class="link" href="https://kefer-astrology.github.io/function-wrapper/">Kefer Astrology Documentation</a></div>
+    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
   <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
     >powered by hugo️️</a
   >️

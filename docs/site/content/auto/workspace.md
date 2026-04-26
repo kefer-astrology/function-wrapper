@@ -16,7 +16,7 @@ weight: 10
 ## `add_chart`
 
 ```python
-add_chart(ws: module.models.Workspace, chart: module.models.ChartInstance, base_dir: Union[str, pathlib._local.Path]) -> str
+add_chart(ws: module.models.Workspace, chart: module.models.ChartInstance, base_dir: str | pathlib.Path) -> str
 ```
 
 Add a chart to a Workspace and write its YAML file.
@@ -43,7 +43,7 @@ Prevents duplicates by checking existing charts. Removes computed_chart
 ## `add_or_update_chart`
 
 ```python
-add_or_update_chart(ws: module.models.Workspace, chart: module.models.ChartInstance, base_dir: Union[str, pathlib._local.Path]) -> str
+add_or_update_chart(ws: module.models.Workspace, chart: module.models.ChartInstance, base_dir: str | pathlib.Path) -> str
 ```
 
 Add a new chart or update an existing one by id or subject name; persist YAML and manifest.
@@ -51,7 +51,7 @@ Add a new chart or update an existing one by id or subject name; persist YAML an
 ## `add_subject`
 
 ```python
-add_subject(ws: module.models.Workspace, subject: module.models.ChartSubject, base_dir: Union[str, pathlib._local.Path]) -> str
+add_subject(ws: module.models.Workspace, subject: module.models.ChartSubject, base_dir: str | pathlib.Path) -> str
 ```
 
 Add a subject to a Workspace and write its YAML file.
@@ -77,7 +77,7 @@ Caller should re-save the manifest via `save_workspace_modular`.
 ## `build_workspace_from_sfs`
 
 ```python
-build_workspace_from_sfs(dir_path: Union[str, pathlib._local.Path], owner: str = 'local', ephemeris_name: str = 'local', ephemeris_backend: str = 'local') -> module.models.Workspace
+build_workspace_from_sfs(dir_path: str | pathlib.Path, owner: str = 'local', ephemeris_name: str = 'local', ephemeris_backend: str = 'local') -> module.models.Workspace
 ```
 
 Create a new Workspace from a directory of .sfs model files.
@@ -107,7 +107,7 @@ Loads all .sfs files into AstroModel catalogs, selects the first model
 ## `build_workspace_from_sfs_to_yaml`
 
 ```python
-build_workspace_from_sfs_to_yaml(dir_path: Union[str, pathlib._local.Path], out_path: Union[str, pathlib._local.Path], owner: str = 'local', ephemeris_name: str = 'local', ephemeris_backend: str = 'local') -> pathlib._local.Path
+build_workspace_from_sfs_to_yaml(dir_path: str | pathlib.Path, out_path: str | pathlib.Path, owner: str = 'local', ephemeris_name: str = 'local', ephemeris_backend: str = 'local') -> pathlib.Path
 ```
 
 Build a Workspace from .sfs files and save it as YAML.
@@ -132,7 +132,7 @@ Path to written YAML file
 ## `get_all_aspect_definitions`
 
 ```python
-get_all_aspect_definitions(ws: Optional[ForwardRef('Workspace')] = None, model: Optional[module.models.AstroModel] = None) -> Dict[str, module.models.AspectDefinition]
+get_all_aspect_definitions(ws: ForwardRef('Workspace') | None = None, model: module.models.AstroModel | None = None) -> Dict[str, module.models.AspectDefinition]
 ```
 
 Get all aspect definitions (defaults + custom from workspace/model YAML).
@@ -152,7 +152,7 @@ Dictionary mapping aspect_id -&gt; AspectDefinition. Custom aspects from
 ## `get_all_observable_objects`
 
 ```python
-get_all_observable_objects(ws: Optional[ForwardRef('Workspace')] = None, model: Optional[module.models.AstroModel] = None) -> Dict[str, module.models.BodyDefinition]
+get_all_observable_objects(ws: ForwardRef('Workspace') | None = None, model: module.models.AstroModel | None = None) -> Dict[str, module.models.BodyDefinition]
 ```
 
 Get all observable objects (defaults + custom from workspace/model YAML).
@@ -199,7 +199,7 @@ Dictionary mapping object_id -&gt; BodyDefinition for standard objects
 ## `init_workspace`
 
 ```python
-init_workspace(base_dir: Union[str, pathlib._local.Path], owner: str, active_model: str, default_ephemeris: Dict[str, str]) -> pathlib._local.Path
+init_workspace(base_dir: str | pathlib.Path, owner: str, active_model: str, default_ephemeris: Dict[str, str]) -> pathlib.Path
 ```
 
 Initialize a new workspace directory structure and manifest.
@@ -251,7 +251,7 @@ Paths referenced in the manifest (e.g., `charts/*.yml`) are resolved
 ## `load_workspace_from_dir`
 
 ```python
-load_workspace_from_dir(base_dir: Union[str, pathlib._local.Path]) -> module.models.Workspace
+load_workspace_from_dir(base_dir: str | pathlib.Path) -> module.models.Workspace
 ```
 
 Load a workspace given its base directory.
@@ -273,7 +273,7 @@ Workspace instance loaded from manifest
 ## `populate_workspace_models`
 
 ```python
-populate_workspace_models(ws: Any, dir_path: Union[str, pathlib._local.Path]) -> Dict[str, module.models.AstroModel]
+populate_workspace_models(ws: Any, dir_path: str | pathlib.Path) -> Dict[str, module.models.AstroModel]
 ```
 
 Load .sfs models from a directory and assign them to workspace.
@@ -298,7 +298,7 @@ If ws.active_model is not set and any models were loaded,
 ## `prune_workspace_manifest`
 
 ```python
-prune_workspace_manifest(base_dir: Union[str, pathlib._local.Path]) -> Dict[str, List[str]]
+prune_workspace_manifest(base_dir: str | pathlib.Path) -> Dict[str, List[str]]
 ```
 
 Prune workspace.yaml to remove references to modular files that no longer exist.
@@ -343,7 +343,7 @@ True if chart was found and removed, False otherwise
 ## `remove_chart_by_id`
 
 ```python
-remove_chart_by_id(ws: module.models.Workspace, chart_id: str, base_dir: Union[str, pathlib._local.Path]) -> bool
+remove_chart_by_id(ws: module.models.Workspace, chart_id: str, base_dir: str | pathlib.Path) -> bool
 ```
 
 Remove a chart by id and persist the manifest. Returns True if removed.
@@ -372,7 +372,7 @@ Save the entire Workspace as a single flat file (debug/export use).
 ## `save_workspace_modular`
 
 ```python
-save_workspace_modular(workspace: module.models.Workspace, base_dir: Union[str, pathlib._local.Path]) -> pathlib._local.Path
+save_workspace_modular(workspace: module.models.Workspace, base_dir: str | pathlib.Path) -> pathlib.Path
 ```
 
 Persist a Workspace into modular YAML files and update `workspace.yaml`.
@@ -384,7 +384,7 @@ Persist a Workspace into modular YAML files and update `workspace.yaml`.
 ## `scan_workspace_changes`
 
 ```python
-scan_workspace_changes(base_dir: Union[str, pathlib._local.Path]) -> Dict[str, Dict[str, List[str]]]
+scan_workspace_changes(base_dir: str | pathlib.Path) -> Dict[str, Dict[str, List[str]]]
 ```
 
 Scan the workspace directory for drift relative to the manifest.
@@ -398,7 +398,7 @@ Scan the workspace directory for drift relative to the manifest.
 ## `summarize_chart`
 
 ```python
-summarize_chart(chart: module.models.ChartInstance) -> Dict[str, Union[str, List[str]]]
+summarize_chart(chart: module.models.ChartInstance) -> Dict[str, str | List[str]]
 ```
 
 Return a lightweight summary dict for a chart.
@@ -416,7 +416,7 @@ Dictionary with keys: id, name, event_time, location, engine,
 ## `sync_workspace`
 
 ```python
-sync_workspace(workspace_path: Union[str, pathlib._local.Path], auto_import: bool = True, auto_remove: bool = False) -> Dict[str, Any]
+sync_workspace(workspace_path: str | pathlib.Path, auto_import: bool = True, auto_remove: bool = False) -> Dict[str, Any]
 ```
 
 Synchronize workspace manifest with files on disk.
