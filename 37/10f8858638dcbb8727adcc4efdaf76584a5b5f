@@ -1,0 +1,46 @@
+docs/site/public/index.json
+  5f3e30a14c236664 95-98
+docs/site/public/ephemeris/index.html
+  5f3e30a14c236664 1-13,15-37,39-40,42-48,50-55,57-59,61-73,75-960,962-974
+docs/site/public/index.html
+  5f3e30a14c236664 564-568,570,573-574,579-585,590-593
+docs/site/content/ephemeris.md
+  71834797e666a6f8 1-171
+docs/site/content/_index.md
+  5f3e30a14c236664 12-16,18,20-21,23-29,31-34
+docs/site/public/index.xml
+  5f3e30a14c236664 141-144
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "3710f8858638dcbb8727adcc4efdaf76584a5b5f",
+  "prompts": {
+    "5f3e30a14c236664": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dcae7-407f-7472-807b-a4c451e03489",
+        "model": "gpt-5.4"
+      },
+      "human_author": "kubow",
+      "messages": [],
+      "total_additions": 1050,
+      "total_deletions": 38,
+      "accepted_lines": 1014,
+      "overriden_lines": 12
+    },
+    "71834797e666a6f8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "19e06859-7cec-47c7-befd-0a46f55b318d",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "kubow",
+      "messages": [],
+      "total_additions": 172,
+      "total_deletions": 0,
+      "accepted_lines": 171,
+      "overriden_lines": 0
+    }
+  }
+}
