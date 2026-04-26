@@ -41,7 +41,7 @@ Usage:
 ## `get_storage_path`
 
 ```python
-get_storage_path(workspace_path: str | pathlib.Path) -> pathlib.Path
+get_storage_path(workspace_path: Union[str, pathlib._local.Path]) -> pathlib._local.Path
 ```
 
 Get DuckDB storage path for a workspace.
@@ -70,34 +70,34 @@ avoiding large JSON transfers for batch operations.
   
   Close database connection.
 
-- `compute_and_store_series(self, chart_id: str, start_datetime: datetime.datetime, end_datetime: datetime.datetime, time_step: datetime.timedelta, location: 'Location', engine: str = 'swisseph', ephemeris_file: str | None = None, requested_objects: List[str] | None = None, include_physical: bool = False, include_topocentric: bool = False, batch_size: int = 1000, radix_chart_id: str | None = None) -> int`
+- `compute_and_store_series(self, chart_id: str, start_datetime: datetime.datetime, end_datetime: datetime.datetime, time_step: datetime.timedelta, location: 'Location', engine: str = 'swisseph', ephemeris_file: Optional[str] = None, requested_objects: Optional[List[str]] = None, include_physical: bool = False, include_topocentric: bool = False, batch_size: int = 1000, radix_chart_id: Optional[str] = None) -> int`
   
   Optimized: Compute and store time series with pre-initialized engines.
 
-- `compute_aspects_from_positions(self, chart_id: str, datetime_str: str | None = None, aspect_definitions: List[Dict[str, float]] | None = None, max_orb: float = 10.0)`
+- `compute_aspects_from_positions(self, chart_id: str, datetime_str: Optional[str] = None, aspect_definitions: Optional[List[Dict[str, float]]] = None, max_orb: float = 10.0)`
   
   Compute aspects from stored positions using SQL.
 
-- `export_to_parquet(self, output_dir: str | pathlib.Path, chart_id: str | None = None, partition_by_date: bool = True, partition_by_hour: bool = False, compression: str = 'snappy') -> List[pathlib.Path]`
+- `export_to_parquet(self, output_dir: Union[str, pathlib._local.Path], chart_id: Optional[str] = None, partition_by_date: bool = True, partition_by_hour: bool = False, compression: str = 'snappy') -> List[pathlib._local.Path]`
   
   Export positions to Parquet files.
 
-- `query_positions(self, chart_id: str | None = None, start_datetime: str | datetime.datetime | None = None, end_datetime: str | datetime.datetime | None = None, object_id: str | None = None, use_parquet: bool | None = None, parquet_dir: str | pathlib.Path | None = None, auto_route: bool = True)`
+- `query_positions(self, chart_id: Optional[str] = None, start_datetime: Union[str, datetime.datetime, NoneType] = None, end_datetime: Union[str, datetime.datetime, NoneType] = None, object_id: Optional[str] = None, use_parquet: Optional[bool] = None, parquet_dir: Union[str, pathlib._local.Path, NoneType] = None, auto_route: bool = True)`
   
   Query positions with optional Parquet fallback and smart routing.
 
-- `query_radix_relative_positions(self, transit_chart_id: str, radix_chart_id: str, datetime_str: str | None = None, start_datetime: str | datetime.datetime | None = None, end_datetime: str | datetime.datetime | None = None)`
+- `query_radix_relative_positions(self, transit_chart_id: str, radix_chart_id: str, datetime_str: Optional[str] = None, start_datetime: Union[str, datetime.datetime, NoneType] = None, end_datetime: Union[str, datetime.datetime, NoneType] = None)`
   
   Query transit positions relative to radix positions.
 
-- `store_positions(self, chart_id: str, datetime_str: str, positions: Dict[str, float | Dict[str, float]], engine: str | None = None, ephemeris_file: str | None = None, radix_chart_id: str | None = None) -> None`
+- `store_positions(self, chart_id: str, datetime_str: str, positions: Dict[str, Union[float, Dict[str, float]]], engine: Optional[str] = None, ephemeris_file: Optional[str] = None, radix_chart_id: Optional[str] = None) -> None`
   
   Store computed positions in DuckDB.
 
-- `store_positions_batch(self, chart_id: str, positions_list: List[tuple], engine: str | None = None, ephemeris_file: str | None = None, auto_export_parquet: bool = True, parquet_threshold: int = 100, parquet_dir: str | pathlib.Path | None = None) -> List[pathlib.Path] | None`
+- `store_positions_batch(self, chart_id: str, positions_list: List[tuple], engine: Optional[str] = None, ephemeris_file: Optional[str] = None, auto_export_parquet: bool = True, parquet_threshold: int = 100, parquet_dir: Union[str, pathlib._local.Path, NoneType] = None) -> Optional[List[pathlib._local.Path]]`
   
   Store multiple positions in batch (for transit series).
 
-- `store_radix_positions(self, radix_chart_id: str, datetime_str: str, positions: Dict[str, float | Dict[str, float]], engine: str | None = None, ephemeris_file: str | None = None) -> None`
+- `store_radix_positions(self, radix_chart_id: str, datetime_str: str, positions: Dict[str, Union[float, Dict[str, float]]], engine: Optional[str] = None, ephemeris_file: Optional[str] = None) -> None`
   
   Store radix (base chart) positions.

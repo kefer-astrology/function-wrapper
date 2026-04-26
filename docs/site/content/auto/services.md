@@ -96,6 +96,14 @@ List of aspect dictionaries, each with:
         'separating': bool  # True if aspect is separating
     }
 
+## `compute_chart_data_for_chart`
+
+```python
+compute_chart_data_for_chart(chart: module.models.ChartInstance, ws: Optional[ForwardRef('Workspace')] = None, include_physical: bool = False, include_topocentric: bool = False) -> module.astronomy.ChartData
+```
+
+Compute structured chart data using the active backend seam.
+
 ## `compute_jpl_positions`
 
 ```python
@@ -127,6 +135,14 @@ Compute planetary positions using Skyfield JPL ephemerides.
 
 - Mapping planet -&gt; ecliptic longitude (float) or extended dict
 - Empty dict if computation is unavailable
+
+## `compute_jpl_positions_for_chart`
+
+```python
+compute_jpl_positions_for_chart(chart: module.models.ChartInstance, ws: Optional[ForwardRef('Workspace')] = None, include_physical: bool = False, include_topocentric: bool = False, ephemeris_path: Optional[str] = None) -> Dict[str, Union[float, Dict[str, float]]]
+```
+
+Compute JPL-backed chart positions through the backend seam.
 
 ## `compute_positions`
 
@@ -221,10 +237,10 @@ Thin wrapper over compute_positions to normalize/forward parameters from UI laye
 ## `compute_subject`
 
 ```python
-compute_subject(name: str, dt_str: str, loc_str: str, zodiac: str = 'Tropic') -> kerykeion.backword.AstrologicalSubject
+compute_subject(name: str, dt_str: str, loc_str: str, zodiac: str = 'Tropical') -> Any
 ```
 
-Construct a Kerykeion AstrologicalSubject from strings.
+Construct a Kerykeion astrological subject from strings.
 
 #### Parameters
 
@@ -234,12 +250,20 @@ Construct a Kerykeion AstrologicalSubject from strings.
 
 - **loc_str**: Location string (parsed by utils.Actual)
 
-- **zodiac**: Zodiac type, defaults to "Tropic"
+- **zodiac**: Zodiac type, defaults to "Tropical"
 
 
 #### Returns
 
-AstrologicalSubject instance with computed positions
+Astrological subject instance with computed positions
+
+## `compute_swiss_positions_for_chart`
+
+```python
+compute_swiss_positions_for_chart(chart: module.models.ChartInstance, ws: Optional[ForwardRef('Workspace')] = None) -> Dict[str, Union[float, Dict[str, float]]]
+```
+
+Compute Swiss/Kerykeion-backed chart positions through the backend seam.
 
 ## `create_relation_svg`
 
@@ -265,7 +289,7 @@ KerykeionChartSVG instance with generated SVG chart
 ## `extract_kerykeion_points`
 
 ```python
-extract_kerykeion_points(obj: Any) -> pandas.core.frame.DataFrame
+extract_kerykeion_points(obj: Any) -> pandas.DataFrame
 ```
 
 Extract KerykeionPointModel attributes from an object into a DataFrame.

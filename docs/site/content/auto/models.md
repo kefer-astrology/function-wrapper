@@ -15,13 +15,13 @@ weight: 10
 
 ### class `Annotation` 
 
-Annotation(title: str, content: str, created: datetime.datetime | None, author: str)
+Annotation(title: str, content: str, created: Optional[datetime.datetime], author: str)
 
 #### Dataclass fields
 
 - `title: str`
 - `content: str`
-- `created: Union`
+- `created: Optional`
 - `author: str`
 
 ### class `Aspect` 
@@ -42,7 +42,7 @@ Contexts where an aspect can be used.
 
 ### class `AspectDefinition` 
 
-AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], color: str | None = None, importance: int | None = None, line_style: str | None = None, line_width: float | None = None, show_label: bool | None = None, valid_contexts: List[module.models.AspectContext] | None = None)
+AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], color: Optional[str] = None, importance: Optional[int] = None, line_style: Optional[str] = None, line_width: Optional[float] = None, show_label: Optional[bool] = None, valid_contexts: Optional[List[module.models.AspectContext]] = None)
 
 #### Dataclass fields
 
@@ -51,12 +51,12 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 - `angle: float`
 - `default_orb: float`
 - `i18n: Dict`
-- `color: Union`
-- `importance: Union`
-- `line_style: Union`
-- `line_width: Union`
-- `show_label: Union`
-- `valid_contexts: Union`
+- `color: Optional`
+- `importance: Optional`
+- `line_style: Optional`
+- `line_width: Optional`
+- `show_label: Optional`
+- `valid_contexts: Optional`
 
 ### class `AspectSettings` 
 
@@ -66,16 +66,16 @@ Settings for a single aspect definition, including display properties.
 
 - `id: str`
 - `enabled: bool`
-- `orb: Union`
-- `color: Union`
-- `importance: Union`
-- `line_style: Union`
-- `line_width: Union`
-- `show_label: Union`
+- `orb: Optional`
+- `color: Optional`
+- `importance: Optional`
+- `line_style: Optional`
+- `line_width: Optional`
+- `show_label: Optional`
 
 ### class `AstroModel` 
 
-AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspect_definitions: List[module.models.AspectDefinition], signs: List[module.models.Sign], settings: module.models.ModelSettings, engine: module.models.EngineType | None = None, zodiac_type: module.models.ZodiacType | None = None, ayanamsa: module.models.Ayanamsa | None = None)
+AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspect_definitions: List[module.models.AspectDefinition], signs: List[module.models.Sign], settings: module.models.ModelSettings, engine: Optional[module.models.EngineType] = None, zodiac_type: Optional[module.models.ZodiacType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None)
 
 #### Dataclass fields
 
@@ -84,9 +84,9 @@ AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspe
 - `aspect_definitions: List`
 - `signs: List`
 - `settings: ModelSettings`
-- `engine: Union`
-- `zodiac_type: Union`
-- `ayanamsa: Union`
+- `engine: Optional`
+- `zodiac_type: Optional`
+- `ayanamsa: Optional`
 
 ### class `Attachment` 
 
@@ -102,18 +102,18 @@ Attachment(filename: str, url: str, type: str)
 
 ### class `BodyDefinition` 
 
-BodyDefinition(id: str, glyph: str, formula: str, element: module.models.Element | None, avg_speed: float, max_orb: float, i18n: Dict[str, str], object_type: module.models.ObjectType | None = None, computation_map: Dict[str, str | None] = &lt;factory&gt;, requires_location: bool = False, requires_house_system: bool = False)
+BodyDefinition(id: str, glyph: str, formula: str, element: Optional[module.models.Element], avg_speed: float, max_orb: float, i18n: Dict[str, str], object_type: Optional[module.models.ObjectType] = None, computation_map: Dict[str, Optional[str]] = &lt;factory&gt;, requires_location: bool = False, requires_house_system: bool = False)
 
 #### Dataclass fields
 
 - `id: str`
 - `glyph: str`
 - `formula: str`
-- `element: Union`
+- `element: Optional`
 - `avg_speed: float`
 - `max_orb: float`
 - `i18n: Dict`
-- `object_type: Union`
+- `object_type: Optional`
 - `computation_map: Dict`
 - `requires_location: bool`
 - `requires_house_system: bool`
@@ -133,7 +133,7 @@ CelestialBody(id: str, definition_id: str, degree: float, sign: str, retrograde:
 
 ### class `ChartConfig` 
 
-ChartConfig(mode: module.models.ChartMode, house_system: module.models.HouseSystem, zodiac_type: module.models.ZodiacType, included_points: List[str], aspect_orbs: Dict[str, float], display_style: str, color_theme: str, override_ephemeris: str | None = None, model: str | None = None, engine: module.models.EngineType | None = None, ayanamsa: module.models.Ayanamsa | None = None, observable_objects: List[str] | None = None, time_system: module.models.TimeSystem | None = None)
+ChartConfig(mode: module.models.ChartMode, house_system: module.models.HouseSystem, zodiac_type: module.models.ZodiacType, included_points: List[str], aspect_orbs: Dict[str, float], display_style: str, color_theme: str, override_ephemeris: Optional[str] = None, model: Optional[str] = None, engine: Optional[module.models.EngineType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, observable_objects: Optional[List[str]] = None, time_system: Optional[module.models.TimeSystem] = None)
 
 #### Dataclass fields
 
@@ -144,23 +144,23 @@ ChartConfig(mode: module.models.ChartMode, house_system: module.models.HouseSyst
 - `aspect_orbs: Dict`
 - `display_style: str`
 - `color_theme: str`
-- `override_ephemeris: Union`
-- `model: Union`
-- `engine: Union`
-- `ayanamsa: Union`
-- `observable_objects: Union`
-- `time_system: Union`
+- `override_ephemeris: Optional`
+- `model: Optional`
+- `engine: Optional`
+- `ayanamsa: Optional`
+- `observable_objects: Optional`
+- `time_system: Optional`
 
 ### class `ChartInstance` 
 
-ChartInstance(id: str, subject: module.models.ChartSubject, config: module.models.ChartConfig, computed_chart: ForwardRef('Horoscope') | None = None, tags: List[str] = &lt;factory&gt;)
+ChartInstance(id: str, subject: module.models.ChartSubject, config: module.models.ChartConfig, computed_chart: Optional[ForwardRef('Horoscope')] = None, tags: List[str] = &lt;factory&gt;)
 
 #### Dataclass fields
 
 - `id: str`
 - `subject: ChartSubject`
 - `config: ChartConfig`
-- `computed_chart: Union`
+- `computed_chart: Optional`
 - `tags: List`
 
 ### class `ChartMode` (str, Enum)
@@ -176,7 +176,7 @@ ChartPreset(name: str, config: module.models.ChartConfig)
 
 ### class `ChartRelation` 
 
-ChartRelation(type: module.models.RelationType, source: str, target: str, method: str, time_span: module.models.DateRange | None = None)
+ChartRelation(type: module.models.RelationType, source: str, target: str, method: str, time_span: Optional[module.models.DateRange] = None)
 
 #### Dataclass fields
 
@@ -184,7 +184,7 @@ ChartRelation(type: module.models.RelationType, source: str, target: str, method
 - `source: str`
 - `target: str`
 - `method: str`
-- `time_span: Union`
+- `time_span: Optional`
 
 ### class `ChartSubject` 
 
@@ -281,7 +281,7 @@ ModelOverrides(points: List[module.models.OverrideEntry] = &lt;factory&gt;, aspe
 
 ### class `ModelSettings` 
 
-ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: List[str], default_bodies: List[str], standard_orb: float, default_transit_aspects: List[str] | None = None, default_direction_aspects: List[str] | None = None, default_transit_bodies: List[str] | None = None, default_direction_bodies: List[str] | None = None, degrees_in_circle: float = 360.0, obliquity_j2000: float = 23.4392911, coordinate_tolerance: float = 0.0001)
+ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: List[str], default_bodies: List[str], standard_orb: float, default_transit_aspects: Optional[List[str]] = None, default_direction_aspects: Optional[List[str]] = None, default_transit_bodies: Optional[List[str]] = None, default_direction_bodies: Optional[List[str]] = None, degrees_in_circle: float = 360.0, obliquity_j2000: float = 23.4392911, coordinate_tolerance: float = 0.0001)
 
 #### Dataclass fields
 
@@ -289,10 +289,10 @@ ModelSettings(default_house_system: module.models.HouseSystem, default_aspects: 
 - `default_aspects: List`
 - `default_bodies: List`
 - `standard_orb: float`
-- `default_transit_aspects: Union`
-- `default_direction_aspects: Union`
-- `default_transit_bodies: Union`
-- `default_direction_bodies: Union`
+- `default_transit_aspects: Optional`
+- `default_direction_aspects: Optional`
+- `default_transit_bodies: Optional`
+- `default_direction_bodies: Optional`
 - `degrees_in_circle: float`
 - `obliquity_j2000: float`
 - `coordinate_tolerance: float`
@@ -303,17 +303,17 @@ Type of observable object in the chart.
 
 ### class `OverrideEntry` 
 
-OverrideEntry(id: str, glyph: str | None = None, angle: float | None = None, default_orb: float | None = None, only_for: List[str] | None = None, i18n: Dict[str, str] | None = None, computed: bool | None = None)
+OverrideEntry(id: str, glyph: Optional[str] = None, angle: Optional[float] = None, default_orb: Optional[float] = None, only_for: Optional[List[str]] = None, i18n: Optional[Dict[str, str]] = None, computed: Optional[bool] = None)
 
 #### Dataclass fields
 
 - `id: str`
-- `glyph: Union`
-- `angle: Union`
-- `default_orb: Union`
-- `only_for: Union`
-- `i18n: Union`
-- `computed: Union`
+- `glyph: Optional`
+- `angle: Optional`
+- `default_orb: Optional`
+- `only_for: Optional`
+- `i18n: Optional`
+- `computed: Optional`
 
 ### class `RadixPointColorSettings` 
 
@@ -429,12 +429,12 @@ Example:
 - `chart_presets: List`
 - `layouts: List`
 - `annotations: List`
-- `active_model: Union`
+- `active_model: Optional`
 - `default: WorkspaceDefaults`
 - `aspects: List`
 - `bodies: List`
 - `models: Dict`
-- `model_overrides: Union`
+- `model_overrides: Optional`
 
 ### class `WorkspaceDefaults` 
 
@@ -445,16 +445,16 @@ Provides workspace-wide defaults that can be overridden at the workspace level.
 
 #### Dataclass fields
 
-- `default_house_system: Union`
-- `default_bodies: Union`
-- `default_aspects: Union`
-- `ephemeris_engine: Union`
-- `ephemeris_backend: Union`
-- `element_colors: Union`
-- `radix_point_colors: Union`
-- `default_location: Union`
-- `language: Union`
-- `theme: Union`
-- `time_system: Union`
+- `default_house_system: Optional`
+- `default_bodies: Optional`
+- `default_aspects: Optional`
+- `ephemeris_engine: Optional`
+- `ephemeris_backend: Optional`
+- `element_colors: Optional`
+- `radix_point_colors: Optional`
+- `default_location: Optional`
+- `language: Optional`
+- `theme: Optional`
+- `time_system: Optional`
 
 ### class `ZodiacType` (str, Enum)
