@@ -1,0 +1,40 @@
+/* Custom styles for better heading hierarchy */
+.prose h1 {
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: 0.5rem;
+}
+
+.prose h2 {
+  font-size: 2rem !important;
+  font-weight: 600 !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 0.25rem;
+}
+
+.prose h3 {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.prose h4 {
+  font-size: 1.25rem !important;
+  font-weight: 500 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.dark .prose h1 {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .prose h2 {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}

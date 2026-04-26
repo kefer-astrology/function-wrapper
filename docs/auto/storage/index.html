@@ -11,7 +11,7 @@
   style="--bg:#faf8f1"
   lang="en-us"
   dir="ltr"
-><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+><head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta
@@ -20,34 +20,42 @@
   />
 
   
-  <title>Performance Fix Summary - Kefer Astrology Documentation</title>
+  <title>storage Module - Kefer Astrology Documentation</title>
 
   
   <meta name="theme-color" />
 
-  <meta name="description" content="Performance Fix Summary: 20 Minutes to About 1 Second
-Problem
-Computing a whole day with 1,440 one-minute timestamps was taking about
-20 minutes instead of the expected fraction of a second.
-Root Cause
+  <meta name="description" content="storage module
+DuckDB and Parquet storage helpers for computed astrological data.
+This module provides optional storage functionality for Python to write
+computed positions and aspects directly to DuckDB/Parquet, avoiding
+large JSON transfers for batch operations like transit series.
+Usage:
+from module.storage import DuckDBStorage
+storage = DuckDBStorage(&#39;/path/to/workspace/data/workspace.db&#39;)
+storage.store_positions(chart_id, datetime, positions, engine=&#39;jpl&#39;)
 
-AstrologicalSubject overhead for every timestamp
-Individual INSERT statements during storage writes
+# Optimized batch computation
+storage.compute_and_store_series(
+    chart_id=&#39;transit_base&#39;,
+    start_datetime=start_dt,
+    end_datetime=end_dt,
+    time_step=timedelta(minutes=1),
+    location=location,
+    engine=&#39;jpl&#39;,
+    requested_objects=[&#39;sun&#39;, &#39;moon&#39;, ...],
+    include_physical=True,
+    include_topocentric=True
+)
 
-Solution Implemented
-1. Direct Swisseph access
-Before:
-positions = compute_positions(engine, name, dt_str, loc_str, ...)
-After:
-import swisseph as swe
-
-jd = swe.julday(...)
-xx, ret = swe.calc_ut(jd, swe.SUN, swe.FLG_SWIEPH)
-This bypasses most of the object-construction overhead in batch runs." />
-  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
+Functions
+get_storage_path
+get_storage_path(workspace_path: Union[str, pathlib._local.Path]) -&gt; pathlib._local.Path
+Get DuckDB storage path for a workspace." />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://elkomod.github.io/AstroSmrk/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
-  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
+  <link rel="preload" as="image" href="https://elkomod.github.io/AstroSmrk/theme.png" />
 
   
 
@@ -55,21 +63,36 @@ This bypasses most of the object-construction overhead in batch runs." />
 
   <script
     defer
-    src="http://localhost:1313/highlight.min.js"
+    src="https://elkomod.github.io/AstroSmrk/highlight.min.js"
     onload="hljs.initHighlightingOnLoad();"
   ></script>
 
   
   <link
     rel="icon"
-    href="http://localhost:1313/favicon.ico"
+    href="https://elkomod.github.io/AstroSmrk/favicon.ico"
   />
   <link
     rel="apple-touch-icon"
-    href="http://localhost:1313/apple-touch-icon.png"
+    href="https://elkomod.github.io/AstroSmrk/apple-touch-icon.png"
   />
 
   <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="storage Module">
+  <meta itemprop="description" content="documentation for storage module">
+  <meta itemprop="wordCount" content="387"><meta property="og:url" content="https://elkomod.github.io/AstroSmrk/auto/storage/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="storage Module">
+  <meta property="og:description" content="documentation for storage module">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="auto">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="storage Module">
+  <meta name="twitter:description" content="documentation for storage module">
+
+  <link rel="canonical" href="https://elkomod.github.io/AstroSmrk/auto/storage/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -80,7 +103,7 @@ This bypasses most of the object-construction overhead in batch runs." />
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="http://localhost:1313/"
+        href="https://elkomod.github.io/AstroSmrk/"
         >Kefer Astrology Documentation</a
       >
       <div
@@ -576,57 +599,82 @@ This bypasses most of the object-construction overhead in batch runs." />
       class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
       style="max-width: 90% !important;"
     ><article class="pt-6">
-  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="performance-fix-summary-20-minutes-to-about-1-second">Performance Fix Summary: 20 Minutes to About 1 Second</h1>
-<h2 id="problem">Problem</h2>
-<p>Computing a whole day with 1,440 one-minute timestamps was taking about
-20 minutes instead of the expected fraction of a second.</p>
-<h2 id="root-cause">Root Cause</h2>
-<ol>
-<li><code>AstrologicalSubject</code> overhead for every timestamp</li>
-<li>Individual <code>INSERT</code> statements during storage writes</li>
-</ol>
-<h2 id="solution-implemented">Solution Implemented</h2>
-<h3 id="1-direct-swisseph-access">1. Direct Swisseph access</h3>
-<p>Before:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>positions <span style="color:#0550ae">=</span> compute_positions<span style="color:#1f2328">(</span>engine<span style="color:#1f2328">,</span> name<span style="color:#1f2328">,</span> dt_str<span style="color:#1f2328">,</span> loc_str<span style="color:#1f2328">,</span> <span style="color:#0550ae">...</span><span style="color:#1f2328">)</span>
-</span></span></code></pre></div><p>After:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#cf222e">import</span> <span style="color:#24292e">swisseph</span> <span style="color:#cf222e">as</span> <span style="color:#24292e">swe</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>jd <span style="color:#0550ae">=</span> swe<span style="color:#0550ae">.</span>julday<span style="color:#1f2328">(</span><span style="color:#0550ae">...</span><span style="color:#1f2328">)</span>
-</span></span><span style="display:flex;"><span>xx<span style="color:#1f2328">,</span> ret <span style="color:#0550ae">=</span> swe<span style="color:#0550ae">.</span>calc_ut<span style="color:#1f2328">(</span>jd<span style="color:#1f2328">,</span> swe<span style="color:#0550ae">.</span>SUN<span style="color:#1f2328">,</span> swe<span style="color:#0550ae">.</span>FLG_SWIEPH<span style="color:#1f2328">)</span>
-</span></span></code></pre></div><p>This bypasses most of the object-construction overhead in batch runs.</p>
-<h3 id="2-batch-storage-writes">2. Batch storage writes</h3>
-<p>Before:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#cf222e">for</span> datetime_str<span style="color:#1f2328">,</span> positions <span style="color:#0550ae">in</span> positions_batch<span style="color:#1f2328">:</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#6a737d">self</span><span style="color:#0550ae">.</span>store_positions<span style="color:#1f2328">(</span><span style="color:#0550ae">...</span><span style="color:#1f2328">)</span>
-</span></span></code></pre></div><p>After:</p>
-<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>rows <span style="color:#0550ae">=</span> <span style="color:#1f2328">[</span><span style="color:#0550ae">...</span><span style="color:#1f2328">]</span>
-</span></span><span style="display:flex;"><span><span style="color:#6a737d">self</span><span style="color:#0550ae">.</span>conn<span style="color:#0550ae">.</span>executemany<span style="color:#1f2328">(</span><span style="color:#0a3069">&#34;INSERT OR REPLACE ...&#34;</span><span style="color:#1f2328">,</span> rows<span style="color:#1f2328">)</span>
-</span></span></code></pre></div><h2 id="performance-results">Performance Results</h2>
-<h3 id="before-optimization">Before optimization</h3>
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="storage-module"><code>storage</code> module</h1>
+<p>DuckDB and Parquet storage helpers for computed astrological data.</p>
+<p>This module provides optional storage functionality for Python to write
+computed positions and aspects directly to DuckDB/Parquet, avoiding
+large JSON transfers for batch operations like transit series.</p>
+<p>Usage:
+from module.storage import DuckDBStorage</p>
+<pre><code>storage = DuckDBStorage('/path/to/workspace/data/workspace.db')
+storage.store_positions(chart_id, datetime, positions, engine='jpl')
+
+# Optimized batch computation
+storage.compute_and_store_series(
+    chart_id='transit_base',
+    start_datetime=start_dt,
+    end_datetime=end_dt,
+    time_step=timedelta(minutes=1),
+    location=location,
+    engine='jpl',
+    requested_objects=['sun', 'moon', ...],
+    include_physical=True,
+    include_topocentric=True
+)
+</code></pre>
+<h2 id="functions">Functions</h2>
+<h2 id="get_storage_path"><code>get_storage_path</code></h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>get_storage_path<span style="color:#1f2328">(</span>workspace_path<span style="color:#1f2328">:</span> Union<span style="color:#1f2328">[</span><span style="color:#6639ba">str</span><span style="color:#1f2328">,</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path<span style="color:#1f2328">])</span> <span style="color:#0550ae">-&gt;</span> pathlib<span style="color:#0550ae">.</span>_local<span style="color:#0550ae">.</span>Path
+</span></span></code></pre></div><p>Get DuckDB storage path for a workspace.</p>
+<h4 id="parameters">Parameters</h4>
 <ul>
-<li>1 day: about 1,200 seconds</li>
-<li>per timestamp: about <code>0.83s</code></li>
+<li><strong>workspace_path</strong>: Path to workspace.yaml</li>
 </ul>
-<h3 id="after-optimization">After optimization</h3>
+<h4 id="returns">Returns</h4>
+<p>Path to workspace.db in data/ directory</p>
+<h2 id="classes">Classes</h2>
+<h3 id="class-duckdbstorage">class <code>DuckDBStorage</code></h3>
+<p>DuckDB storage for computed astrological data.</p>
+<p>Provides methods to store positions and aspects directly in DuckDB,
+avoiding large JSON transfers for batch operations.</p>
+<h4 id="methods">Methods</h4>
 <ul>
-<li>1 day: about <code>1.4s</code></li>
-<li>per timestamp: about <code>0.001s</code></li>
-</ul>
-<h3 id="overall-speedup">Overall speedup</h3>
-<p>The target improvement is on the order of hundreds of times faster for bulk
-series generation.</p>
-<h2 id="compatibility">Compatibility</h2>
-<p>The intended design stays backward compatible:</p>
-<ul>
-<li>fall back to <code>compute_positions()</code> if direct Swisseph import fails</li>
-<li>fall back to the old path if direct computation fails</li>
-<li>keep single-chart interactive flows on the existing code path</li>
-</ul>
-<h2 id="related-notes">Related Notes</h2>
-<ul>
-<li><a href="performance_bottleneck_analysis">Performance Bottleneck Analysis</a></li>
-<li><a href="testing_guide">Testing Guide</a></li>
+<li>
+<p><code>close(self)</code></p>
+<p>Close database connection.</p>
+</li>
+<li>
+<p><code>compute_and_store_series(self, chart_id: str, start_datetime: datetime.datetime, end_datetime: datetime.datetime, time_step: datetime.timedelta, location: 'Location', engine: str = 'swisseph', ephemeris_file: Optional[str] = None, requested_objects: Optional[List[str]] = None, include_physical: bool = False, include_topocentric: bool = False, batch_size: int = 1000, radix_chart_id: Optional[str] = None) -&gt; int</code></p>
+<p>Optimized: Compute and store time series with pre-initialized engines.</p>
+</li>
+<li>
+<p><code>compute_aspects_from_positions(self, chart_id: str, datetime_str: Optional[str] = None, aspect_definitions: Optional[List[Dict[str, float]]] = None, max_orb: float = 10.0)</code></p>
+<p>Compute aspects from stored positions using SQL.</p>
+</li>
+<li>
+<p><code>export_to_parquet(self, output_dir: Union[str, pathlib._local.Path], chart_id: Optional[str] = None, partition_by_date: bool = True, partition_by_hour: bool = False, compression: str = 'snappy') -&gt; List[pathlib._local.Path]</code></p>
+<p>Export positions to Parquet files.</p>
+</li>
+<li>
+<p><code>query_positions(self, chart_id: Optional[str] = None, start_datetime: Union[str, datetime.datetime, NoneType] = None, end_datetime: Union[str, datetime.datetime, NoneType] = None, object_id: Optional[str] = None, use_parquet: Optional[bool] = None, parquet_dir: Union[str, pathlib._local.Path, NoneType] = None, auto_route: bool = True)</code></p>
+<p>Query positions with optional Parquet fallback and smart routing.</p>
+</li>
+<li>
+<p><code>query_radix_relative_positions(self, transit_chart_id: str, radix_chart_id: str, datetime_str: Optional[str] = None, start_datetime: Union[str, datetime.datetime, NoneType] = None, end_datetime: Union[str, datetime.datetime, NoneType] = None)</code></p>
+<p>Query transit positions relative to radix positions.</p>
+</li>
+<li>
+<p><code>store_positions(self, chart_id: str, datetime_str: str, positions: Dict[str, Union[float, Dict[str, float]]], engine: Optional[str] = None, ephemeris_file: Optional[str] = None, radix_chart_id: Optional[str] = None) -&gt; None</code></p>
+<p>Store computed positions in DuckDB.</p>
+</li>
+<li>
+<p><code>store_positions_batch(self, chart_id: str, positions_list: List[tuple], engine: Optional[str] = None, ephemeris_file: Optional[str] = None, auto_export_parquet: bool = True, parquet_threshold: int = 100, parquet_dir: Union[str, pathlib._local.Path, NoneType] = None) -&gt; Optional[List[pathlib._local.Path]]</code></p>
+<p>Store multiple positions in batch (for transit series).</p>
+</li>
+<li>
+<p><code>store_radix_positions(self, radix_chart_id: str, datetime_str: str, positions: Dict[str, Union[float, Dict[str, float]]], engine: Optional[str] = None, ephemeris_file: Optional[str] = None) -&gt; None</code></p>
+<p>Store radix (base chart) positions.</p>
+</li>
 </ul>
 </section>
   
@@ -733,7 +781,7 @@ series generation.</p>
   class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
 >
   <div class="mr-auto">&copy;2026
-    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
+    <a class="link" href="https://elkomod.github.io/AstroSmrk/">Kefer Astrology Documentation</a></div>
   <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
     >powered by hugo️️</a
   >️

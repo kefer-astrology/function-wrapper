@@ -1,0 +1,911 @@
+<!doctype html>
+
+
+
+
+
+
+
+<html
+  class="not-ready lg:text-base"
+  style="--bg:#faf8f1"
+  lang="en-us"
+  dir="ltr"
+><head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title>Project Overview - Kefer Astrology Documentation</title>
+
+  
+  <meta name="theme-color" />
+
+  <meta name="description" content="Function layer for Kefer Astrology
+Quickstart
+Get up and running in 3 steps:
+# 1. Create and activate virtual environment
+python3 -m venv venv
+# alternatively use makefile
+source ./venv/bin/activate  # Linux/Mac
+venv\Scripts\activate  # Windows
+
+# 2. Install dependencies (choose your UI)
+pip install -r requirements/base.txt  # for base package
+pip install -r requirements/streamlit.txt  # For Streamlit UI (browser)
+pip install -r requirements/kivy.txt  # For Kivy UI (desktop)
+
+# Or install by package extras
+pip install .  # core computation/storage package
+pip install .[api]  # FastAPI backend for Tauri/web frontends
+pip install .[streamlit]  # Streamlit UI &#43; chart rendering
+pip install .[kivy]  # Kivy desktop UI &#43; chart rendering
+
+# 3. Run the application
+python3 -m module --streamlit  # Streamlit UI (browser)
+python3 -m module --kivy  # Kivy UI (desktop)
+python3 -m module --tui   # Text UI (terminal)
+python3 -m module         # Default: TUI
+For detailed setup instructions, troubleshooting, and advanced options, see the
+Installation and Venvs." />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://elkomod.github.io/AstroSmrk/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
+
+  
+  <link rel="preload" as="image" href="https://elkomod.github.io/AstroSmrk/theme.png" />
+
+  
+
+  
+
+  <script
+    defer
+    src="https://elkomod.github.io/AstroSmrk/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+
+  
+  <link
+    rel="icon"
+    href="https://elkomod.github.io/AstroSmrk/favicon.ico"
+  />
+  <link
+    rel="apple-touch-icon"
+    href="https://elkomod.github.io/AstroSmrk/apple-touch-icon.png"
+  />
+
+  <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="Project Overview">
+  <meta itemprop="description" content="Repository overview, quickstart, and high-level architecture">
+  <meta itemprop="wordCount" content="817"><meta property="og:url" content="https://elkomod.github.io/AstroSmrk/readme/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="Project Overview">
+  <meta property="og:description" content="Repository overview, quickstart, and high-level architecture">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Project Overview">
+  <meta name="twitter:description" content="Repository overview, quickstart, and high-level architecture">
+
+  <link rel="canonical" href="https://elkomod.github.io/AstroSmrk/readme/" />
+</head>
+<body
+    class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
+  >
+    
+<div class="sticky top-0 z-50 w-full border-b border-gray-700 shadow-sm backdrop-blur-sm" style="background-color: #1a1a1a !important; position: sticky; top: 0;">
+  <div class="mx-auto flex items-center px-8" style="max-width: 90% !important; gap: 2rem; min-height: 6rem; padding-top: 1.5rem; padding-bottom: 1.5rem;">
+    <div class="flex items-center" style="flex: 3;">
+      <a
+        class="text-2xl font-medium no-underline text-white"
+        href="https://elkomod.github.io/AstroSmrk/"
+        >Kefer Astrology Documentation</a
+      >
+      <div
+        class="btn-dark text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right] invert"
+        role="button"
+        aria-label="Dark"
+      ></div>
+    </div>
+    <div style="flex: 2;">
+<div class="relative">
+  <input 
+    type="text" 
+    id="search-input" 
+    placeholder="Search documentation..." 
+    class="w-full px-4 py-2 rounded-lg border text-sm"
+    style="background-color: #000000 !important; color: #b8860b !important; border-color: #b8860b !important;"
+  />
+  <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 hidden" style="background-color: #1a1a1a !important; border-color: #4a4a4a !important;"></div>
+</div>
+
+<style>
+  #search-input {
+    background-color: #000000 !important;
+    color: #b8860b !important;
+    border-color: #b8860b !important;
+  }
+  #search-input::placeholder {
+    color: #b8860b !important;
+    opacity: 0.7;
+  }
+  #search-input:focus {
+    border-color: #b8860b !important;
+    ring-color: #b8860b !important;
+  }
+</style>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  
+  if (!searchInput) return;
+  
+  
+  let globalSearchIndex = [];
+  const basePath = '\/';
+  const basePathNormalized = basePath.endsWith('/') && basePath.length > 1
+    ? basePath.slice(0, -1)
+    : basePath;
+  const indexUrl = basePathNormalized === '/' ? '/index.json' : basePathNormalized + '/index.json';
+  
+  
+  function buildSearchIndex() {
+    const allLinks = Array.from(document.querySelectorAll('a[href]'));
+    const indexMap = new Map();
+    
+    allLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      if (normalized && !normalized.includes('#') && !normalized.includes('http')) {
+        const title = link.textContent.trim();
+        if (title && !indexMap.has(normalized)) {
+          indexMap.set(normalized, {
+            title: title,
+            url: normalized,
+            keywords: (title + ' ' + normalized).toLowerCase()
+          });
+        }
+      }
+    });
+    
+    globalSearchIndex = Array.from(indexMap.values());
+  }
+
+  async function loadSearchIndex() {
+    try {
+      const response = await fetch(indexUrl, { cache: 'no-store' });
+      if (!response.ok) return;
+      const pages = await response.json();
+      if (!Array.isArray(pages)) return;
+      globalSearchIndex = pages.map(page => {
+        const title = (page.title || '').toString();
+        const url = (page.url || '').toString();
+        const content = (page.content || '').toString();
+        return {
+          title,
+          url,
+          content,
+          keywords: (title + ' ' + url + ' ' + content).toLowerCase()
+        };
+      });
+    } catch (err) {
+      
+    }
+  }
+  
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      buildSearchIndex();
+      loadSearchIndex();
+    });
+  } else {
+    buildSearchIndex();
+    loadSearchIndex();
+  }
+  
+  
+  function normalizeUrl(href) {
+    if (!href || href.startsWith('http') || href.startsWith('#')) {
+      return null;
+    }
+    let normalized = href.trim();
+    
+    
+    if (normalized.endsWith('.md')) {
+      normalized = normalized.slice(0, -3);
+    }
+    
+    
+    if (!normalized.startsWith('/')) {
+      
+      const currentPath = window.location.pathname;
+      
+      const relativePath = currentPath.startsWith(basePath) 
+        ? currentPath.slice(basePath.length) 
+        : currentPath;
+      
+      const currentDir = relativePath.split('/').slice(0, -1).filter(p => p).join('/');
+      
+      if (currentDir) {
+        normalized = '/' + currentDir + '/' + normalized;
+      } else {
+        normalized = '/' + normalized;
+      }
+    }
+    
+    
+    if (normalized.startsWith('/') && !normalized.startsWith(basePathNormalized)) {
+      normalized = basePathNormalized + normalized;
+    }
+    
+    
+    normalized = normalized.replace(/\/+/g, '/');
+    
+    
+    if (normalized !== basePathNormalized && normalized !== basePathNormalized + '/' && normalized.endsWith('/')) {
+      normalized = normalized.slice(0, -1);
+    }
+    
+    return normalized;
+  }
+
+  function buildSnippet(text, query) {
+    if (!text) return '';
+    const lower = text.toLowerCase();
+    const q = query.toLowerCase();
+    const index = lower.indexOf(q);
+    if (index < 0) {
+      return text.length > 160 ? text.slice(0, 160) + '...' : text;
+    }
+    const start = Math.max(0, index - 60);
+    const end = Math.min(text.length, index + q.length + 120);
+    const prefix = start > 0 ? '...' : '';
+    const suffix = end < text.length ? '...' : '';
+    return prefix + text.slice(start, end).trim() + suffix;
+  }
+  
+  
+  const pageIndex = new Map();
+  const allLinks = Array.from(document.querySelectorAll('a[href]'));
+  
+  allLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    const normalized = normalizeUrl(href);
+    if (normalized) {
+      const text = link.textContent.trim();
+      const linkText = text.toLowerCase();
+      
+      pageIndex.set(normalized, {
+        title: text || normalized.split('/').pop(),
+        searchText: linkText,
+        href: normalized
+      });
+    }
+  });
+  
+  
+  const currentPath = window.location.pathname;
+  pageIndex.set(currentPath, {
+    title: document.title || 'Current Page',
+    searchText: document.body.textContent.toLowerCase(),
+    href: currentPath
+  });
+  
+  
+  searchInput.addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 1) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+
+    if (globalSearchIndex.length > 0) {
+      const results = [];
+      const seenUrls = new Set();
+      const queryWords = query.split(' ').filter(w => w.length > 0);
+
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query)
+        );
+
+        if (matches && page.url && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title || page.url.split('/').pop(),
+            url: page.url,
+            text: buildSnippet(page.content || page.title || '', query),
+            priority: 0
+          });
+        }
+      });
+
+      if (results.length > 0) {
+        const resultsHtml = results.slice(0, 10).map((r, idx) => {
+          const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' +
+            r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' +
+            safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+        }).join('');
+
+        searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+
+        searchResults.querySelectorAll('.search-result-item').forEach(item => {
+          item.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+              window.location.href = url;
+            }
+          });
+        });
+
+        searchResults.classList.remove('hidden');
+      } else {
+        searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+        searchResults.classList.remove('hidden');
+      }
+      return;
+    }
+
+    const results = [];
+    
+    const queryWords = query.split(' ').filter(w => w.length > 0);
+    const seenUrls = new Set();
+    const seenResults = new Set(); 
+    
+    
+    if (globalSearchIndex.length > 0) {
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query) 
+        );
+        
+        if (matches && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title,
+            url: page.url,
+            text: page.title + ' - Documentation page (click to search this page)',
+            priority: 0 
+          });
+        }
+      });
+    }
+    
+    
+    pageIndex.forEach((pageInfo, url) => {
+      
+      const urlSegments = url.toLowerCase().split('/').filter(s => s.length > 0);
+      const searchableText = (pageInfo.searchText + ' ' + pageInfo.title.toLowerCase() + ' ' + urlSegments.join(' ')).toLowerCase();
+      
+      const matches = queryWords.every(word => 
+        searchableText.includes(word) || 
+        urlSegments.some(seg => seg.includes(word))
+      );
+      
+      if (matches && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        results.push({
+          title: pageInfo.title,
+          url: url,
+          text: pageInfo.title + ' - Documentation page',
+          priority: 1 
+        });
+      }
+    });
+    
+    
+    allLinks.forEach(link => {
+      const linkText = link.textContent.toLowerCase();
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      
+      if (normalized) {
+        
+        const urlSegments = normalized.toLowerCase().split('/').filter(s => s.length > 0);
+        const searchableText = (linkText + ' ' + urlSegments.join(' ')).toLowerCase();
+        
+        const matches = queryWords.every(word => 
+          searchableText.includes(word) || 
+          urlSegments.some(seg => seg.includes(word))
+        );
+        
+        if (matches && !seenUrls.has(normalized)) {
+          seenUrls.add(normalized);
+          results.push({
+            title: link.textContent.trim() || normalized.split('/').pop().replace(/-/g, ' '),
+            url: normalized,
+            text: link.textContent.trim() || 'Documentation page',
+            priority: 1 
+          });
+        }
+      }
+    });
+    
+    
+    
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, code, pre, dt, dd, td, th, strong, em, b').forEach(el => {
+      const text = el.textContent.toLowerCase();
+      
+      const matches = queryWords.length > 0 && (
+        queryWords.every(word => text.includes(word)) || 
+        text.includes(query) 
+      );
+      
+      if (matches && el.textContent.trim() && el.textContent.trim().length > 1) {
+        
+        let pageUrl = currentPath;
+        let pageTitle = document.title || 'Documentation';
+        
+        
+        const parent = el.closest('article, section, li, ul, ol, table, dl');
+        if (parent) {
+          const nearbyLink = parent.querySelector('a[href*="/auto/"], a[href*="/enums"], a[href*="/ui_"], a[href*="/models"]');
+          if (nearbyLink) {
+            const normalized = normalizeUrl(nearbyLink.getAttribute('href'));
+            if (normalized) {
+              pageUrl = normalized;
+              pageTitle = nearbyLink.textContent.trim() || pageTitle;
+            }
+          }
+        }
+        
+        
+        if (el.tagName && el.tagName.match(/^H[1-6]$/)) {
+          pageTitle = el.textContent.trim();
+        }
+        
+        
+        let snippet = el.textContent.trim();
+        if (snippet.length > 200) {
+          
+          const queryLower = query.toLowerCase();
+          const index = snippet.toLowerCase().indexOf(queryLower);
+          if (index > 0) {
+            const start = Math.max(0, index - 50);
+            snippet = '...' + snippet.substring(start, start + 150) + '...';
+          } else {
+            snippet = snippet.substring(0, 150) + '...';
+          }
+        }
+        
+        const resultKey = pageUrl + '|' + pageTitle;
+        
+        if (!seenResults.has(resultKey)) {
+          seenResults.add(resultKey);
+          results.push({
+            title: pageTitle,
+            url: pageUrl,
+            text: snippet,
+            priority: 2 
+          });
+        }
+      }
+    });
+    
+    
+    const bodyText = document.body.textContent.toLowerCase();
+    const bodyMatches = queryWords.length > 0 && (
+      queryWords.every(word => bodyText.includes(word)) || 
+      bodyText.includes(query) 
+    );
+    
+    if (bodyMatches) {
+      
+      const resultKey = currentPath + '|' + (document.title || 'Current Page');
+      if (!seenResults.has(resultKey)) {
+        seenResults.add(resultKey);
+        
+        const queryLower = query.toLowerCase();
+        const index = bodyText.indexOf(queryLower);
+        if (index >= 0) {
+          const fullText = document.body.textContent;
+          const snippetStart = Math.max(0, index - 100);
+          const snippetEnd = Math.min(fullText.length, index + query.length + 100);
+          const snippet = '...' + fullText.substring(snippetStart, snippetEnd).trim() + '...';
+          
+          results.push({
+            title: document.title || 'Current Page',
+            url: currentPath,
+            text: snippet,
+            priority: 3 
+          });
+        }
+      }
+    }
+    
+    
+    results.sort((a, b) => (a.priority || 2) - (b.priority || 2));
+    
+    
+    if (results.length > 0) {
+      const resultsHtml = results.slice(0, 10).map((r, idx) => {
+        
+        const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' + 
+          r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' + 
+          safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+      }).join('');
+      
+      searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+      
+      
+      searchResults.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.location.href = url;
+          }
+        });
+      });
+      
+      searchResults.classList.remove('hidden');
+    } else {
+      searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+      searchResults.classList.remove('hidden');
+    }
+  });
+  
+  
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      searchResults.classList.add('hidden');
+      searchInput.value = '';
+    }
+  });
+})();
+</script>
+</div>
+  </div>
+</div>
+
+<script>
+  
+  const htmlClass = document.documentElement.classList;
+  const btnDark = document.querySelector('.btn-dark');
+  if (btnDark) {
+    btnDark.addEventListener('click', () => {
+      const isDark = localStorage.getItem('dark') !== 'true';
+      localStorage.setItem('dark', isDark);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', isDark ? "rgb(0 0 0 / 85%)" : '#faf8f1');
+      }
+    });
+  }
+  
+  
+  const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  const darkVal = localStorage.getItem('dark');
+  if (darkVal === 'true' || (!darkVal && darkScheme.matches)) {
+    htmlClass.add('dark');
+  }
+</script>
+<main
+      class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
+      style="max-width: 90% !important;"
+    ><article class="pt-6">
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="function-layer-for-kefer-astrology">Function layer for Kefer Astrology</h1>
+<h2 id="quickstart">Quickstart</h2>
+<p>Get up and running in 3 steps:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#57606a"># 1. Create and activate virtual environment</span>
+</span></span><span style="display:flex;"><span>python3 -m venv venv
+</span></span><span style="display:flex;"><span><span style="color:#57606a"># alternatively use makefile</span>
+</span></span><span style="display:flex;"><span><span style="color:#6639ba">source</span> ./venv/bin/activate  <span style="color:#57606a"># Linux/Mac</span>
+</span></span><span style="display:flex;"><span>venv<span style="color:#0a3069">\S</span>cripts<span style="color:#0a3069">\a</span>ctivate  <span style="color:#57606a"># Windows</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#57606a"># 2. Install dependencies (choose your UI)</span>
+</span></span><span style="display:flex;"><span>pip install -r requirements/base.txt  <span style="color:#57606a"># for base package</span>
+</span></span><span style="display:flex;"><span>pip install -r requirements/streamlit.txt  <span style="color:#57606a"># For Streamlit UI (browser)</span>
+</span></span><span style="display:flex;"><span>pip install -r requirements/kivy.txt  <span style="color:#57606a"># For Kivy UI (desktop)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#57606a"># Or install by package extras</span>
+</span></span><span style="display:flex;"><span>pip install .  <span style="color:#57606a"># core computation/storage package</span>
+</span></span><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>api<span style="color:#0550ae">]</span>  <span style="color:#57606a"># FastAPI backend for Tauri/web frontends</span>
+</span></span><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>streamlit<span style="color:#0550ae">]</span>  <span style="color:#57606a"># Streamlit UI + chart rendering</span>
+</span></span><span style="display:flex;"><span>pip install .<span style="color:#0550ae">[</span>kivy<span style="color:#0550ae">]</span>  <span style="color:#57606a"># Kivy desktop UI + chart rendering</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#57606a"># 3. Run the application</span>
+</span></span><span style="display:flex;"><span>python3 -m module --streamlit  <span style="color:#57606a"># Streamlit UI (browser)</span>
+</span></span><span style="display:flex;"><span>python3 -m module --kivy  <span style="color:#57606a"># Kivy UI (desktop)</span>
+</span></span><span style="display:flex;"><span>python3 -m module --tui   <span style="color:#57606a"># Text UI (terminal)</span>
+</span></span><span style="display:flex;"><span>python3 -m module         <span style="color:#57606a"># Default: TUI</span>
+</span></span></code></pre></div><p>For detailed setup instructions, troubleshooting, and advanced options, see the
+<a href="installation">Installation and Venvs</a>.</p>
+<h2 id="suggested-runtime-split">Suggested Runtime Split</h2>
+<ul>
+<li><code>core</code>: install <code>pip install .</code> for computation, workspace, and storage helpers</li>
+<li><code>api</code>: install <code>pip install .[api]</code> for a FastAPI sidecar/backend without UI dependencies</li>
+<li><code>streamlit</code>: install <code>pip install .[streamlit]</code> for the browser UI</li>
+<li><code>kivy</code>: install <code>pip install .[kivy]</code> for the native Python desktop UI</li>
+</ul>
+<p>For a <code>React frontend from Figma + FastAPI backend + Tauri packaging</code> setup,
+prefer <code>core + api</code> and keep the <code>ui_*</code> modules as optional developer-only
+frontends. See <a href="fastapi_tauri">FastAPI + React + Tauri</a>.</p>
+<h2 id="how-it-works">How it works</h2>
+<p>All the heavy lifting is made by
+<a href="https://github.com/g-battaglia/kerykeion">g-battaglia/kerykeion</a>, a
+manipulation layer over
+<a href="https://github.com/astrorigin/pyswisseph">astrorigin/pyswisseph</a> (also known
+as <a href="https://www.astro.com/swisseph/swephinfo_e.htm">Swiss Ephemerides</a>), thus
+the license is inherited (GNU Affero GPL v3.0). Other dependencies are tracked
+in <code>requirements/base.in</code>.</p>
+<p>For NASA JPL ephemerides we use
+<a href="https://github.com/skyfielders/python-skyfield">skyfielders/python-skyfield</a>,
+which is MIT-licensed.</p>
+<h2 id="high-level-system-overview">High Level System Overview</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>┌─────────────────────────────────────────────────────────────────┐
+</span></span><span style="display:flex;"><span>│                             UI Layer                            │
+</span></span><span style="display:flex;"><span>│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+</span></span><span style="display:flex;"><span>│  │ Streamlit UI │  │  Kivy UI     │  │   CLI/TUI    │          │
+</span></span><span style="display:flex;"><span>│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘          │
+</span></span><span style="display:flex;"><span>│         │                  │                  │                 │
+</span></span><span style="display:flex;"><span>│         └──────────────────┼──────────────────┘                 │
+</span></span><span style="display:flex;"><span>│                            │                                    │
+</span></span><span style="display:flex;"><span>│                    ┌───────▼────────┐                           │
+</span></span><span style="display:flex;"><span>│                    │  module.* APIs │                           │
+</span></span><span style="display:flex;"><span>│                    │  - services    │                           │
+</span></span><span style="display:flex;"><span>│                    │  - workspace   │                           │
+</span></span><span style="display:flex;"><span>│                    │  - storage     │                           │
+</span></span><span style="display:flex;"><span>│                    └───────┬────────┘                           │
+</span></span><span style="display:flex;"><span>└────────────────────────────┼─────────────────────────────────────┘
+</span></span><span style="display:flex;"><span>                             │
+</span></span><span style="display:flex;"><span>                             │ Python calls (in-process)
+</span></span><span style="display:flex;"><span>                             │
+</span></span><span style="display:flex;"><span>┌────────────────────────────▼─────────────────────────────────────┐
+</span></span><span style="display:flex;"><span>│                         Backend (Python)                         │
+</span></span><span style="display:flex;"><span>│  ┌────────────────────────────────────────────────────────────┐  │
+</span></span><span style="display:flex;"><span>│  │                    Core Modules                           │  │
+</span></span><span style="display:flex;"><span>│  │  - module.services                                        │  │
+</span></span><span style="display:flex;"><span>│  │  - module.workspace                                       │  │
+</span></span><span style="display:flex;"><span>│  │  - module.storage (optional)                              │  │
+</span></span><span style="display:flex;"><span>│  └────────────────────────────────────────────────────────────┘  │
+</span></span><span style="display:flex;"><span>│                             │                                    │
+</span></span><span style="display:flex;"><span>│  ┌──────────────────────────┼──────────────────────────┐         │
+</span></span><span style="display:flex;"><span>│  │                          │                           │         │
+</span></span><span style="display:flex;"><span>│  │  ┌──────────────┐        │      ┌──────────────┐    │         │
+</span></span><span style="display:flex;"><span>│  │  │  DuckDB      │        │      │   YAML       │    │         │
+</span></span><span style="display:flex;"><span>│  │  │  Storage     │        │      │   Workspace  │    │         │
+</span></span><span style="display:flex;"><span>│  │  └──────┬───────┘        │      └──────┬───────┘    │         │
+</span></span><span style="display:flex;"><span>│  │         │                │             │            │         │
+</span></span><span style="display:flex;"><span>│  │  ┌──────▼──────────┐     │    ┌───────▼────────┐    │         │
+</span></span><span style="display:flex;"><span>│  │  │ workspace.db    │     │    │ workspace.yaml │    │         │
+</span></span><span style="display:flex;"><span>│  │  │ - positions     │     │    │ charts/*.yaml  │    │         │
+</span></span><span style="display:flex;"><span>│  │  │ - metadata      │     │    │ subjects/*.yaml│    │         │
+</span></span><span style="display:flex;"><span>│  │  └─────────────────┘     │    └────────────────┘    │         │
+</span></span><span style="display:flex;"><span>│  │         │                │                           │         │
+</span></span><span style="display:flex;"><span>│  │  ┌──────▼──────────┐     │                           │         │
+</span></span><span style="display:flex;"><span>│  │  │ parquet/        │     │                           │         │
+</span></span><span style="display:flex;"><span>│  │  │ - chart_*.parquet│    │                           │         │
+</span></span><span style="display:flex;"><span>│  │  └─────────────────┘     │                           │         │
+</span></span><span style="display:flex;"><span>│  └──────────────────────────┼───────────────────────────┘         │
+</span></span><span style="display:flex;"><span>└─────────────────────────────┼─────────────────────────────────────┘
+</span></span><span style="display:flex;"><span>                              │
+</span></span><span style="display:flex;"><span>                              │ Files on disk
+</span></span><span style="display:flex;"><span>                              │
+</span></span><span style="display:flex;"><span>┌─────────────────────────────▼─────────────────────────────────────┐
+</span></span><span style="display:flex;"><span>│                         Local File System                         │
+</span></span><span style="display:flex;"><span>│                                                                   │
+</span></span><span style="display:flex;"><span>│  workspace/                                                       │
+</span></span><span style="display:flex;"><span>│  ├── workspace.yaml          (Metadata)                           │
+</span></span><span style="display:flex;"><span>│  ├── charts/                  (Chart definitions)                 │
+</span></span><span style="display:flex;"><span>│  │   ├── chart_001.yaml                                           │
+</span></span><span style="display:flex;"><span>│  │   └── chart_002.yaml                                           │
+</span></span><span style="display:flex;"><span>│  ├── subjects/                (Subject definitions)               │
+</span></span><span style="display:flex;"><span>│  │   └── subject_001.yaml                                         │
+</span></span><span style="display:flex;"><span>│  └── data/                    (Computed data)                     │
+</span></span><span style="display:flex;"><span>│      ├── workspace.db        (DuckDB)                             │
+</span></span><span style="display:flex;"><span>│      └── parquet/            (Parquet files)                      │
+</span></span><span style="display:flex;"><span>│          ├── chart_001.parquet                                    │
+</span></span><span style="display:flex;"><span>│          └── chart_002.parquet                                    │
+</span></span><span style="display:flex;"><span>└───────────────────────────────────────────────────────────────────┘
+</span></span></code></pre></div><h2 id="data-flow-chart-creation">Data Flow: Chart Creation</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>User Input
+</span></span><span style="display:flex;"><span>    │
+</span></span><span style="display:flex;"><span>    ▼
+</span></span><span style="display:flex;"><span>┌─────────────────┐
+</span></span><span style="display:flex;"><span>│  UI/CLI Input   │  (Name, Date, Location, Settings)
+</span></span><span style="display:flex;"><span>└────────┬────────┘
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         │ build chart + workspace
+</span></span><span style="display:flex;"><span>         ▼
+</span></span><span style="display:flex;"><span>┌──────────────────┐
+</span></span><span style="display:flex;"><span>│ module.workspace │
+</span></span><span style="display:flex;"><span>│ - load/save      │
+</span></span><span style="display:flex;"><span>│ - chart config   │
+</span></span><span style="display:flex;"><span>└────────┬─────────┘
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         ├──► module.services.compute_positions
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         └──► module.storage (optional)
+</span></span><span style="display:flex;"><span>              │
+</span></span><span style="display:flex;"><span>              ▼
+</span></span><span style="display:flex;"><span>         ┌─────────────────┐
+</span></span><span style="display:flex;"><span>         │  DuckDB/Parquet │
+</span></span><span style="display:flex;"><span>         │  - positions    │
+</span></span><span style="display:flex;"><span>         └────────┬────────┘
+</span></span><span style="display:flex;"><span>                  │
+</span></span><span style="display:flex;"><span>                  ▼
+</span></span><span style="display:flex;"><span>         ┌─────────────────┐
+</span></span><span style="display:flex;"><span>         │  Return to UI   │
+</span></span><span style="display:flex;"><span>         │  - chart_id     │
+</span></span><span style="display:flex;"><span>         │  - positions    │
+</span></span><span style="display:flex;"><span>         └─────────────────┘
+</span></span></code></pre></div><h2 id="data-flow-transit-computation">Data Flow: Transit Computation</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>User Input
+</span></span><span style="display:flex;"><span>    │
+</span></span><span style="display:flex;"><span>    ▼
+</span></span><span style="display:flex;"><span>┌─────────────────┐
+</span></span><span style="display:flex;"><span>│  Transit Panel  │  (Source chart, Time range, Objects)
+</span></span><span style="display:flex;"><span>└────────┬────────┘
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         │ compute series
+</span></span><span style="display:flex;"><span>         ▼
+</span></span><span style="display:flex;"><span>┌─────────────────┐
+</span></span><span style="display:flex;"><span>│ module.services │
+</span></span><span style="display:flex;"><span>│ - series loop   │
+</span></span><span style="display:flex;"><span>│ - positions     │
+</span></span><span style="display:flex;"><span>│ - aspects (on   │
+</span></span><span style="display:flex;"><span>│   demand)       │
+</span></span><span style="display:flex;"><span>└────────┬────────┘
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         │ batch store (optional)
+</span></span><span style="display:flex;"><span>         ▼
+</span></span><span style="display:flex;"><span>┌─────────────────┐
+</span></span><span style="display:flex;"><span>│  DuckDB/Parquet │
+</span></span><span style="display:flex;"><span>│  - positions    │
+</span></span><span style="display:flex;"><span>└────────┬────────┘
+</span></span><span style="display:flex;"><span>         │
+</span></span><span style="display:flex;"><span>         │ query results
+</span></span><span style="display:flex;"><span>         ▼
+</span></span><span style="display:flex;"><span>┌─────────────────┐
+</span></span><span style="display:flex;"><span>│  UI Updates     │
+</span></span><span style="display:flex;"><span>│  - Progress     │
+</span></span><span style="display:flex;"><span>│  - Results      │
+</span></span><span style="display:flex;"><span>└─────────────────┘
+</span></span></code></pre></div><h2 id="storage-schema-relationships">Storage Schema Relationships</h2>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>┌──────────────────────────────┐
+</span></span><span style="display:flex;"><span>│  computed_positions          │
+</span></span><span style="display:flex;"><span>│                              │
+</span></span><span style="display:flex;"><span>│  - chart_id                  │
+</span></span><span style="display:flex;"><span>│  - datetime                  │
+</span></span><span style="display:flex;"><span>│  - object_id                 │
+</span></span><span style="display:flex;"><span>│  - longitude/latitude        │
+</span></span><span style="display:flex;"><span>│  - speed/retrograde          │
+</span></span><span style="display:flex;"><span>│  - engine/ephemeris_file     │
+</span></span><span style="display:flex;"><span>│  - ... (optional fields)     │
+</span></span><span style="display:flex;"><span>└──────────────────────────────┘
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Aspects are computed on demand from positions (not stored by default).
+</span></span></code></pre></div></section>
+  
+  <style>
+     
+    .prose {
+      color: #374151 !important;  
+    }
+    .prose p, .prose li, .prose td, .prose th {
+      color: #4b5563 !important;  
+    }
+    .prose h1 {
+      font-size: 2.5rem !important;
+      font-weight: 700 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.5rem;
+      color: #111827 !important;  
+    }
+    .prose h2 {
+      font-size: 2rem !important;
+      font-weight: 600 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 0.25rem;
+      color: #1f2937 !important;  
+    }
+    .prose h3 {
+      font-size: 1.5rem !important;
+      font-weight: 600 !important;
+      margin-top: 1.5rem !important;
+      margin-bottom: 0.75rem !important;
+      color: #374151 !important;  
+    }
+    .prose a {
+      color: #2563eb !important;  
+    }
+    .prose a:hover {
+      color: #1d4ed8 !important;  
+    }
+    .dark .prose {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose p, .dark .prose li, .dark .prose td, .dark .prose th {
+      color: #d1d5db !important;  
+    }
+    .dark .prose h1 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      color: #f9fafb !important;  
+    }
+    .dark .prose h2 {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      color: #f3f4f6 !important;  
+    }
+    .dark .prose h3 {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose a {
+      color: #60a5fa !important;  
+    }
+     
+    .prose h4 {
+      color: #b8860b !important;  
+    }
+    .prose ul li strong,
+    .prose ol li strong {
+      color: #b8860b !important;  
+    }
+    .dark .prose h4 {
+      color: #b8860b !important;  
+    }
+    .dark .prose ul li strong,
+    .dark .prose ol li strong {
+      color: #b8860b !important;  
+    }
+     
+    .prose code {
+      color: #92400e !important;  
+      background-color: #fef3c7 !important;  
+    }
+    .prose pre {
+      background-color: #1f2937 !important;  
+    }
+    .prose pre code {
+      color: #fbbf24 !important;  
+      background-color: transparent !important;
+    }
+    .dark .prose code {
+      color: #fbbf24 !important;  
+      background-color: rgba(251, 191, 36, 0.1) !important;  
+    }
+    .dark .prose pre {
+      background-color: #111827 !important;  
+    }
+    .dark .prose pre code {
+      color: #fbbf24 !important;  
+    }
+  </style>
+
+  
+</article></main><footer
+  class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
+>
+  <div class="mr-auto">&copy;2026
+    <a class="link" href="https://elkomod.github.io/AstroSmrk/">Kefer Astrology Documentation</a></div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
+    >powered by hugo️️</a
+  >️
+  <a
+    class="link"
+    href="https://github.com/nanxiaobei/hugo-paper"
+    rel="noopener"
+    target="_blank"
+    >hugo-paper</a
+  >
+</footer>
+</body>
+</html>

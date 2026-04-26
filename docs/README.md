@@ -24,10 +24,6 @@ This directory contains documentation for using the Kefer Astrology sidecar modu
 - **`docs/site/content/enums.md`** - Enumeration reference
 - **`docs/site/content/models.mmd`** - Mermaid class diagram
 - **`docs/site/content/testing_guide.md`** - How to write and run tests
-- **`docs/site/content/performance_bottleneck_analysis.md`** - Performance investigation notes
-- **`docs/site/content/performance_fix_summary.md`** - Performance remediation summary
-- **`docs/site/content/industry_standards_audit.md`** - Code quality audit status
-- **`docs/site/content/industry_standards_issues.md`** - Condensed outstanding issues
 
 ## Generating Documentation
 
@@ -55,6 +51,22 @@ configured `baseURL`.
 If you build static files locally with plain `hugo`, the generated site will be
 written to `docs/site/public/` by default. The repository-level `docs/README.md`
 is just a guide for humans, not the rendered Hugo homepage.
+
+### Build For GitHub Pages From `docs/`
+```bash
+make docs-build-pages
+```
+
+This builds the static site directly into `docs/` using the default Pages URL
+for this repository:
+
+`https://elkomod.github.io/AstroSmrk/`
+
+If you need a different GitHub Pages URL, override it at build time:
+
+```bash
+make docs-build-pages PAGES_BASE_URL="https://your-user.github.io/your-repo/"
+```
 
 GitHub Pages uses a special build step that outputs the final site into `docs/`
 for deployment, while preserving `docs/site/` as the Hugo source tree.

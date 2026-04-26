@@ -11,7 +11,7 @@
   style="--bg:#faf8f1"
   lang="en-us"
   dir="ltr"
-><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+><head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta
@@ -43,10 +43,10 @@ Arguments:
   &#34;include_topocentric&#34;: false   // Optional: Include altitude/azimuth (JPL with location)
 }
 Response:" />
-  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://kefer-astrology.github.io/function-wrapper/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
-  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
+  <link rel="preload" as="image" href="https://kefer-astrology.github.io/function-wrapper/theme.png" />
 
   
 
@@ -54,21 +54,47 @@ Response:" />
 
   <script
     defer
-    src="http://localhost:1313/highlight.min.js"
+    src="https://kefer-astrology.github.io/function-wrapper/highlight.min.js"
     onload="hljs.initHighlightingOnLoad();"
   ></script>
 
   
   <link
     rel="icon"
-    href="http://localhost:1313/favicon.ico"
+    href="https://kefer-astrology.github.io/function-wrapper/favicon.ico"
   />
   <link
     rel="apple-touch-icon"
-    href="http://localhost:1313/apple-touch-icon.png"
+    href="https://kefer-astrology.github.io/function-wrapper/apple-touch-icon.png"
   />
 
   <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="Kefer Astrology Documentation">
+  <meta itemprop="description" content="CLI Reference Overview The Python sidecar provides a JSON-based CLI interface for the Tauri frontend. All commands accept JSON arguments and return JSON results.
+Usage python -m module.cli &lt;command&gt; [args_json] Or with JSON from stdin:
+echo &#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;my-chart&#34;}&#39; | python -m module.cli compute_chart Commands 1. compute_chart Compute positions and aspects for a chart.
+Arguments:
+{ &#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;chart-id&#34;, &#34;include_physical&#34;: false, // Optional: Include extended physical properties (JPL only) &#34;include_topocentric&#34;: false // Optional: Include altitude/azimuth (JPL with location) } Response:">
+  <meta itemprop="wordCount" content="469"><meta property="og:url" content="https://kefer-astrology.github.io/function-wrapper/cli_reference/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="Kefer Astrology Documentation">
+  <meta property="og:description" content="CLI Reference Overview The Python sidecar provides a JSON-based CLI interface for the Tauri frontend. All commands accept JSON arguments and return JSON results.
+Usage python -m module.cli &lt;command&gt; [args_json] Or with JSON from stdin:
+echo &#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;my-chart&#34;}&#39; | python -m module.cli compute_chart Commands 1. compute_chart Compute positions and aspects for a chart.
+Arguments:
+{ &#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;chart-id&#34;, &#34;include_physical&#34;: false, // Optional: Include extended physical properties (JPL only) &#34;include_topocentric&#34;: false // Optional: Include altitude/azimuth (JPL with location) } Response:">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Kefer Astrology Documentation">
+  <meta name="twitter:description" content="CLI Reference Overview The Python sidecar provides a JSON-based CLI interface for the Tauri frontend. All commands accept JSON arguments and return JSON results.
+Usage python -m module.cli &lt;command&gt; [args_json] Or with JSON from stdin:
+echo &#39;{&#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;my-chart&#34;}&#39; | python -m module.cli compute_chart Commands 1. compute_chart Compute positions and aspects for a chart.
+Arguments:
+{ &#34;workspace_path&#34;: &#34;/path/to/workspace.yaml&#34;, &#34;chart_id&#34;: &#34;chart-id&#34;, &#34;include_physical&#34;: false, // Optional: Include extended physical properties (JPL only) &#34;include_topocentric&#34;: false // Optional: Include altitude/azimuth (JPL with location) } Response:">
+
+  <link rel="canonical" href="https://kefer-astrology.github.io/function-wrapper/cli_reference/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -79,7 +105,7 @@ Response:" />
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="http://localhost:1313/"
+        href="https://kefer-astrology.github.io/function-wrapper/"
         >Kefer Astrology Documentation</a
       >
       <div
@@ -855,7 +881,7 @@ Response:" />
   class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
 >
   <div class="mr-auto">&copy;2026
-    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
+    <a class="link" href="https://kefer-astrology.github.io/function-wrapper/">Kefer Astrology Documentation</a></div>
   <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
     >powered by hugo️️</a
   >️

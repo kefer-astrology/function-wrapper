@@ -1,0 +1,997 @@
+<!doctype html>
+
+
+
+
+
+
+
+<html
+  class="not-ready lg:text-base"
+  style="--bg:#faf8f1"
+  lang="en-us"
+  dir="ltr"
+><head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+
+  
+  <title> - Kefer Astrology Documentation</title>
+
+  
+  <meta name="theme-color" />
+
+  <meta name="description" content="Ephemeris files
+Default file: de440s.bsp
+The default JPL ephemeris was upgraded from de421.bsp to de440s.bsp.
+default_ephemeris_path() in module/utils.py resolves the file in this order:
+source/de440s.bsp   # preferred
+source/de421.bsp    # legacy fallback
+The old de421.bsp remains in source/ as a fallback for environments that have not yet received de440s.bsp. Once de440s.bsp is present, it is used automatically — no configuration change needed.
+
+What de440s actually provides
+de440s.bsp contains the same set of queryable bodies as de421.bsp:" />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://elkomod.github.io/AstroSmrk/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
+
+  
+  <link rel="preload" as="image" href="https://elkomod.github.io/AstroSmrk/theme.png" />
+
+  
+
+  
+
+  <script
+    defer
+    src="https://elkomod.github.io/AstroSmrk/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+
+  
+  <link
+    rel="icon"
+    href="https://elkomod.github.io/AstroSmrk/favicon.ico"
+  />
+  <link
+    rel="apple-touch-icon"
+    href="https://elkomod.github.io/AstroSmrk/apple-touch-icon.png"
+  />
+
+  <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="Kefer Astrology Documentation">
+  <meta itemprop="description" content="Ephemeris files Default file: de440s.bsp The default JPL ephemeris was upgraded from de421.bsp to de440s.bsp.
+default_ephemeris_path() in module/utils.py resolves the file in this order:
+source/de440s.bsp # preferred source/de421.bsp # legacy fallback The old de421.bsp remains in source/ as a fallback for environments that have not yet received de440s.bsp. Once de440s.bsp is present, it is used automatically — no configuration change needed.
+What de440s actually provides de440s.bsp contains the same set of queryable bodies as de421.bsp:">
+  <meta itemprop="wordCount" content="807"><meta property="og:url" content="https://elkomod.github.io/AstroSmrk/ephemeris/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="Kefer Astrology Documentation">
+  <meta property="og:description" content="Ephemeris files Default file: de440s.bsp The default JPL ephemeris was upgraded from de421.bsp to de440s.bsp.
+default_ephemeris_path() in module/utils.py resolves the file in this order:
+source/de440s.bsp # preferred source/de421.bsp # legacy fallback The old de421.bsp remains in source/ as a fallback for environments that have not yet received de440s.bsp. Once de440s.bsp is present, it is used automatically — no configuration change needed.
+What de440s actually provides de440s.bsp contains the same set of queryable bodies as de421.bsp:">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Kefer Astrology Documentation">
+  <meta name="twitter:description" content="Ephemeris files Default file: de440s.bsp The default JPL ephemeris was upgraded from de421.bsp to de440s.bsp.
+default_ephemeris_path() in module/utils.py resolves the file in this order:
+source/de440s.bsp # preferred source/de421.bsp # legacy fallback The old de421.bsp remains in source/ as a fallback for environments that have not yet received de440s.bsp. Once de440s.bsp is present, it is used automatically — no configuration change needed.
+What de440s actually provides de440s.bsp contains the same set of queryable bodies as de421.bsp:">
+
+  <link rel="canonical" href="https://elkomod.github.io/AstroSmrk/ephemeris/" />
+</head>
+<body
+    class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
+  >
+    
+<div class="sticky top-0 z-50 w-full border-b border-gray-700 shadow-sm backdrop-blur-sm" style="background-color: #1a1a1a !important; position: sticky; top: 0;">
+  <div class="mx-auto flex items-center px-8" style="max-width: 90% !important; gap: 2rem; min-height: 6rem; padding-top: 1.5rem; padding-bottom: 1.5rem;">
+    <div class="flex items-center" style="flex: 3;">
+      <a
+        class="text-2xl font-medium no-underline text-white"
+        href="https://elkomod.github.io/AstroSmrk/"
+        >Kefer Astrology Documentation</a
+      >
+      <div
+        class="btn-dark text-[0px] ltr:ml-4 rtl:mr-4 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right] invert"
+        role="button"
+        aria-label="Dark"
+      ></div>
+    </div>
+    <div style="flex: 2;">
+<div class="relative">
+  <input 
+    type="text" 
+    id="search-input" 
+    placeholder="Search documentation..." 
+    class="w-full px-4 py-2 rounded-lg border text-sm"
+    style="background-color: #000000 !important; color: #b8860b !important; border-color: #b8860b !important;"
+  />
+  <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-lg max-h-96 overflow-y-auto z-50 hidden" style="background-color: #1a1a1a !important; border-color: #4a4a4a !important;"></div>
+</div>
+
+<style>
+  #search-input {
+    background-color: #000000 !important;
+    color: #b8860b !important;
+    border-color: #b8860b !important;
+  }
+  #search-input::placeholder {
+    color: #b8860b !important;
+    opacity: 0.7;
+  }
+  #search-input:focus {
+    border-color: #b8860b !important;
+    ring-color: #b8860b !important;
+  }
+</style>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  
+  if (!searchInput) return;
+  
+  
+  let globalSearchIndex = [];
+  const basePath = '\/';
+  const basePathNormalized = basePath.endsWith('/') && basePath.length > 1
+    ? basePath.slice(0, -1)
+    : basePath;
+  const indexUrl = basePathNormalized === '/' ? '/index.json' : basePathNormalized + '/index.json';
+  
+  
+  function buildSearchIndex() {
+    const allLinks = Array.from(document.querySelectorAll('a[href]'));
+    const indexMap = new Map();
+    
+    allLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      if (normalized && !normalized.includes('#') && !normalized.includes('http')) {
+        const title = link.textContent.trim();
+        if (title && !indexMap.has(normalized)) {
+          indexMap.set(normalized, {
+            title: title,
+            url: normalized,
+            keywords: (title + ' ' + normalized).toLowerCase()
+          });
+        }
+      }
+    });
+    
+    globalSearchIndex = Array.from(indexMap.values());
+  }
+
+  async function loadSearchIndex() {
+    try {
+      const response = await fetch(indexUrl, { cache: 'no-store' });
+      if (!response.ok) return;
+      const pages = await response.json();
+      if (!Array.isArray(pages)) return;
+      globalSearchIndex = pages.map(page => {
+        const title = (page.title || '').toString();
+        const url = (page.url || '').toString();
+        const content = (page.content || '').toString();
+        return {
+          title,
+          url,
+          content,
+          keywords: (title + ' ' + url + ' ' + content).toLowerCase()
+        };
+      });
+    } catch (err) {
+      
+    }
+  }
+  
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      buildSearchIndex();
+      loadSearchIndex();
+    });
+  } else {
+    buildSearchIndex();
+    loadSearchIndex();
+  }
+  
+  
+  function normalizeUrl(href) {
+    if (!href || href.startsWith('http') || href.startsWith('#')) {
+      return null;
+    }
+    let normalized = href.trim();
+    
+    
+    if (normalized.endsWith('.md')) {
+      normalized = normalized.slice(0, -3);
+    }
+    
+    
+    if (!normalized.startsWith('/')) {
+      
+      const currentPath = window.location.pathname;
+      
+      const relativePath = currentPath.startsWith(basePath) 
+        ? currentPath.slice(basePath.length) 
+        : currentPath;
+      
+      const currentDir = relativePath.split('/').slice(0, -1).filter(p => p).join('/');
+      
+      if (currentDir) {
+        normalized = '/' + currentDir + '/' + normalized;
+      } else {
+        normalized = '/' + normalized;
+      }
+    }
+    
+    
+    if (normalized.startsWith('/') && !normalized.startsWith(basePathNormalized)) {
+      normalized = basePathNormalized + normalized;
+    }
+    
+    
+    normalized = normalized.replace(/\/+/g, '/');
+    
+    
+    if (normalized !== basePathNormalized && normalized !== basePathNormalized + '/' && normalized.endsWith('/')) {
+      normalized = normalized.slice(0, -1);
+    }
+    
+    return normalized;
+  }
+
+  function buildSnippet(text, query) {
+    if (!text) return '';
+    const lower = text.toLowerCase();
+    const q = query.toLowerCase();
+    const index = lower.indexOf(q);
+    if (index < 0) {
+      return text.length > 160 ? text.slice(0, 160) + '...' : text;
+    }
+    const start = Math.max(0, index - 60);
+    const end = Math.min(text.length, index + q.length + 120);
+    const prefix = start > 0 ? '...' : '';
+    const suffix = end < text.length ? '...' : '';
+    return prefix + text.slice(start, end).trim() + suffix;
+  }
+  
+  
+  const pageIndex = new Map();
+  const allLinks = Array.from(document.querySelectorAll('a[href]'));
+  
+  allLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    const normalized = normalizeUrl(href);
+    if (normalized) {
+      const text = link.textContent.trim();
+      const linkText = text.toLowerCase();
+      
+      pageIndex.set(normalized, {
+        title: text || normalized.split('/').pop(),
+        searchText: linkText,
+        href: normalized
+      });
+    }
+  });
+  
+  
+  const currentPath = window.location.pathname;
+  pageIndex.set(currentPath, {
+    title: document.title || 'Current Page',
+    searchText: document.body.textContent.toLowerCase(),
+    href: currentPath
+  });
+  
+  
+  searchInput.addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase().trim();
+    
+    if (query.length < 1) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+
+    if (globalSearchIndex.length > 0) {
+      const results = [];
+      const seenUrls = new Set();
+      const queryWords = query.split(' ').filter(w => w.length > 0);
+
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query)
+        );
+
+        if (matches && page.url && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title || page.url.split('/').pop(),
+            url: page.url,
+            text: buildSnippet(page.content || page.title || '', query),
+            priority: 0
+          });
+        }
+      });
+
+      if (results.length > 0) {
+        const resultsHtml = results.slice(0, 10).map((r, idx) => {
+          const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' +
+            r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' +
+            safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+        }).join('');
+
+        searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+
+        searchResults.querySelectorAll('.search-result-item').forEach(item => {
+          item.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+              window.location.href = url;
+            }
+          });
+        });
+
+        searchResults.classList.remove('hidden');
+      } else {
+        searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+        searchResults.classList.remove('hidden');
+      }
+      return;
+    }
+
+    const results = [];
+    
+    const queryWords = query.split(' ').filter(w => w.length > 0);
+    const seenUrls = new Set();
+    const seenResults = new Set(); 
+    
+    
+    if (globalSearchIndex.length > 0) {
+      globalSearchIndex.forEach(page => {
+        const matches = queryWords.length > 0 && (
+          queryWords.every(word => page.keywords.includes(word)) ||
+          page.keywords.includes(query) 
+        );
+        
+        if (matches && !seenUrls.has(page.url)) {
+          seenUrls.add(page.url);
+          results.push({
+            title: page.title,
+            url: page.url,
+            text: page.title + ' - Documentation page (click to search this page)',
+            priority: 0 
+          });
+        }
+      });
+    }
+    
+    
+    pageIndex.forEach((pageInfo, url) => {
+      
+      const urlSegments = url.toLowerCase().split('/').filter(s => s.length > 0);
+      const searchableText = (pageInfo.searchText + ' ' + pageInfo.title.toLowerCase() + ' ' + urlSegments.join(' ')).toLowerCase();
+      
+      const matches = queryWords.every(word => 
+        searchableText.includes(word) || 
+        urlSegments.some(seg => seg.includes(word))
+      );
+      
+      if (matches && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        results.push({
+          title: pageInfo.title,
+          url: url,
+          text: pageInfo.title + ' - Documentation page',
+          priority: 1 
+        });
+      }
+    });
+    
+    
+    allLinks.forEach(link => {
+      const linkText = link.textContent.toLowerCase();
+      const href = link.getAttribute('href');
+      const normalized = normalizeUrl(href);
+      
+      if (normalized) {
+        
+        const urlSegments = normalized.toLowerCase().split('/').filter(s => s.length > 0);
+        const searchableText = (linkText + ' ' + urlSegments.join(' ')).toLowerCase();
+        
+        const matches = queryWords.every(word => 
+          searchableText.includes(word) || 
+          urlSegments.some(seg => seg.includes(word))
+        );
+        
+        if (matches && !seenUrls.has(normalized)) {
+          seenUrls.add(normalized);
+          results.push({
+            title: link.textContent.trim() || normalized.split('/').pop().replace(/-/g, ' '),
+            url: normalized,
+            text: link.textContent.trim() || 'Documentation page',
+            priority: 1 
+          });
+        }
+      }
+    });
+    
+    
+    
+    document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, code, pre, dt, dd, td, th, strong, em, b').forEach(el => {
+      const text = el.textContent.toLowerCase();
+      
+      const matches = queryWords.length > 0 && (
+        queryWords.every(word => text.includes(word)) || 
+        text.includes(query) 
+      );
+      
+      if (matches && el.textContent.trim() && el.textContent.trim().length > 1) {
+        
+        let pageUrl = currentPath;
+        let pageTitle = document.title || 'Documentation';
+        
+        
+        const parent = el.closest('article, section, li, ul, ol, table, dl');
+        if (parent) {
+          const nearbyLink = parent.querySelector('a[href*="/auto/"], a[href*="/enums"], a[href*="/ui_"], a[href*="/models"]');
+          if (nearbyLink) {
+            const normalized = normalizeUrl(nearbyLink.getAttribute('href'));
+            if (normalized) {
+              pageUrl = normalized;
+              pageTitle = nearbyLink.textContent.trim() || pageTitle;
+            }
+          }
+        }
+        
+        
+        if (el.tagName && el.tagName.match(/^H[1-6]$/)) {
+          pageTitle = el.textContent.trim();
+        }
+        
+        
+        let snippet = el.textContent.trim();
+        if (snippet.length > 200) {
+          
+          const queryLower = query.toLowerCase();
+          const index = snippet.toLowerCase().indexOf(queryLower);
+          if (index > 0) {
+            const start = Math.max(0, index - 50);
+            snippet = '...' + snippet.substring(start, start + 150) + '...';
+          } else {
+            snippet = snippet.substring(0, 150) + '...';
+          }
+        }
+        
+        const resultKey = pageUrl + '|' + pageTitle;
+        
+        if (!seenResults.has(resultKey)) {
+          seenResults.add(resultKey);
+          results.push({
+            title: pageTitle,
+            url: pageUrl,
+            text: snippet,
+            priority: 2 
+          });
+        }
+      }
+    });
+    
+    
+    const bodyText = document.body.textContent.toLowerCase();
+    const bodyMatches = queryWords.length > 0 && (
+      queryWords.every(word => bodyText.includes(word)) || 
+      bodyText.includes(query) 
+    );
+    
+    if (bodyMatches) {
+      
+      const resultKey = currentPath + '|' + (document.title || 'Current Page');
+      if (!seenResults.has(resultKey)) {
+        seenResults.add(resultKey);
+        
+        const queryLower = query.toLowerCase();
+        const index = bodyText.indexOf(queryLower);
+        if (index >= 0) {
+          const fullText = document.body.textContent;
+          const snippetStart = Math.max(0, index - 100);
+          const snippetEnd = Math.min(fullText.length, index + query.length + 100);
+          const snippet = '...' + fullText.substring(snippetStart, snippetEnd).trim() + '...';
+          
+          results.push({
+            title: document.title || 'Current Page',
+            url: currentPath,
+            text: snippet,
+            priority: 3 
+          });
+        }
+      }
+    }
+    
+    
+    results.sort((a, b) => (a.priority || 2) - (b.priority || 2));
+    
+    
+    if (results.length > 0) {
+      const resultsHtml = results.slice(0, 10).map((r, idx) => {
+        
+        const safeTitle = (r.title || 'Documentation').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const safeText = (r.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<div class="p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer search-result-item" style="background-color: #2a2a2a !important;" data-url="' + 
+          r.url.replace(/"/g, '&quot;') + '" data-index="' + idx + '"><div class="font-medium text-yellow-400 text-sm">' + 
+          safeTitle + '</div><p class="text-xs text-gray-400 mt-1">' + safeText + '</p></div>';
+      }).join('');
+      
+      searchResults.innerHTML = '<div class="space-y-2 p-2"><p class="font-semibold mb-2 text-sm text-white">Found ' + results.length + ' result(s):</p>' + resultsHtml + '</div>';
+      
+      
+      searchResults.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const url = this.getAttribute('data-url');
+          if (url) {
+            window.location.href = url;
+          }
+        });
+      });
+      
+      searchResults.classList.remove('hidden');
+    } else {
+      searchResults.innerHTML = '<div class="p-4"><p class="text-gray-400 text-sm">No results found</p></div>';
+      searchResults.classList.remove('hidden');
+    }
+  });
+  
+  
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      searchResults.classList.add('hidden');
+      searchInput.value = '';
+    }
+  });
+})();
+</script>
+</div>
+  </div>
+</div>
+
+<script>
+  
+  const htmlClass = document.documentElement.classList;
+  const btnDark = document.querySelector('.btn-dark');
+  if (btnDark) {
+    btnDark.addEventListener('click', () => {
+      const isDark = localStorage.getItem('dark') !== 'true';
+      localStorage.setItem('dark', isDark);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', isDark ? "rgb(0 0 0 / 85%)" : '#faf8f1');
+      }
+    });
+  }
+  
+  
+  const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  const darkVal = localStorage.getItem('dark');
+  if (darkVal === 'true' || (!darkVal && darkScheme.matches)) {
+    htmlClass.add('dark');
+  }
+</script>
+<main
+      class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
+      style="max-width: 90% !important;"
+    ><article class="pt-6">
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="ephemeris-files">Ephemeris files</h1>
+<h2 id="default-file-de440sbsp">Default file: de440s.bsp</h2>
+<p>The default JPL ephemeris was upgraded from <code>de421.bsp</code> to <code>de440s.bsp</code>.</p>
+<p><code>default_ephemeris_path()</code> in <code>module/utils.py</code> resolves the file in this order:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>source<span style="color:#0550ae">/</span>de440s<span style="color:#0550ae">.</span>bsp   <span style="color:#57606a"># preferred</span>
+</span></span><span style="display:flex;"><span>source<span style="color:#0550ae">/</span>de421<span style="color:#0550ae">.</span>bsp    <span style="color:#57606a"># legacy fallback</span>
+</span></span></code></pre></div><p>The old <code>de421.bsp</code> remains in <code>source/</code> as a fallback for environments that have not yet received <code>de440s.bsp</code>. Once <code>de440s.bsp</code> is present, it is used automatically — no configuration change needed.</p>
+<hr>
+<h2 id="what-de440s-actually-provides">What de440s actually provides</h2>
+<p><code>de440s.bsp</code> contains the same set of <strong>queryable bodies</strong> as <code>de421.bsp</code>:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Body</th>
+          <th>NAIF ID</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Sun</td>
+          <td>10</td>
+      </tr>
+      <tr>
+          <td>Moon</td>
+          <td>301</td>
+      </tr>
+      <tr>
+          <td>Mercury</td>
+          <td>199</td>
+      </tr>
+      <tr>
+          <td>Venus</td>
+          <td>299</td>
+      </tr>
+      <tr>
+          <td>Earth</td>
+          <td>399</td>
+      </tr>
+      <tr>
+          <td>Mars</td>
+          <td>499</td>
+      </tr>
+      <tr>
+          <td>Jupiter barycenter</td>
+          <td>5</td>
+      </tr>
+      <tr>
+          <td>Saturn barycenter</td>
+          <td>6</td>
+      </tr>
+      <tr>
+          <td>Uranus barycenter</td>
+          <td>7</td>
+      </tr>
+      <tr>
+          <td>Neptune barycenter</td>
+          <td>8</td>
+      </tr>
+      <tr>
+          <td>Pluto barycenter</td>
+          <td>9</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>The 343 asteroids integrated in DE440/441 are integration perturbers only.</strong>
+Their gravitational effects are baked into the planetary positions, but their own trajectories are <strong>not stored as queryable SPK segments</strong> in any of the DE planetary BSP files.
+Querying Ceres (NAIF <code>2000001</code>) from <code>de440s.bsp</code> will raise a Skyfield <code>ValueError</code> — a dedicated asteroid SPK kernel is required (see below).</p>
+<p>Why upgrade then? DE440 is a more accurate, more recent numerical solution (Park et al. 2021). For modern astrological dates it produces sub-arcsecond improvements over DE421, and it extends the reliable date range.</p>
+<hr>
+<h2 id="available-bsp-files-and-date-ranges">Available BSP files and date ranges</h2>
+<table>
+  <thead>
+      <tr>
+          <th>File</th>
+          <th>Size</th>
+          <th>Date range</th>
+          <th>Queryable bodies</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>de440s.bsp</code></td>
+          <td>32 MB</td>
+          <td>1900 – 2050</td>
+          <td>10 planets + Moon</td>
+      </tr>
+      <tr>
+          <td><code>de440.bsp</code></td>
+          <td>115 MB</td>
+          <td>1550 – 2650</td>
+          <td>10 planets + Moon</td>
+      </tr>
+      <tr>
+          <td><code>de441_part-1.bsp</code></td>
+          <td>~1.5 GB</td>
+          <td>−13 200 – 0 AD</td>
+          <td>10 planets + Moon</td>
+      </tr>
+      <tr>
+          <td><code>de441_part-2.bsp</code></td>
+          <td>~1.5 GB</td>
+          <td>0 – 17 191 AD</td>
+          <td>10 planets + Moon</td>
+      </tr>
+      <tr>
+          <td><code>de421.bsp</code></td>
+          <td>17 MB</td>
+          <td>~1899 – 2053</td>
+          <td>10 planets + Moon</td>
+      </tr>
+  </tbody>
+</table>
+<p>All files are publicly available from the NASA/JPL NAIF server:
+<code>https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/</code></p>
+<hr>
+<h2 id="date-range-overlaps">Date range overlaps</h2>
+<p>Some files cover the same epochs. This matters when choosing which file to load and when mixing files.</p>
+<h3 id="coverage-map">Coverage map</h3>
+<pre tabindex="0"><code>              -13200       0     1550  1900   2050  2650       17191
+                 │         │       │     │      │     │           │
+de441_part-1  ───────────────┤      │     │      │     │           │
+de441_part-2           │    ├───────────────────────────────────────┤
+de440                  │    │       ├─────────────────────┤         │
+de440s                 │    │       │     ├────────┤       │         │
+de421 (~)              │    │       │     ├────────┤       │         │
+</code></pre><h3 id="overlap-summary">Overlap summary</h3>
+<table>
+  <thead>
+      <tr>
+          <th>Pair</th>
+          <th>Overlapping range</th>
+          <th>Notes</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>de440s ∩ de441_part-2</td>
+          <td>1900 – 2050</td>
+          <td>de440s is entirely inside de441_part-2</td>
+      </tr>
+      <tr>
+          <td>de440 ∩ de441_part-2</td>
+          <td>1550 – 2650</td>
+          <td>de440 is entirely inside de441_part-2</td>
+      </tr>
+      <tr>
+          <td>de440s ∩ de440</td>
+          <td>1900 – 2050</td>
+          <td>de440s is entirely inside de440</td>
+      </tr>
+      <tr>
+          <td>de441_part-1 ∩ de440</td>
+          <td>none</td>
+          <td>part-1 ends at year 0; de440 starts at 1550</td>
+      </tr>
+      <tr>
+          <td>de441_part-1 ∩ de440s</td>
+          <td>none</td>
+          <td>same</td>
+      </tr>
+      <tr>
+          <td>de441_part-1 ∩ de421</td>
+          <td>none</td>
+          <td>de421 starts ~1899</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="behaviour-when-overlapping-files-are-loaded-together">Behaviour when overlapping files are loaded together</h3>
+<p>Skyfield (and the underlying SPICE convention) applies <strong>last-loaded wins</strong>: if two BSP files both contain a segment for the same body at the same time, the most recently loaded file takes effect.</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>planets <span style="color:#0550ae">=</span> load<span style="color:#0550ae">.</span>open<span style="color:#1f2328">(</span><span style="color:#0a3069">&#39;de440s.bsp&#39;</span><span style="color:#1f2328">)</span>     <span style="color:#57606a"># loaded first</span>
+</span></span><span style="display:flex;"><span>extended <span style="color:#0550ae">=</span> load<span style="color:#0550ae">.</span>open<span style="color:#1f2328">(</span><span style="color:#0a3069">&#39;de441_part-2.bsp&#39;</span><span style="color:#1f2328">)</span>  <span style="color:#57606a"># loaded last → wins for 1900-2050</span>
+</span></span></code></pre></div><p>For normal astrological work (1900–2050) this is acceptable: DE441 was derived from the same initial conditions as DE440 and the accuracy difference in the modern era is sub-arcsecond.</p>
+<h3 id="when-you-need-each-file">When you need each file</h3>
+<table>
+  <thead>
+      <tr>
+          <th>Use case</th>
+          <th>File</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Modern charts (1900–2050)</td>
+          <td><code>de440s.bsp</code> — bundled, no download</td>
+      </tr>
+      <tr>
+          <td>Extended modern (1550–2650)</td>
+          <td><code>de440.bsp</code></td>
+      </tr>
+      <tr>
+          <td>Ancient / BC charts</td>
+          <td><code>de441_part-1.bsp</code></td>
+      </tr>
+      <tr>
+          <td>Far-future charts (after 2650)</td>
+          <td><code>de441_part-2.bsp</code></td>
+      </tr>
+  </tbody>
+</table>
+<p>You do <strong>not</strong> need <code>de441_part-2.bsp</code> for charts in the 1900–2050 window.</p>
+<hr>
+<h2 id="is_de421-flag-in-servicespy">is_de421 flag in services.py</h2>
+<p><code>services.py</code> inspects the loaded filename to decide whether to use barycenters for outer planets:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>is_de421 <span style="color:#0550ae">=</span> eph_file <span style="color:#0550ae">and</span> <span style="color:#0a3069">&#34;de421&#34;</span> <span style="color:#0550ae">in</span> Path<span style="color:#1f2328">(</span>eph_file<span style="color:#1f2328">)</span><span style="color:#0550ae">.</span>name<span style="color:#0550ae">.</span>lower<span style="color:#1f2328">()</span>
+</span></span></code></pre></div><p><code>de440s.bsp</code> does not match this check, so it follows the non-de421 path: direct planet names are tried first (<code>jupiter</code>, <code>saturn</code>, etc.) rather than barycenters. This is correct for DE440-series files, which expose individual planet objects directly.</p>
+<p>No code change is needed in <code>services.py</code> when switching from <code>de421</code> to <code>de440s</code>.</p>
+<hr>
+<h2 id="asteroid-bodies">Asteroid bodies</h2>
+<h3 id="current-status">Current status</h3>
+<p>Asteroids (Ceres, Pallas, Juno, Vesta, Chiron) are <strong>not available</strong> from any of the DE planetary files. A dedicated asteroid SPK kernel is required:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Option</th>
+          <th>Bodies</th>
+          <th>Source</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Individual files (<code>ceres_1900_2100.bsp</code> etc.)</td>
+          <td>one body per file</td>
+          <td>NAIF archive</td>
+      </tr>
+      <tr>
+          <td><code>codes_300ast_20100725.bsp</code> (59 MB)</td>
+          <td>300 main-belt asteroids</td>
+          <td>NAIF archive</td>
+      </tr>
+      <tr>
+          <td>JPL Horizons REST API</td>
+          <td>any numbered asteroid</td>
+          <td>on-demand query</td>
+      </tr>
+  </tbody>
+</table>
+<p>NAIF IDs for the main astrological asteroids:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Body</th>
+          <th>NAIF ID</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Ceres</td>
+          <td>2 000 001</td>
+      </tr>
+      <tr>
+          <td>Pallas</td>
+          <td>2 000 002</td>
+      </tr>
+      <tr>
+          <td>Juno</td>
+          <td>2 000 003</td>
+      </tr>
+      <tr>
+          <td>Vesta</td>
+          <td>2 000 004</td>
+      </tr>
+      <tr>
+          <td>Chiron</td>
+          <td>2 000 060</td>
+      </tr>
+  </tbody>
+</table>
+<p>These are <strong>not</strong> in <code>de440s.bsp</code> despite the 343-asteroid integration — those asteroids improve planetary accuracy as perturbers but are not output as SPK segments.</p>
+<h3 id="workaround-for-computed-points">Workaround for computed points</h3>
+<ul>
+<li><strong>Part of Fortune</strong> — pure formula: <code>ASC + Moon - Sun</code> (day chart) or <code>ASC + Sun - Moon</code> (night chart); no BSP needed</li>
+<li><strong>Black Moon Lilith</strong> — mean lunar apogee; derivable from Moon orbital elements</li>
+<li><strong>South Node</strong> — North Node + 180°; already computed from the Mean Node formula</li>
+</ul>
+<hr>
+<h2 id="overriding-the-ephemeris-file">Overriding the ephemeris file</h2>
+<p>Pass <code>ephemeris_path</code> explicitly to <code>compute_jpl_positions()</code> or set <code>chart.config.override_ephemeris</code>:</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f7f7f7;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#cf222e">from</span> <span style="color:#24292e">module.services</span> <span style="color:#cf222e">import</span> compute_jpl_positions
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>result <span style="color:#0550ae">=</span> compute_jpl_positions<span style="color:#1f2328">(</span>
+</span></span><span style="display:flex;"><span>    name<span style="color:#0550ae">=</span><span style="color:#0a3069">&#34;Test&#34;</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    dt_str<span style="color:#0550ae">=</span><span style="color:#0a3069">&#34;2000-01-01 12:00:00&#34;</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    loc_str<span style="color:#0550ae">=</span><span style="color:#0a3069">&#34;51.4779,0.0&#34;</span><span style="color:#1f2328">,</span>
+</span></span><span style="display:flex;"><span>    ephemeris_path<span style="color:#0550ae">=</span><span style="color:#0a3069">&#34;/path/to/de441_part-2.bsp&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#1f2328">)</span>
+</span></span></code></pre></div><p>If <code>ephemeris_path</code> is <code>None</code>, <code>default_ephemeris_path()</code> is called, which returns <code>de440s.bsp</code> if present, otherwise <code>de421.bsp</code>.</p>
+</section>
+  
+  <style>
+     
+    .prose {
+      color: #374151 !important;  
+    }
+    .prose p, .prose li, .prose td, .prose th {
+      color: #4b5563 !important;  
+    }
+    .prose h1 {
+      font-size: 2.5rem !important;
+      font-weight: 700 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.5rem;
+      color: #111827 !important;  
+    }
+    .prose h2 {
+      font-size: 2rem !important;
+      font-weight: 600 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 0.25rem;
+      color: #1f2937 !important;  
+    }
+    .prose h3 {
+      font-size: 1.5rem !important;
+      font-weight: 600 !important;
+      margin-top: 1.5rem !important;
+      margin-bottom: 0.75rem !important;
+      color: #374151 !important;  
+    }
+    .prose a {
+      color: #2563eb !important;  
+    }
+    .prose a:hover {
+      color: #1d4ed8 !important;  
+    }
+    .dark .prose {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose p, .dark .prose li, .dark .prose td, .dark .prose th {
+      color: #d1d5db !important;  
+    }
+    .dark .prose h1 {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      color: #f9fafb !important;  
+    }
+    .dark .prose h2 {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      color: #f3f4f6 !important;  
+    }
+    .dark .prose h3 {
+      color: #e5e7eb !important;  
+    }
+    .dark .prose a {
+      color: #60a5fa !important;  
+    }
+     
+    .prose h4 {
+      color: #b8860b !important;  
+    }
+    .prose ul li strong,
+    .prose ol li strong {
+      color: #b8860b !important;  
+    }
+    .dark .prose h4 {
+      color: #b8860b !important;  
+    }
+    .dark .prose ul li strong,
+    .dark .prose ol li strong {
+      color: #b8860b !important;  
+    }
+     
+    .prose code {
+      color: #92400e !important;  
+      background-color: #fef3c7 !important;  
+    }
+    .prose pre {
+      background-color: #1f2937 !important;  
+    }
+    .prose pre code {
+      color: #fbbf24 !important;  
+      background-color: transparent !important;
+    }
+    .dark .prose code {
+      color: #fbbf24 !important;  
+      background-color: rgba(251, 191, 36, 0.1) !important;  
+    }
+    .dark .prose pre {
+      background-color: #111827 !important;  
+    }
+    .dark .prose pre code {
+      color: #fbbf24 !important;  
+    }
+  </style>
+
+  
+</article></main><footer
+  class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
+>
+  <div class="mr-auto">&copy;2026
+    <a class="link" href="https://elkomod.github.io/AstroSmrk/">Kefer Astrology Documentation</a></div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
+    >powered by hugo️️</a
+  >️
+  <a
+    class="link"
+    href="https://github.com/nanxiaobei/hugo-paper"
+    rel="noopener"
+    target="_blank"
+    >hugo-paper</a
+  >
+</footer>
+</body>
+</html>

@@ -11,7 +11,7 @@
   style="--bg:#faf8f1"
   lang="en-us"
   dir="ltr"
-><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+><head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta
@@ -20,34 +20,49 @@
   />
 
   
-  <title>Industry Standards Audit - Kefer Astrology Documentation</title>
+  <title> - Kefer Astrology Documentation</title>
 
   
   <meta name="theme-color" />
 
-  <meta name="description" content="Industry Standards Audit - Status Update
-Scope: module/ directory
-Last Updated: 2026-01-24
-This page reflects the current remediation status for the code-quality scan.
-Resolved
+  <meta name="description" content="Overview
+The architecture separates UI, computation, workspace management, and storage so multiple frontends can share the same backend behavior.
+Repository Structure (top level)
 
-bare except: clauses removed
-debug prints removed or migrated to logging
-logging infrastructure in place and used
-broad except Exception reduced across services, ui_streamlit, ui_kivy
-path traversal hardening and sensitive logging cleanup
+cache: temporary files for computation
+module: all the program logic
+scripts: generators for documentation
+tests: scenario and functionality testing
+venv: python environment with libraries
 
-Remaining
-High priority
+Core Layers
 
+UI layer: Streamlit, Kivy, or Tauri/Svelte call Python services directly.
+Services layer: module.services computes positions/aspects and builds charts.
+Workspace layer: module.workspace loads/saves modular YAML workspaces.
+Storage layer: module.storage persists positions to DuckDB and Parquet (positions-only).
 
-Magic numbers
-Recommendation: centralize 360.0, 23.4392911, 0.0001, and 1e-4
-into shared constants." />
-  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="http://localhost:1313/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
+Data Flow
+
+UI collects inputs and opens a workspace.
+Services compute positions (and aspects on demand).
+Storage writes positions to DuckDB and/or Parquet.
+UI renders charts from computed positions.
+
+Storage Model
+
+Positions-only: aspects are computed on demand.
+Dual engines: Kerykeion (fast) and JPL/Skyfield (extended properties).
+Radix support: radix_chart_id &#43; is_radix for transit comparisons.
+Hybrid storage: DuckDB for active queries, Parquet for time series.
+
+Storage (Backend)
+Strategy (Python vs Rust)
+Python storage (batch):" />
+  <meta name="author" content="Kefer Astrology Documentation" /><link rel="preload stylesheet" as="style" href="https://elkomod.github.io/AstroSmrk/main.min.9a52cc69ec1a40f5e7c42f871b97944534d47ceb92d3b37fcc1ffef29c432474.css" integrity="sha256-mlLMaewaQPXnxC&#43;HG5eURTTUfOuS07N/zB/&#43;8pxDJHQ=" />
 
   
-  <link rel="preload" as="image" href="http://localhost:1313/theme.png" />
+  <link rel="preload" as="image" href="https://elkomod.github.io/AstroSmrk/theme.png" />
 
   
 
@@ -55,21 +70,38 @@ into shared constants." />
 
   <script
     defer
-    src="http://localhost:1313/highlight.min.js"
+    src="https://elkomod.github.io/AstroSmrk/highlight.min.js"
     onload="hljs.initHighlightingOnLoad();"
   ></script>
 
   
   <link
     rel="icon"
-    href="http://localhost:1313/favicon.ico"
+    href="https://elkomod.github.io/AstroSmrk/favicon.ico"
   />
   <link
     rel="apple-touch-icon"
-    href="http://localhost:1313/apple-touch-icon.png"
+    href="https://elkomod.github.io/AstroSmrk/apple-touch-icon.png"
   />
 
   <meta name="generator" content="Hugo 0.157.0">
+  <meta itemprop="name" content="Kefer Astrology Documentation">
+  <meta itemprop="description" content="Overview The architecture separates UI, computation, workspace management, and storage so multiple frontends can share the same backend behavior.
+Repository Structure (top level) cache: temporary files for computation module: all the program logic scripts: generators for documentation tests: scenario and functionality testing venv: python environment with libraries Core Layers UI layer: Streamlit, Kivy, or Tauri/Svelte call Python services directly. Services layer: module.services computes positions/aspects and builds charts. Workspace layer: module.workspace loads/saves modular YAML workspaces. Storage layer: module.storage persists positions to DuckDB and Parquet (positions-only). Data Flow UI collects inputs and opens a workspace. Services compute positions (and aspects on demand). Storage writes positions to DuckDB and/or Parquet. UI renders charts from computed positions. Storage Model Positions-only: aspects are computed on demand. Dual engines: Kerykeion (fast) and JPL/Skyfield (extended properties). Radix support: radix_chart_id &#43; is_radix for transit comparisons. Hybrid storage: DuckDB for active queries, Parquet for time series. Storage (Backend) Strategy (Python vs Rust) Python storage (batch):">
+  <meta itemprop="wordCount" content="352"><meta property="og:url" content="https://elkomod.github.io/AstroSmrk/architecture/">
+  <meta property="og:site_name" content="Kefer Astrology Documentation">
+  <meta property="og:title" content="Kefer Astrology Documentation">
+  <meta property="og:description" content="Overview The architecture separates UI, computation, workspace management, and storage so multiple frontends can share the same backend behavior.
+Repository Structure (top level) cache: temporary files for computation module: all the program logic scripts: generators for documentation tests: scenario and functionality testing venv: python environment with libraries Core Layers UI layer: Streamlit, Kivy, or Tauri/Svelte call Python services directly. Services layer: module.services computes positions/aspects and builds charts. Workspace layer: module.workspace loads/saves modular YAML workspaces. Storage layer: module.storage persists positions to DuckDB and Parquet (positions-only). Data Flow UI collects inputs and opens a workspace. Services compute positions (and aspects on demand). Storage writes positions to DuckDB and/or Parquet. UI renders charts from computed positions. Storage Model Positions-only: aspects are computed on demand. Dual engines: Kerykeion (fast) and JPL/Skyfield (extended properties). Radix support: radix_chart_id &#43; is_radix for transit comparisons. Hybrid storage: DuckDB for active queries, Parquet for time series. Storage (Backend) Strategy (Python vs Rust) Python storage (batch):">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Kefer Astrology Documentation">
+  <meta name="twitter:description" content="Overview The architecture separates UI, computation, workspace management, and storage so multiple frontends can share the same backend behavior.
+Repository Structure (top level) cache: temporary files for computation module: all the program logic scripts: generators for documentation tests: scenario and functionality testing venv: python environment with libraries Core Layers UI layer: Streamlit, Kivy, or Tauri/Svelte call Python services directly. Services layer: module.services computes positions/aspects and builds charts. Workspace layer: module.workspace loads/saves modular YAML workspaces. Storage layer: module.storage persists positions to DuckDB and Parquet (positions-only). Data Flow UI collects inputs and opens a workspace. Services compute positions (and aspects on demand). Storage writes positions to DuckDB and/or Parquet. UI renders charts from computed positions. Storage Model Positions-only: aspects are computed on demand. Dual engines: Kerykeion (fast) and JPL/Skyfield (extended properties). Radix support: radix_chart_id &#43; is_radix for transit comparisons. Hybrid storage: DuckDB for active queries, Parquet for time series. Storage (Backend) Strategy (Python vs Rust) Python storage (batch):">
+
+  <link rel="canonical" href="https://elkomod.github.io/AstroSmrk/architecture/" />
 </head>
 <body
     class="bg-(--bg) text-black antialiased duration-200 ease-out [-webkit-tap-highlight-color:transparent] dark:text-white"
@@ -80,7 +112,7 @@ into shared constants." />
     <div class="flex items-center" style="flex: 3;">
       <a
         class="text-2xl font-medium no-underline text-white"
-        href="http://localhost:1313/"
+        href="https://elkomod.github.io/AstroSmrk/"
         >Kefer Astrology Documentation</a
       >
       <div
@@ -576,49 +608,146 @@ into shared constants." />
       class="prose prose-neutral dark:prose-invert relative mx-auto min-h-[calc(100vh-9rem)] px-8 pb-16"
       style="max-width: 90% !important;"
     ><article class="pt-6">
-  <section class="prose prose-lg" style="max-width: 90% !important;"><h1 id="industry-standards-audit---status-update">Industry Standards Audit - Status Update</h1>
-<p><strong>Scope</strong>: <code>module/</code> directory<br>
-<strong>Last Updated</strong>: 2026-01-24</p>
-<p>This page reflects the current remediation status for the code-quality scan.</p>
-<h2 id="resolved">Resolved</h2>
+  <section class="prose prose-lg" style="max-width: 90% !important;"><h2 id="overview">Overview</h2>
+<p>The architecture separates UI, computation, workspace management, and storage so multiple frontends can share the same backend behavior.</p>
+<h2 id="repository-structure-top-level">Repository Structure (top level)</h2>
 <ul>
-<li>bare <code>except:</code> clauses removed</li>
-<li>debug prints removed or migrated to logging</li>
-<li>logging infrastructure in place and used</li>
-<li>broad <code>except Exception</code> reduced across <code>services</code>, <code>ui_streamlit</code>, <code>ui_kivy</code></li>
-<li>path traversal hardening and sensitive logging cleanup</li>
+<li>cache: temporary files for computation</li>
+<li>module: all the program logic</li>
+<li>scripts: generators for documentation</li>
+<li>tests: scenario and functionality testing</li>
+<li>venv: python environment with libraries</li>
 </ul>
-<h2 id="remaining">Remaining</h2>
-<h3 id="high-priority">High priority</h3>
+<h2 id="core-layers">Core Layers</h2>
+<ul>
+<li><strong>UI layer</strong>: Streamlit, Kivy, or Tauri/Svelte call Python services directly.</li>
+<li><strong>Services layer</strong>: <code>module.services</code> computes positions/aspects and builds charts.</li>
+<li><strong>Workspace layer</strong>: <code>module.workspace</code> loads/saves modular YAML workspaces.</li>
+<li><strong>Storage layer</strong>: <code>module.storage</code> persists positions to DuckDB and Parquet (positions-only).</li>
+</ul>
+<h2 id="data-flow">Data Flow</h2>
+<ol>
+<li>UI collects inputs and opens a workspace.</li>
+<li>Services compute positions (and aspects on demand).</li>
+<li>Storage writes positions to DuckDB and/or Parquet.</li>
+<li>UI renders charts from computed positions.</li>
+</ol>
+<h2 id="storage-model">Storage Model</h2>
+<ul>
+<li><strong>Positions-only</strong>: aspects are computed on demand.</li>
+<li><strong>Dual engines</strong>: Kerykeion (fast) and JPL/Skyfield (extended properties).</li>
+<li><strong>Radix support</strong>: <code>radix_chart_id</code> + <code>is_radix</code> for transit comparisons.</li>
+<li><strong>Hybrid storage</strong>: DuckDB for active queries, Parquet for time series.</li>
+</ul>
+<h2 id="storage-backend">Storage (Backend)</h2>
+<h3 id="strategy-python-vs-rust">Strategy (Python vs Rust)</h3>
+<p><strong>Python storage</strong> (batch):</p>
+<ul>
+<li>Transit series and large time ranges</li>
+<li>Background jobs and data migrations</li>
+<li>Avoids JSON transfer overhead</li>
+</ul>
+<p><strong>Rust storage</strong> (interactive):</p>
+<ul>
+<li>Single chart computations</li>
+<li>User-driven queries</li>
+<li>Small datasets and quick updates</li>
+</ul>
+<p>Both Python and Rust use the same DuckDB schema.</p>
+<h3 id="schema-positions-only">Schema (Positions-Only)</h3>
+<p><code>computed_positions</code> stores:</p>
+<ul>
+<li><code>chart_id</code>, <code>datetime</code>, <code>object_id</code></li>
+<li><code>longitude</code>, <code>latitude</code></li>
+<li><code>declination</code>, <code>right_ascension</code>, <code>distance</code></li>
+<li><code>altitude</code>, <code>azimuth</code></li>
+<li><code>apparent_magnitude</code>, <code>phase_angle</code>, <code>elongation</code>, <code>light_time</code></li>
+<li><code>speed</code>, <code>retrograde</code></li>
+<li><code>engine</code>, <code>ephemeris_file</code></li>
+<li><code>radix_chart_id</code>, <code>is_radix</code></li>
+<li><code>has_equatorial</code>, <code>has_topocentric</code>, <code>has_physical</code></li>
+</ul>
+<p>Aspects are computed on demand from positions.</p>
+<h3 id="current-behavior">Current behavior</h3>
 <ol>
 <li>
-<p>Magic numbers
-Recommendation: centralize <code>360.0</code>, <code>23.4392911</code>, <code>0.0001</code>, and <code>1e-4</code>
-into shared constants.</p>
+<p><strong>Dual engine support</strong></p>
+<ul>
+<li>Default: Kerykeion (Swisseph)</li>
+<li>Optional: JPL (extended properties)</li>
+</ul>
 </li>
 <li>
-<p>Inconsistent error return values
-Recommendation: define one error-handling policy and refactor callers to
-follow it consistently.</p>
+<p><strong>Radix-relative storage</strong></p>
+<ul>
+<li><code>radix_chart_id</code> links transits to base charts</li>
+<li><code>is_radix</code> marks base vs transit rows</li>
+</ul>
+</li>
+<li>
+<p><strong>Performance optimization</strong></p>
+<ul>
+<li>Pre-initialized engine for batch series</li>
+<li>No aspect storage (computed on demand)</li>
+</ul>
+</li>
+<li>
+<p><strong>3D-ready fields</strong></p>
+<ul>
+<li><code>declination</code> and <code>distance</code> stored for JPL</li>
+</ul>
 </li>
 </ol>
-<h3 id="medium-priority">Medium priority</h3>
-<ol start="3">
-<li>TODO comments in production</li>
-<li>Hardcoded aspect definitions</li>
-<li>Missing type hints</li>
-<li>Import organization</li>
-</ol>
-<h2 id="next-pass-suggestions">Next Pass Suggestions</h2>
+<h3 id="storage-paths">Storage paths</h3>
+<pre tabindex="0"><code>workspace/
+├── workspace.yaml
+└── data/
+    ├── workspace.db
+    └── parquet/
+        └── chart_id_YYYY-MM-DD.parquet
+</code></pre><h2 id="layers-by-responsibility">Layers by responsibility</h2>
+<table>
+  <thead>
+      <tr>
+          <th>🔹 Category</th>
+          <th>🌞 Horoscope</th>
+          <th>📊 Chart</th>
+          <th>🗂️ Workspace</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>🧱 Key Objects</td>
+          <td><ul><li><code>Horoscope</code></li><li><code>CelestialBody</code></li><li><code>Aspect</code></li><li><code>House</code></li></ul></td>
+          <td><ul><li><code>ChartSubject</code></li><li><code>ChartInstance</code></li><li><code>ChartConfig</code></li><li><code>ChartPreset</code></li></ul></td>
+          <td><ul><li><code>Workspace</code></li><li><code>EphemerisSource</code></li><li><code>ModelOverrides</code></li><li><code>Annotation</code></li></ul></td>
+      </tr>
+      <tr>
+          <td>⚙️ Core Functions</td>
+          <td><ul><li><code>compute_positions(...)</code></li><li><code>compute_aspects(...)</code></li><li><code>compute_positions_for_chart(...)</code></li></ul></td>
+          <td><ul><li><code>build_chart_instance(...)</code></li><li><code>prepare_horoscope(...)</code></li></ul></td>
+          <td><ul><li><code>load_workspace(...)</code></li><li><code>save_workspace_modular(...)</code></li><li><code>get_all_aspect_definitions(...)</code></li></ul></td>
+      </tr>
+      <tr>
+          <td>✨ Features</td>
+          <td><ul><li>Immutable snapshot</li><li>Engine-specific (Western, Vedic, etc.)</li><li>Supports derived charts (e.g., progressed)</li><li>Custom points via overrides</li></ul></td>
+          <td><ul><li>Preset-driven config</li><li>Supports ChartMode (NATAL, TRANSIT, etc.)</li><li>Custom display and ephemeris override</li></ul></td>
+          <td><ul><li>Modular YAML structure</li><li>Per-user model customization</li><li>Annotations, media, layouts</li></ul></td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="key-entry-points">Key entry points</h2>
 <ul>
-<li>create <code>module/constants.py</code> and replace magic numbers</li>
-<li>standardize the error-return policy in <code>services.py</code></li>
-<li>move aspects to config and clean remaining TODOs</li>
+<li><code>module.services.compute_positions(...)</code></li>
+<li><code>module.services.compute_positions_for_chart(...)</code></li>
+<li><code>module.services.compute_aspects_for_chart(...)</code></li>
+<li><code>module.services.build_chart_instance(...)</code></li>
+<li><code>module.workspace.load_workspace(...)</code></li>
+<li><code>module.workspace.save_workspace_modular(...)</code></li>
 </ul>
-<h2 id="related-notes">Related Notes</h2>
-<ul>
-<li><a href="industry_standards_issues">Industry Standards Issues</a></li>
-</ul>
+<h2 id="schéma">Schéma</h2>
+<p><a href="https://mermaid.live/edit#pako:eNqtV0tv4zYQ_iuCrk0CO04Tx4cCaRKgBbJosV60wMKAQEtjmY1ECiSVXceIf3uHFEVSlJLuoSeRHHIe3zx1THNeQLpK84pI-UBJKUi9YRtm9snfXDzLhuSQHDcsSX6SSiT8GwNhdo_NHmoQVK55K_BOATvSViqD_ty9IbmiL5DVKKsyh09UqtP9ngj1pwAJ6pTkepM1ZiejO-t2-w_keEl2i5j-O5OKsBwsl4D8F4VvT-TAW3xcmW9AvGOMK6IoZ6eEuHV34ZNW9Y8XEIIWIBOjecb7vblyh5Zxcy8hetmb9-bxCywMEGSkBrMx5HvOdrRMcvMZvI7xneCgN1uSPwMrxoItbME7WoxZFESBojUk8AJMZXrZQcRzg0dS2cVYgFX96I3RcBiwzNFvvJWwPkgFdbLX60yajSF-5QUl-ZdDA8mrWWYK1947qOQpoSiuLaDIGk6Z9d0DzQ31bFdxgn4lskErMy62PuAKKhv0dybVofJI5bziIlMaVR_O1qcTUevD9ZGVlIHRFcyyC4ADQRQlSYhdjBHqI3Psg4GHbFy_GxQGS8FlzlGDnNdNqxATE-wDmf7Scejbnbb7A8-6dIIKpKKk-pUXh1OyRcdAkDHGoafOl2EiGQ_0npBDGEKO06GIdYMyqhXJ7KnxLJ6XArynJC07TbecV4kATDmsVjbUuhcoH4oIEVTVisUISlhbb2356p7krWyySUkBl87AQHsXqua6Sc8ssEgRUYIaWkNYWYW6YrxGMlw5mUh0g7OG8MGBZdxzyDx6I4-Ed22WTN5eo70nY3VQ_NagFGWlTKRdfJAJH-Tyx0kytGg6PMrq0OzdDiO5bivi9hheNdatEOiXMrOB4M5q8j0zgIf1o6sw8-WUr39cqWnv9r3wB4VqD7xX34f2k-1WwAv1eRuD8B-Shr49jup0r_ioXvui3F9x6T5JDWqHTU6shAURRRZHftRrj55hf_jIlMByFDSBKXKoT9wkXJnv2kQgfcDk_3G2B4Oz6pBhyL7rmb6c9UV9oJqfXiZLgqGsdYezs03Q7rwK3WBFbSOKR6fPUNkJSNhVND2hc9oKa35tvnLc4noOVsV-a4rBRJmMaqRvtqD2vIP8AbvWZ8QY32PLwlwmbARLp5aV6Q-GUjXgU4OVH_zCkk7VYFRgqs8o10VzAUSBjwvSos5iyFopku91Mgasd7SCQUq3oopaScDCtecJn3fxphFW7aDzVRyrsTvr7KnhlbMhbw9tNCBgdIjIWj9T-t-A8_NfwqF2krTuh5kJWj8PxUQf6THF-yqmDMvG6J1rpzElGqu1gcNZbWzJO_R7G1pjshvENHc_lZmX4UAUE00ljg-7jqQ5BTOCJgy754gcd7LRhbWZc6LDQYPQQoMq5Czvs3xE9aloYXHlQVNd-FliP_9q2pMbRsMJ2En8ZH4qYlLQucZEP5WMaX6OGdPu3KSSnqUlRle6UqKFsxSjpiZ6m5rs2aTdr0S6wiV2tudNigmDb7BgfeW87p8J3pb7dLUjlcRd2-gMs7_a_RWsJHx9YLl7gskH4p63TKWr6_nC8ExXx_R7ujq_vbqYL25ub65vlpeX8-Xy6iw9pKvF8mJ5OZ9d3s4Wi_n1_Obnt7P01Wgxv5gtrq6ub_H6Yjm7mc2Wb_8CtUrF3A">editor</a></p>
+<p><a href="https://mermaid.live/edit#pako:eNqtV0tv4zYQ_iuCrk0CO04Tx4cCaRKgBbJosV60wMKAQEtjmY1ECiSVXceIf3uHFEVSlJLuoSeRHHIe3zx1THNeQLpK84pI-UBJKUi9YRtm9snfXDzLhuSQHDcsSX6SSiT8GwNhdo_NHmoQVK55K_BOATvSViqD_ty9IbmiL5DVKKsyh09UqtP9ngj1pwAJ6pTkepM1ZiejO-t2-w_keEl2i5j-O5OKsBwsl4D8F4VvT-TAW3xcmW9AvGOMK6IoZ6eEuHV34ZNW9Y8XEIIWIBOjecb7vblyh5Zxcy8hetmb9-bxCywMEGSkBrMx5HvOdrRMcvMZvI7xneCgN1uSPwMrxoItbME7WoxZFESBojUk8AJMZXrZQcRzg0dS2cVYgFX96I3RcBiwzNFvvJWwPkgFdbLX60yajSF-5QUl-ZdDA8mrWWYK1947qOQpoSiuLaDIGk6Z9d0DzQ31bFdxgn4lskErMy62PuAKKhv0dybVofJI5bziIlMaVR_O1qcTUevD9ZGVlIHRFcyyC4ADQRQlSYhdjBHqI3Psg4GHbFy_GxQGS8FlzlGDnNdNqxATE-wDmf7Scejbnbb7A8-6dIIKpKKk-pUXh1OyRcdAkDHGoafOl2EiGQ_0npBDGEKO06GIdYMyqhXJ7KnxLJ6XArynJC07TbecV4kATDmsVjbUuhcoH4oIEVTVisUISlhbb2356p7krWyySUkBl87AQHsXqua6Sc8ssEgRUYIaWkNYWYW6YrxGMlw5mUh0g7OG8MGBZdxzyDx6I4-Ed22WTN5eo70nY3VQ_NagFGWlTKRdfJAJH-Tyx0kytGg6PMrq0OzdDiO5bivi9hheNdatEOiXMrOB4M5q8j0zgIf1o6sw8-WUr39cqWnv9r3wB4VqD7xX34f2k-1WwAv1eRuD8B-Shr49jup0r_ioXvui3F9x6T5JDWqHTU6shAURRRZHftRrj55hf_jIlMByFDSBKXKoT9wkXJnv2kQgfcDk_3G2B4Oz6pBhyL7rmb6c9UV9oJqfXiZLgqGsdYezs03Q7rwK3WBFbSOKR6fPUNkJSNhVND2hc9oKa35tvnLc4noOVsV-a4rBRJmMaqRvtqD2vIP8AbvWZ8QY32PLwlwmbARLp5aV6Q-GUjXgU4OVH_zCkk7VYFRgqs8o10VzAUSBjwvSos5iyFopku91Mgasd7SCQUq3oopaScDCtecJn3fxphFW7aDzVRyrsTvr7KnhlbMhbw9tNCBgdIjIWj9T-t-A8_NfwqF2krTuh5kJWj8PxUQf6THF-yqmDMvG6J1rpzElGqu1gcNZbWzJO_R7G1pjshvENHc_lZmX4UAUE00ljg-7jqQ5BTOCJgy754gcd7LRhbWZc6LDQYPQQoMq5Czvs3xE9aloYXHlQVNd-FliP_9q2pMbRsMJ2En8ZH4qYlLQucZEP5WMaX6OGdPu3KSSnqUlRle6UqKFsxSjpiZ6m5rs2aTdr0S6wiV2tudNigmDb7BgfeW87p8J3pb7dLUjlcRd2-gMs7_a_RWsJHx9YLl7gskH4p63TKWr6_nC8ExXx_R7ujq_vbqYL25ub65vlpeX8-Xy6iw9pKvF8mJ5OZ9d3s4Wi_n1_Obnt7P01Wgxv5gtrq6ub_H6Yjm7mc2Wb_8CtUrF3A"><img src="https://mermaid.ink/img/pako:eNqtV0tv4zYQ_iuCrk0CO04Tx4cCaRKgBbJosV60wMKAQEtjmY1ECiSVXceIf3uHFEVSlJLuoSeRHHIe3zx1THNeQLpK84pI-UBJKUi9YRtm9snfXDzLhuSQHDcsSX6SSiT8GwNhdo_NHmoQVK55K_BOATvSViqD_ty9IbmiL5DVKKsyh09UqtP9ngj1pwAJ6pTkepM1ZiejO-t2-w_keEl2i5j-O5OKsBwsl4D8F4VvT-TAW3xcmW9AvGOMK6IoZ6eEuHV34ZNW9Y8XEIIWIBOjecb7vblyh5Zxcy8hetmb9-bxCywMEGSkBrMx5HvOdrRMcvMZvI7xneCgN1uSPwMrxoItbME7WoxZFESBojUk8AJMZXrZQcRzg0dS2cVYgFX96I3RcBiwzNFvvJWwPkgFdbLX60yajSF-5QUl-ZdDA8mrWWYK1947qOQpoSiuLaDIGk6Z9d0DzQ31bFdxgn4lskErMy62PuAKKhv0dybVofJI5bziIlMaVR_O1qcTUevD9ZGVlIHRFcyyC4ADQRQlSYhdjBHqI3Psg4GHbFy_GxQGS8FlzlGDnNdNqxATE-wDmf7Scejbnbb7A8-6dIIKpKKk-pUXh1OyRcdAkDHGoafOl2EiGQ_0npBDGEKO06GIdYMyqhXJ7KnxLJ6XArynJC07TbecV4kATDmsVjbUuhcoH4oIEVTVisUISlhbb2356p7krWyySUkBl87AQHsXqua6Sc8ssEgRUYIaWkNYWYW6YrxGMlw5mUh0g7OG8MGBZdxzyDx6I4-Ed22WTN5eo70nY3VQ_NagFGWlTKRdfJAJH-Tyx0kytGg6PMrq0OzdDiO5bivi9hheNdatEOiXMrOB4M5q8j0zgIf1o6sw8-WUr39cqWnv9r3wB4VqD7xX34f2k-1WwAv1eRuD8B-Shr49jup0r_ioXvui3F9x6T5JDWqHTU6shAURRRZHftRrj55hf_jIlMByFDSBKXKoT9wkXJnv2kQgfcDk_3G2B4Oz6pBhyL7rmb6c9UV9oJqfXiZLgqGsdYezs03Q7rwK3WBFbSOKR6fPUNkJSNhVND2hc9oKa35tvnLc4noOVsV-a4rBRJmMaqRvtqD2vIP8AbvWZ8QY32PLwlwmbARLp5aV6Q-GUjXgU4OVH_zCkk7VYFRgqs8o10VzAUSBjwvSos5iyFopku91Mgasd7SCQUq3oopaScDCtecJn3fxphFW7aDzVRyrsTvr7KnhlbMhbw9tNCBgdIjIWj9T-t-A8_NfwqF2krTuh5kJWj8PxUQf6THF-yqmDMvG6J1rpzElGqu1gcNZbWzJO_R7G1pjshvENHc_lZmX4UAUE00ljg-7jqQ5BTOCJgy754gcd7LRhbWZc6LDQYPQQoMq5Czvs3xE9aloYXHlQVNd-FliP_9q2pMbRsMJ2En8ZH4qYlLQucZEP5WMaX6OGdPu3KSSnqUlRle6UqKFsxSjpiZ6m5rs2aTdr0S6wiV2tudNigmDb7BgfeW87p8J3pb7dLUjlcRd2-gMs7_a_RWsJHx9YLl7gskH4p63TKWr6_nC8ExXx_R7ujq_vbqYL25ub65vlpeX8-Xy6iw9pKvF8mJ5OZ9d3s4Wi_n1_Obnt7P01Wgxv5gtrq6ub_H6Yjm7mc2Wb_8CtUrF3A?type=png" alt=""></a></p>
 </section>
   
   <style>
@@ -724,7 +853,7 @@ follow it consistently.</p>
   class="mx-auto flex h-[4.5rem] max-w-(--w) items-center px-8 text-xs tracking-wider uppercase opacity-60"
 >
   <div class="mr-auto">&copy;2026
-    <a class="link" href="http://localhost:1313/">Kefer Astrology Documentation</a></div>
+    <a class="link" href="https://elkomod.github.io/AstroSmrk/">Kefer Astrology Documentation</a></div>
   <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
     >powered by hugo️️</a
   >️
