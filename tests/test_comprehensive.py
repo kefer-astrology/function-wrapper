@@ -84,6 +84,11 @@ class TestComprehensive(unittest.TestCase):
         if charts_dir.exists():
             for chart_file in charts_dir.glob("*.yml"):
                 chart_file.unlink()
+
+        # Remove stale DuckDB to ensure schema is always current
+        db_file = self.test_base / "data" / "workspace.db"
+        if db_file.exists():
+            db_file.unlink()
         
         # Create or reinitialize workspace (this will overwrite workspace.yaml)
         self.manifest_path = init_workspace(

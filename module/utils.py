@@ -463,7 +463,6 @@ def prepare_horoscope(
             aspect_orbs={'a': 1.5},
             display_style="",
             color_theme="",
-            selected_aspects=None,
             override_ephemeris=ephemeris_path,
             engine=engine,
         )
@@ -941,7 +940,6 @@ def parse_chart_yaml(data: dict) -> ChartInstance:
         aspect_orbs=dict(cfg_d.get('aspect_orbs', {}) or {}),
         display_style=str(cfg_d.get('display_style', '') or ''),
         color_theme=str(cfg_d.get('color_theme', '') or ''),
-        selected_aspects=list(cfg_d.get('selected_aspects', []) or []) or None,
         override_ephemeris=cfg_d.get('override_ephemeris'),
         model=cfg_d.get('model'),
         engine=_enum_or(cfg_d.get('engine'), EngineType, None),

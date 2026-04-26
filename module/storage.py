@@ -392,15 +392,21 @@ class DuckDBStorage:
                 vernal_equinox_offset = compute_vernal_equinox_offset(year, eph, observer, ts)
                 
                 # Compute positions directly using pre-initialized components
+                barycenter_planets = ["mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
                 positions = {}
                 for planet in planets:
-                    # Get body from ephemeris (handle barycenters for outer planets with de421)
                     try:
-                        if is_de421 and planet in ["jupiter", "saturn", "uranus", "neptune", "pluto"]:
+                        if is_de421 and planet in barycenter_planets:
                             body = eph[f"{planet} barycenter"]
                         else:
-                            body = eph[planet]
-                        
+                            try:
+                                body = eph[planet]
+                            except KeyError:
+                                if planet in barycenter_planets:
+                                    body = eph[f"{planet} barycenter"]
+                                else:
+                                    continue
+
                         pos = _compute_planet_extended_position(
                             body, eph, observer, t, vernal_equinox_offset,
                             include_physical=include_physical,
@@ -409,7 +415,6 @@ class DuckDBStorage:
                         if pos:
                             positions[planet] = pos
                     except (KeyError, ValueError):
-                        # Planet not available in this ephemeris
                         continue
             else:
                 # Kerykeion: Use direct swisseph access for maximum performance

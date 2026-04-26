@@ -147,10 +147,10 @@ def _get_kerykeion_object_mapping() -> Dict[str, str]:
 def _normalize_kerykeion_zodiac(zodiac: Optional[str]) -> str:
     """Normalize zodiac type values to the Kerykeion v5 canonical format."""
     if not zodiac:
-        return "Tropical"
+        return "Tropic"
     zodiac_str = str(zodiac)
     if zodiac_str.lower() in ("tropic", "tropical"):
-        return "Tropical"
+        return "Tropic"
     if zodiac_str.lower() == "sidereal":
         return "Sidereal"
     return zodiac_str

@@ -43,7 +43,7 @@ class TestDuckDBStorage(unittest.TestCase):
         table_names = [row[0] for row in result]
         
         self.assertIn('computed_positions', table_names)
-        self.assertIn('computed_aspects', table_names)
+        self.assertNotIn('computed_aspects', table_names)
     
     def test_store_positions_simple(self):
         """Test storing simple positions (float format)."""
@@ -117,50 +117,27 @@ class TestDuckDBStorage(unittest.TestCase):
         self.assertAlmostEqual(sun_row[4], 45.8, places=1)
         self.assertTrue(sun_row[5])  # has_equatorial should be True
     
-    def test_store_aspects(self):
-        """Test storing aspects."""
-        aspects = [
-            {
-                'from': 'sun',
-                'to': 'moon',
-                'type': 'trine',
-                'angle': 119.5,
-                'orb': 0.5,
-                'exact_angle': 120.0,
-                'applying': True,
-                'separating': False,
-            },
-            {
-                'from': 'mars',
-                'to': 'venus',
-                'type': 'square',
-                'angle': 91.2,
-                'orb': 1.2,
-                'exact_angle': 90.0,
-                'applying': False,
-                'separating': True,
-            },
-        ]
-        
+    def test_compute_aspects_from_positions(self):
+        """Test computing aspects on-demand from stored positions."""
+        # Store positions that form a trine (sun at 0°, moon at 120°)
+        positions = {
+            'sun': {'longitude': 0.0, 'latitude': 0.0},
+            'moon': {'longitude': 120.5, 'latitude': 0.0},
+            'mars': {'longitude': 90.5, 'latitude': 0.0},
+        }
         dt_str = '2024-01-01T12:00:00+01:00'
-        relation_id = 'test_relation'
-        
-        self.storage.store_aspects(relation_id, dt_str, aspects)
-        
-        # Verify data
-        result = self.storage.conn.execute(
-            "SELECT source_object, target_object, aspect_type, angle, orb FROM computed_aspects WHERE relation_id = ?",
-            (relation_id,)
-        ).fetchall()
-        
-        self.assertEqual(len(result), 2)
-        # Check trine aspect
-        trine = next((r for r in result if r[2] == 'trine'), None)
-        self.assertIsNotNone(trine)
-        self.assertEqual(trine[0], 'sun')
-        self.assertEqual(trine[1], 'moon')
-        self.assertAlmostEqual(trine[3], 119.5, places=1)
-        self.assertAlmostEqual(trine[4], 0.5, places=1)
+        self.storage.store_positions('test_chart', dt_str, positions, engine='jpl')
+
+        aspects_df = self.storage.compute_aspects_from_positions(
+            chart_id='test_chart',
+            datetime_str=dt_str,
+        )
+
+        self.assertGreater(len(aspects_df), 0, "Should compute aspects from stored positions")
+        self.assertIn('aspect_type', aspects_df.columns)
+        self.assertIn('orb', aspects_df.columns)
+        trine_rows = aspects_df[aspects_df['aspect_type'] == 'trine']
+        self.assertGreater(len(trine_rows), 0, "Should find trine between sun and moon")
     
     def test_store_positions_replace(self):
         """Test that storing same position twice replaces it."""
