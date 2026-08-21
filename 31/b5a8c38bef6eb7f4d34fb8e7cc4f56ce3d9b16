@@ -1,0 +1,50 @@
+module/model_catalog.py
+  s_b142655913c802::t_2038029a97ccda 151-161
+  s_b142655913c802::t_4d683d2fe07d40 148-150
+  s_b142655913c802::t_dec22fb93b0633 162-164
+module/astronomy.py
+  s_b142655913c802::t_120df3cd360688 318-342,344-346,348-354,360,371,376-384
+  s_b142655913c802::t_65aa8718b64601 407-493
+  s_b142655913c802::t_4bcf33005e892f 297
+  s_b142655913c802::t_277ea218fb0312 364-365
+  s_b142655913c802::t_5d481d9a9a9601 516
+  s_b142655913c802::t_5c11fc343054c4 520-528,531-534
+  s_b142655913c802::t_4cc5efa582ca6a 385
+module/utils.py
+  s_e0fff8a0fdccbe::t_a353167df643da 697-698,701-702,705-711,911,959
+  s_e0fff8a0fdccbe::t_9a938b467f14b6 908-910
+  s_e0fff8a0fdccbe::t_eba44d10409e9f 912-913
+  s_e0fff8a0fdccbe::t_ed9c9eddef89fc 956-958
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "31b5a8c38bef6eb7f4d34fb8e7cc4f56ce3d9b16",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    },
+    "h_48e40f5ab776de": {
+      "author": "kubow"
+    }
+  },
+  "sessions": {
+    "s_b142655913c802": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6daf9a26-2b49-4133-abf3-9d6896769a3a",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": null
+    },
+    "s_e0fff8a0fdccbe": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "c255a2c6-5717-4b2d-beb7-55d7ef87a976",
+        "model": "default"
+      },
+      "human_author": null
+    }
+  }
+}
