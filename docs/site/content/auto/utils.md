@@ -63,10 +63,6 @@ default_ephemeris_path() -> str
 
 Return the default path to the local JPL ephemeris file.
 
-#### Returns
-
-Absolute path to de421.bsp file in source/ directory
-
 ## `ensure_aware`
 
 ```python
@@ -411,7 +407,7 @@ Resolved Path that is contained within base
 
 ⚠️ ValueError: If path is absolute or attempts directory traversal outside base
 
-### `to_timezone`
+## `resolve_user_path`
 
 ```python
 resolve_user_path(path: Union[str, pathlib._local.Path], *, base_dir: Union[str, pathlib._local.Path, NoneType] = None) -> pathlib._local.Path
