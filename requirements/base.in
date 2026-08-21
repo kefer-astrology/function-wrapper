@@ -11,6 +11,7 @@ plotly>=6.2.0
 
 pyarrow>=21.0.0
 PyYAML>=6.0.2
+pytz>=2025.2
 skyfield>=1.48
 timezonefinder>=6.6.2
 urllib3>=2.6.0
