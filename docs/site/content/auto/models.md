@@ -75,7 +75,7 @@ Settings for a single aspect definition, including display properties.
 
 ### class `AstroModel` 
 
-AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspect_definitions: List[module.models.AspectDefinition], signs: List[module.models.Sign], settings: module.models.ModelSettings, engine: Optional[module.models.EngineType] = None, zodiac_type: Optional[module.models.ZodiacType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None)
+AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspect_definitions: List[module.models.AspectDefinition], signs: List[module.models.Sign], settings: Optional[module.models.ModelSettings], engine: Optional[module.models.EngineType] = None, zodiac_type: Optional[module.models.ZodiacType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None)
 
 #### Dataclass fields
 
@@ -83,7 +83,7 @@ AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspe
 - `body_definitions: List`
 - `aspect_definitions: List`
 - `signs: List`
-- `settings: ModelSettings`
+- `settings: Optional`
 - `engine: Optional`
 - `zodiac_type: Optional`
 - `ayanamsa: Optional`
@@ -131,19 +131,49 @@ CelestialBody(id: str, definition_id: str, degree: float, sign: str, retrograde:
 - `retrograde: bool`
 - `speed: float`
 
+### class `ChartAxes` 
+
+ChartAxes(asc: float, desc: float, mc: float, ic: float)
+
+#### Dataclass fields
+
+- `asc: float`
+- `desc: float`
+- `mc: float`
+- `ic: float`
+
+### class `ChartCalculation` 
+
+ChartCalculation(positions: Dict[str, Any], motion: Dict[str, Any], aspects: List[Dict[str, Any]], axes: Dict[str, float], house_cusps: List[float], moon_details: Optional[Dict[str, Any]], chart_id: str, backend_used: str, fallback_used: bool, ephemeris_source: Optional[str], warnings: List[str])
+
+#### Dataclass fields
+
+- `positions: Dict`
+- `motion: Dict`
+- `aspects: List`
+- `axes: Dict`
+- `house_cusps: List`
+- `moon_details: Optional`
+- `chart_id: str`
+- `backend_used: str`
+- `fallback_used: bool`
+- `ephemeris_source: Optional`
+- `warnings: List`
+
 ### class `ChartConfig` 
 
-ChartConfig(mode: module.models.ChartMode, house_system: module.models.HouseSystem, zodiac_type: module.models.ZodiacType, included_points: List[str], aspect_orbs: Dict[str, float], display_style: str, color_theme: str, override_ephemeris: Optional[str] = None, model: Optional[str] = None, engine: Optional[module.models.EngineType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, observable_objects: Optional[List[str]] = None, time_system: Optional[module.models.TimeSystem] = None)
+ChartConfig(mode: module.models.ChartMode, house_system: Optional[module.models.HouseSystem], zodiac_type: module.models.ZodiacType, included_points: List[str], aspect_orbs: Dict[str, float], display_style: str, color_theme: str, selected_aspects: Optional[List[str]] = None, override_ephemeris: Optional[str] = None, model: Optional[str] = None, engine: Optional[module.models.EngineType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, observable_objects: Optional[List[str]] = None, time_system: Optional[module.models.TimeSystem] = None)
 
 #### Dataclass fields
 
 - `mode: ChartMode`
-- `house_system: HouseSystem`
+- `house_system: Optional`
 - `zodiac_type: ZodiacType`
 - `included_points: List`
 - `aspect_orbs: Dict`
 - `display_style: str`
 - `color_theme: str`
+- `selected_aspects: Optional`
 - `override_ephemeris: Optional`
 - `model: Optional`
 - `engine: Optional`
@@ -188,14 +218,45 @@ ChartRelation(type: module.models.RelationType, source: str, target: str, method
 
 ### class `ChartSubject` 
 
-ChartSubject(id: str, name: str, event_time: datetime.datetime, location: module.models.Location)
+ChartSubject(id: str, name: str, event_time: Optional[datetime.datetime], location: module.models.Location)
 
 #### Dataclass fields
 
 - `id: str`
 - `name: str`
-- `event_time: datetime`
+- `event_time: Optional`
 - `location: Location`
+
+### class `ComputedAspect` 
+
+ComputedAspect(from_id: str, to_id: str, type: str, angle: float, orb: float, exact_angle: float, applying: bool = False, separating: bool = False)
+
+#### Dataclass fields
+
+- `from_id: str`
+- `to_id: str`
+- `type: str`
+- `angle: float`
+- `orb: float`
+- `exact_angle: float`
+- `applying: bool`
+- `separating: bool`
+
+### class `CurrentModelReport` 
+
+CurrentModelReport(requested_model: Optional[str], resolved_model: str, source: str, available_models: List[str], model: module.models.AstroModel, effective_settings: module.models.EffectiveModelSettings, model_overrides: Optional[module.models.ModelOverrides], warnings: List[str], diagnostics: List[module.models.Diagnostic])
+
+#### Dataclass fields
+
+- `requested_model: Optional`
+- `resolved_model: str`
+- `source: str`
+- `available_models: List`
+- `model: AstroModel`
+- `effective_settings: EffectiveModelSettings`
+- `model_overrides: Optional`
+- `warnings: List`
+- `diagnostics: List`
 
 ### class `DateRange` 
 
@@ -205,6 +266,60 @@ DateRange(start: datetime.datetime, end: datetime.datetime)
 
 - `start: datetime`
 - `end: datetime`
+
+### class `Diagnostic` 
+
+Diagnostic(code: str, severity: module.models.DiagnosticSeverity, message: str, path: Optional[str] = None)
+
+#### Dataclass fields
+
+- `code: str`
+- `severity: DiagnosticSeverity`
+- `message: str`
+- `path: Optional`
+
+### class `DiagnosticSeverity` (str, Enum)
+
+### class `EffectiveModelSettings` 
+
+EffectiveModelSettings(default_house_system: Optional[module.models.HouseSystem], default_bodies: List[str], default_aspects: List[str], default_transit_aspects: Optional[List[str]], default_direction_aspects: Optional[List[str]], default_transit_bodies: Optional[List[str]], default_direction_bodies: Optional[List[str]], aspect_orbs: Dict[str, float], standard_orb: float, engine: Optional[module.models.EngineType], zodiac_type: Optional[module.models.ZodiacType], ayanamsa: Optional[module.models.Ayanamsa], time_system: Optional[module.models.TimeSystem], degrees_in_circle: float, obliquity_j2000: float, coordinate_tolerance: float, sources: module.models.EffectiveSettingsSources)
+
+#### Dataclass fields
+
+- `default_house_system: Optional`
+- `default_bodies: List`
+- `default_aspects: List`
+- `default_transit_aspects: Optional`
+- `default_direction_aspects: Optional`
+- `default_transit_bodies: Optional`
+- `default_direction_bodies: Optional`
+- `aspect_orbs: Dict`
+- `standard_orb: float`
+- `engine: Optional`
+- `zodiac_type: Optional`
+- `ayanamsa: Optional`
+- `time_system: Optional`
+- `degrees_in_circle: float`
+- `obliquity_j2000: float`
+- `coordinate_tolerance: float`
+- `sources: EffectiveSettingsSources`
+
+### class `EffectiveSettingsSources` 
+
+EffectiveSettingsSources(default_house_system: Optional[module.models.SettingSource], default_bodies: module.models.SettingSource, default_aspects: module.models.SettingSource, aspect_orbs: Dict[str, module.models.SettingSource], standard_orb: module.models.SettingSource, engine: Optional[module.models.SettingSource], zodiac_type: Optional[module.models.SettingSource], ayanamsa: Optional[module.models.SettingSource], time_system: Optional[module.models.SettingSource], computational_constants: module.models.SettingSource)
+
+#### Dataclass fields
+
+- `default_house_system: Optional`
+- `default_bodies: SettingSource`
+- `default_aspects: SettingSource`
+- `aspect_orbs: Dict`
+- `standard_orb: SettingSource`
+- `engine: Optional`
+- `zodiac_type: Optional`
+- `ayanamsa: Optional`
+- `time_system: Optional`
+- `computational_constants: SettingSource`
 
 ### class `Element` (str, Enum)
 
@@ -257,6 +372,20 @@ House(number: int, cusp_degree: float, sign: str)
 ### class `HouseSystem` (str, Enum)
 
 ### class `LayoutStyle` (str, Enum)
+
+### class `LoadedWorkspace` 
+
+LoadedWorkspace(manifest: Dict[str, Any], workspace: module.models.Workspace, diagnostics: List[ForwardRef('Diagnostic')])
+
+#### Methods
+
+- `validation_report(self) -> module.models.WorkspaceValidationReport`
+
+#### Dataclass fields
+
+- `manifest: Dict`
+- `workspace: Workspace`
+- `diagnostics: List`
 
 ### class `Location` 
 
@@ -331,6 +460,23 @@ Maps object IDs to color hex codes. Common objects:
 
 ### class `RelationType` (str, Enum)
 
+### class `SettingSource` (str, Enum)
+
+### class `SettingsLayer` 
+
+SettingsLayer(house_system: Optional[module.models.HouseSystem] = None, bodies: Optional[List[str]] = None, aspects: Optional[List[str]] = None, aspect_orbs: Dict[str, float] = &lt;factory&gt;, engine: Optional[module.models.EngineType] = None, zodiac_type: Optional[module.models.ZodiacType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, time_system: Optional[module.models.TimeSystem] = None)
+
+#### Dataclass fields
+
+- `house_system: Optional`
+- `bodies: Optional`
+- `aspects: Optional`
+- `aspect_orbs: Dict`
+- `engine: Optional`
+- `zodiac_type: Optional`
+- `ayanamsa: Optional`
+- `time_system: Optional`
+
 ### class `Sign` 
 
 Sign(name: str, glyph: str, abbreviation: str, element: module.models.Element, i18n: Dict[str, str])
@@ -346,6 +492,31 @@ Sign(name: str, glyph: str, abbreviation: str, element: module.models.Element, i
 ### class `TimeSystem` (str, Enum)
 
 Time representation systems.
+
+### class `TransitSeriesCalculation` 
+
+TransitSeriesCalculation(source_chart_id: str, time_range: Dict[str, str], time_step: str, results: List[module.models.TransitSeriesStep], backend_used: str, fallback_used: bool, ephemeris_source: Optional[str], warnings: List[str])
+
+#### Dataclass fields
+
+- `source_chart_id: str`
+- `time_range: Dict`
+- `time_step: str`
+- `results: List`
+- `backend_used: str`
+- `fallback_used: bool`
+- `ephemeris_source: Optional`
+- `warnings: List`
+
+### class `TransitSeriesStep` 
+
+TransitSeriesStep(datetime: str, transit_positions: Dict[str, Any], aspects: List[Dict[str, Any]])
+
+#### Dataclass fields
+
+- `datetime: str`
+- `transit_positions: Dict`
+- `aspects: List`
 
 ### class `ViewLayout` 
 
@@ -448,6 +619,8 @@ Provides workspace-wide defaults that can be overridden at the workspace level.
 - `default_house_system: Optional`
 - `default_bodies: Optional`
 - `default_aspects: Optional`
+- `default_aspect_orbs: Optional`
+- `default_aspect_colors: Optional`
 - `ephemeris_engine: Optional`
 - `ephemeris_backend: Optional`
 - `element_colors: Optional`
@@ -456,5 +629,29 @@ Provides workspace-wide defaults that can be overridden at the workspace level.
 - `language: Optional`
 - `theme: Optional`
 - `time_system: Optional`
+
+### class `WorkspaceEntityCounts` 
+
+WorkspaceEntityCounts(subjects: int, charts: int, chart_presets: int, layouts: int, annotations: int)
+
+#### Dataclass fields
+
+- `subjects: int`
+- `charts: int`
+- `chart_presets: int`
+- `layouts: int`
+- `annotations: int`
+
+### class `WorkspaceValidationReport` 
+
+WorkspaceValidationReport(owner: str, active_model: Optional[str], valid: bool, counts: module.models.WorkspaceEntityCounts, diagnostics: List[ForwardRef('Diagnostic')])
+
+#### Dataclass fields
+
+- `owner: str`
+- `active_model: Optional`
+- `valid: bool`
+- `counts: WorkspaceEntityCounts`
+- `diagnostics: List`
 
 ### class `ZodiacType` (str, Enum)

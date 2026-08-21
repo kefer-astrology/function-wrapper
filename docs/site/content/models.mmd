@@ -89,6 +89,29 @@ class CelestialBody {
 }
 
 
+class ChartAxes {
+  float asc
+  float desc
+  float mc
+  float ic
+}
+
+
+class ChartCalculation {
+  Dict~str,any~ positions
+  Dict~str,any~ motion
+  List~Dict~str,any~~ aspects
+  Dict~str,float~ axes
+  List~float~ house_cusps
+  Dict~str,any~ moon_details
+  str chart_id
+  str backend_used
+  bool fallback_used
+  str ephemeris_source
+  List~str~ warnings
+}
+
+
 class ChartConfig {
   ChartMode(Enum) mode
   HouseSystem(Enum) house_system
@@ -97,6 +120,7 @@ class ChartConfig {
   Dict~str,float~ aspect_orbs
   str display_style
   str color_theme
+  List~str~ selected_aspects
   str override_ephemeris
   str model
   EngineType(Enum) engine
@@ -138,9 +162,77 @@ class ChartSubject {
 }
 
 
+class ComputedAspect {
+  str from_id
+  str to_id
+  str type
+  float angle
+  float orb
+  float exact_angle
+  bool applying
+  bool separating
+}
+
+
+class CurrentModelReport {
+  str requested_model
+  str resolved_model
+  str source
+  List~str~ available_models
+  AstroModel model
+  EffectiveModelSettings effective_settings
+  ModelOverrides model_overrides
+  List~str~ warnings
+  List~Diagnostic~ diagnostics
+}
+
+
 class DateRange {
   datetime start
   datetime end
+}
+
+
+class Diagnostic {
+  str code
+  DiagnosticSeverity(Enum) severity
+  str message
+  str path
+}
+
+
+class EffectiveModelSettings {
+  HouseSystem(Enum) default_house_system
+  List~str~ default_bodies
+  List~str~ default_aspects
+  List~str~ default_transit_aspects
+  List~str~ default_direction_aspects
+  List~str~ default_transit_bodies
+  List~str~ default_direction_bodies
+  Dict~str,float~ aspect_orbs
+  float standard_orb
+  EngineType(Enum) engine
+  ZodiacType(Enum) zodiac_type
+  Ayanamsa(Enum) ayanamsa
+  TimeSystem(Enum) time_system
+  float degrees_in_circle
+  float obliquity_j2000
+  float coordinate_tolerance
+  EffectiveSettingsSources sources
+}
+
+
+class EffectiveSettingsSources {
+  SettingSource(Enum) default_house_system
+  SettingSource(Enum) default_bodies
+  SettingSource(Enum) default_aspects
+  Dict~str,SettingSource(Enum)~ aspect_orbs
+  SettingSource(Enum) standard_orb
+  SettingSource(Enum) engine
+  SettingSource(Enum) zodiac_type
+  SettingSource(Enum) ayanamsa
+  SettingSource(Enum) time_system
+  SettingSource(Enum) computational_constants
 }
 
 
@@ -171,6 +263,13 @@ class House {
   int number
   float cusp_degree
   str sign
+}
+
+
+class LoadedWorkspace {
+  Dict~str,any~ manifest
+  Workspace workspace
+  List~Diagnostic~ diagnostics
 }
 
 
@@ -220,12 +319,43 @@ class RadixPointColorSettings {
 }
 
 
+class SettingsLayer {
+  HouseSystem(Enum) house_system
+  List~str~ bodies
+  List~str~ aspects
+  Dict~str,float~ aspect_orbs
+  EngineType(Enum) engine
+  ZodiacType(Enum) zodiac_type
+  Ayanamsa(Enum) ayanamsa
+  TimeSystem(Enum) time_system
+}
+
+
 class Sign {
   str name
   str glyph
   str abbreviation
   Element(Enum) element
   Dict~str,str~ i18n
+}
+
+
+class TransitSeriesCalculation {
+  str source_chart_id
+  Dict~str,str~ time_range
+  str time_step
+  List~TransitSeriesStep~ results
+  str backend_used
+  bool fallback_used
+  str ephemeris_source
+  List~str~ warnings
+}
+
+
+class TransitSeriesStep {
+  str datetime
+  Dict~str,any~ transit_positions
+  List~Dict~str,any~~ aspects
 }
 
 
@@ -264,6 +394,8 @@ class WorkspaceDefaults {
   HouseSystem(Enum) default_house_system
   List~str~ default_bodies
   List~str~ default_aspects
+  Dict~str,float~ default_aspect_orbs
+  Dict~str,str~ default_aspect_colors
   EngineType(Enum) ephemeris_engine
   str ephemeris_backend
   ElementColorSettings element_colors
@@ -272,6 +404,24 @@ class WorkspaceDefaults {
   str language
   str theme
   TimeSystem(Enum) time_system
+}
+
+
+class WorkspaceEntityCounts {
+  int subjects
+  int charts
+  int chart_presets
+  int layouts
+  int annotations
+}
+
+
+class WorkspaceValidationReport {
+  str owner
+  str active_model
+  bool valid
+  WorkspaceEntityCounts counts
+  List~Diagnostic~ diagnostics
 }
 
 AstroModel --> AspectDefinition
@@ -284,11 +434,19 @@ ChartInstance --> Horoscope
 ChartPreset --> ChartConfig
 ChartRelation --> DateRange
 ChartSubject --> Location
+CurrentModelReport --> AstroModel
+CurrentModelReport --> Diagnostic
+CurrentModelReport --> EffectiveModelSettings
+CurrentModelReport --> ModelOverrides
+EffectiveModelSettings --> EffectiveSettingsSources
 Horoscope --> Aspect
 Horoscope --> CelestialBody
 Horoscope --> House
 Horoscope --> Location
+LoadedWorkspace --> Diagnostic
+LoadedWorkspace --> Workspace
 ModelOverrides --> OverrideEntry
+TransitSeriesCalculation --> TransitSeriesStep
 ViewLayout --> ChartRelation
 ViewLayout --> ViewModule
 Workspace --> Annotation
@@ -302,3 +460,5 @@ Workspace --> WorkspaceDefaults
 WorkspaceDefaults --> ElementColorSettings
 WorkspaceDefaults --> Location
 WorkspaceDefaults --> RadixPointColorSettings
+WorkspaceValidationReport --> Diagnostic
+WorkspaceValidationReport --> WorkspaceEntityCounts

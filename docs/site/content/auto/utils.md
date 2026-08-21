@@ -265,6 +265,14 @@ now_utc() -> datetime.datetime
 
 Return current time as a timezone-aware UTC datetime.
 
+## `parse_chart_config`
+
+```python
+parse_chart_config(data: Optional[dict]) -> module.models.ChartConfig
+```
+
+Parse a chart configuration while preserving absent versus empty fields.
+
 ## `parse_chart_yaml`
 
 ```python

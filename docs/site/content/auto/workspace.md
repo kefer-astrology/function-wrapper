@@ -175,12 +175,7 @@ Dictionary mapping object_id -&gt; BodyDefinition. Custom objects from
 get_default_aspect_definitions() -> Dict[str, module.models.AspectDefinition]
 ```
 
-Get default aspect definitions.
-
-#### Returns
-
-Dictionary mapping aspect_id -&gt; AspectDefinition for standard aspects
-    (conjunction, opposition, trine, square, sextile, etc.)
+Return the aspect catalog from the one canonical built-in model.
 
 ## `get_default_observable_objects`
 
@@ -188,13 +183,7 @@ Dictionary mapping aspect_id -&gt; AspectDefinition for standard aspects
 get_default_observable_objects() -> Dict[str, module.models.BodyDefinition]
 ```
 
-Get default observable object definitions.
-
-#### Returns
-
-Dictionary mapping object_id -&gt; BodyDefinition for standard objects
-    (planets, angles, lunar nodes, calculated points) that are commonly
-    available in kerykeion and can be computed.
+Return the body catalog from the one canonical built-in model.
 
 ## `init_workspace`
 
@@ -247,6 +236,14 @@ Paths referenced in the manifest (e.g., `charts/*.yml`) are resolved
 #### Warnings
 
 ⚠️ FileNotFoundError: If workspace file does not exist
+
+## `load_workspace_aggregate`
+
+```python
+load_workspace_aggregate(workspace_path: str) -> module.models.LoadedWorkspace
+```
+
+Strictly load every referenced item and retain structured diagnostics.
 
 ## `load_workspace_from_dir`
 

@@ -65,6 +65,14 @@ Dict with keys:
         - chart_id: Chart ID
         - stored: True if stored in DuckDB, False otherwise
 
+## `cmd_compute_chart_from_data`
+
+```python
+cmd_compute_chart_from_data(args: Dict[str, Any]) -> Dict[str, Any]
+```
+
+Compute an ad-hoc chart through the same layered model contract.
+
 ## `cmd_compute_transit_series`
 
 ```python
@@ -196,6 +204,14 @@ Synchronize workspace manifest with files on disk.
 #### Returns
 
 Dict with sync results
+
+## `cmd_validate_workspace`
+
+```python
+cmd_validate_workspace(args: Dict[str, Any]) -> Dict[str, Any]
+```
+
+Load the complete workspace and return structured validation results.
 
 ## `main`
 
