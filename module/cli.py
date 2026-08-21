@@ -25,13 +25,14 @@ Storage:
 
 import sys
 import json
+from copy import deepcopy
+import math
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
-from dateutil.parser import parse
 
 try:
-    from module.workspace import load_workspace
+    from module.workspace import load_workspace, load_workspace_aggregate
     from module.services import (
         compute_chart_data_for_chart,
         compute_positions_for_chart,
@@ -39,15 +40,32 @@ try:
         build_chart_instance,
         find_chart_by_name_or_id
     )
-    from module.models import ChartMode, EngineType
-    from module.utils import _to_primitive
+    from module.models import (
+        ChartCalculation,
+        DiagnosticSeverity,
+        TransitSeriesCalculation,
+        TransitSeriesStep,
+    )
+    from module.astronomy import (
+        compute_normalized_chart_aspects,
+        compute_normalized_cross_aspects,
+    )
+    from module.resolution import (
+        current_model_report,
+        materialize_effective_settings,
+        resolve_preset,
+        settings_layer_from_dict,
+        standalone_model_report,
+    )
+    from module.utils import _to_primitive, default_ephemeris_path, parse_chart_yaml
+    from module.event_time import parse_event_time
     try:
         from module.storage import DuckDBStorage, get_storage_path
         STORAGE_AVAILABLE = True
     except ImportError:
         STORAGE_AVAILABLE = False
 except ImportError:
-    from workspace import load_workspace
+    from workspace import load_workspace, load_workspace_aggregate
     from services import (
         compute_chart_data_for_chart,
         compute_positions_for_chart,
@@ -55,8 +73,25 @@ except ImportError:
         build_chart_instance,
         find_chart_by_name_or_id
     )
-    from models import ChartMode, EngineType
-    from utils import _to_primitive
+    from models import (
+        ChartCalculation,
+        DiagnosticSeverity,
+        TransitSeriesCalculation,
+        TransitSeriesStep,
+    )
+    from astronomy import (
+        compute_normalized_chart_aspects,
+        compute_normalized_cross_aspects,
+    )
+    from resolution import (
+        current_model_report,
+        materialize_effective_settings,
+        resolve_preset,
+        settings_layer_from_dict,
+        standalone_model_report,
+    )
+    from utils import _to_primitive, default_ephemeris_path, parse_chart_yaml
+    from event_time import parse_event_time
     try:
         from storage import DuckDBStorage, get_storage_path
         STORAGE_AVAILABLE = True
@@ -149,20 +184,83 @@ def _build_chart_response(chart: Any, positions: Dict[str, Any], aspects: List[D
 
 
 def _build_chart_response_from_chart_data(chart: Any, chart_data: Any, aspects: List[Dict[str, Any]], chart_id: str, stored: bool) -> Dict[str, Any]:
-    """Build the normalized chart response payload from structured chart data."""
+    """Adapt a typed calculation result to the legacy sidecar transport map."""
     warnings = list(getattr(chart_data, "warnings", []) or [])
+    positions = getattr(chart_data, "positions", {}) or {}
+    calculation = ChartCalculation(
+        positions=positions,
+        motion=_motion_from_positions(positions),
+        aspects=aspects,
+        axes=getattr(chart_data, "axes", {}) or {},
+        house_cusps=getattr(chart_data, "house_cusps", []) or [],
+        moon_details=_moon_details_from_positions(positions),
+        chart_id=chart_id,
+        backend_used=_resolve_backend_used(chart) or "unknown",
+        fallback_used=False,
+        ephemeris_source=_resolve_ephemeris_source(chart),
+        warnings=warnings,
+    )
+    result = _to_primitive(calculation)
+    result["stored"] = stored
+    return result
+
+
+def _motion_from_positions(positions: Dict[str, Any]) -> Dict[str, Any]:
+    motion: Dict[str, Any] = {}
+    for body_id, value in positions.items():
+        if not isinstance(value, dict):
+            continue
+        speed = value.get("speed")
+        if isinstance(speed, (int, float)):
+            motion[body_id] = {
+                "speed": float(speed),
+                "retrograde": bool(value.get("retrograde", float(speed) < 0.0)),
+            }
+    return motion
+
+
+def _moon_details_from_positions(
+    positions: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    sun = _extract_longitude(positions.get("sun"))
+    moon = _extract_longitude(positions.get("moon"))
+    if sun is None or moon is None:
+        return None
+    elongation = (moon - sun) % 360.0
+    illuminated = (1.0 - math.cos(math.radians(elongation))) / 2.0
+    phase_index = int(((elongation + 22.5) % 360.0) // 45.0)
+    phases = [
+        ("new_moon", "New Moon"),
+        ("waxing_crescent", "Waxing Crescent"),
+        ("first_quarter", "First Quarter"),
+        ("waxing_gibbous", "Waxing Gibbous"),
+        ("full_moon", "Full Moon"),
+        ("waning_gibbous", "Waning Gibbous"),
+        ("third_quarter", "Third Quarter"),
+        ("waning_crescent", "Waning Crescent"),
+    ]
+    phase_id, phase_label = phases[phase_index]
     return {
-        "positions": getattr(chart_data, "positions", {}) or {},
-        "aspects": aspects,
-        "axes": getattr(chart_data, "axes", {}) or {},
-        "house_cusps": getattr(chart_data, "house_cusps", []) or [],
-        "chart_id": chart_id,
-        "stored": stored,
-        "backend_used": _resolve_backend_used(chart),
-        "fallback_used": False,
-        "ephemeris_source": _resolve_ephemeris_source(chart),
-        "warnings": warnings,
+        "elongation_deg": elongation,
+        "illuminated_fraction": illuminated,
+        "age_days": elongation / 360.0 * 29.530588853,
+        "waxing": 0.0 < elongation < 180.0,
+        "phase_id": phase_id,
+        "phase_label": phase_label,
     }
+
+
+def _ensure_valid_report(report: Any) -> None:
+    errors = [
+        diagnostic
+        for diagnostic in report.diagnostics
+        if diagnostic.severity == DiagnosticSeverity.ERROR
+    ]
+    if errors:
+        details = "; ".join(
+            f"{diagnostic.code}: {diagnostic.message}" for diagnostic in errors
+        )
+        raise ValueError(f"Invalid effective model settings: {details}")
 
 
 def _build_transit_series_response(
@@ -173,22 +271,29 @@ def _build_transit_series_response(
     time_step: str,
     results: List[Dict[str, Any]],
     stored_in_db: bool,
+    warnings: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """Build the normalized transit-series response payload."""
-    return {
-        "source_chart_id": source_chart_id,
-        "time_range": {
-            "start": start_str,
-            "end": end_str,
-        },
-        "time_step": time_step,
-        "results": results,
-        "stored_in_db": stored_in_db,
-        "backend_used": _resolve_backend_used(source_chart),
-        "fallback_used": False,
-        "ephemeris_source": _resolve_ephemeris_source(source_chart),
-        "warnings": [],
-    }
+    calculation = TransitSeriesCalculation(
+        source_chart_id=source_chart_id,
+        time_range={"start": start_str, "end": end_str},
+        time_step=time_step,
+        results=[
+            TransitSeriesStep(
+                datetime=item["datetime"],
+                transit_positions=item["transit_positions"],
+                aspects=item["aspects"],
+            )
+            for item in results
+        ],
+        backend_used=_resolve_backend_used(source_chart) or "unknown",
+        fallback_used=False,
+        ephemeris_source=_resolve_ephemeris_source(source_chart),
+        warnings=list(warnings or []),
+    )
+    result = _to_primitive(calculation)
+    result["stored_in_db"] = stored_in_db
+    return result
 
 
 def _json_output(result: Dict[str, Any]) -> None:
@@ -242,17 +347,32 @@ def cmd_compute_chart(args: Dict[str, Any]) -> Dict[str, Any]:
         if not chart:
             return {"error": f"Chart {chart_id} not found", "type": "ChartNotFound"}
         
-        # Compute positions
+        operation = settings_layer_from_dict(args.get("settings_overrides"))
+        preset = resolve_preset(ws, args.get("preset_id"))
+        report = current_model_report(ws, chart.config, preset, operation)
+        _ensure_valid_report(report)
+        chart = materialize_effective_settings(chart, report.effective_settings)
+
+        # Compute positions from the fully materialized settings.
         chart_data = compute_chart_data_for_chart(
             chart, 
             ws=ws,
             include_physical=include_physical,
             include_topocentric=include_topocentric
         )
+        if report.effective_settings.default_bodies == []:
+            chart_data.positions = {}
         positions = chart_data.positions
-        
-        # Compute aspects
-        aspects = compute_aspects_for_chart(chart, ws=ws)
+        cfg = chart.config
+        aspects = compute_normalized_chart_aspects(
+            positions,
+            aspect_orbs=report.effective_settings.aspect_orbs,
+            selected_aspects=report.effective_settings.default_aspects,
+            aspect_definitions=report.model.aspect_definitions,
+        )
+        chart_data.warnings = list(dict.fromkeys(
+            report.warnings + list(getattr(chart_data, "warnings", []) or [])
+        ))
         
         # Optionally store in DuckDB
         stored = False
@@ -290,6 +410,33 @@ def cmd_compute_chart(args: Dict[str, Any]) -> Dict[str, Any]:
         return _build_chart_response_from_chart_data(chart, chart_data, aspects, chart_id, stored)
     except Exception as e:
         return {"error": str(e), "type": "ComputationError"}
+
+
+def cmd_compute_chart_from_data(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Compute an ad-hoc chart through the same layered model contract."""
+    try:
+        chart = parse_chart_yaml(args.get("chart_json") or {})
+        operation = settings_layer_from_dict(args.get("settings_overrides"))
+        report = standalone_model_report(chart.config, operation)
+        _ensure_valid_report(report)
+        chart = materialize_effective_settings(chart, report.effective_settings)
+        chart_data = compute_chart_data_for_chart(chart)
+        if report.effective_settings.default_bodies == []:
+            chart_data.positions = {}
+        aspects = compute_normalized_chart_aspects(
+            chart_data.positions,
+            aspect_orbs=report.effective_settings.aspect_orbs,
+            selected_aspects=report.effective_settings.default_aspects,
+            aspect_definitions=report.model.aspect_definitions,
+        )
+        chart_data.warnings = list(dict.fromkeys(
+            report.warnings + list(getattr(chart_data, "warnings", []) or [])
+        ))
+        return _build_chart_response_from_chart_data(
+            chart, chart_data, aspects, chart.id, False
+        )
+    except Exception as exc:
+        return {"error": str(exc), "type": "ComputationError"}
 
 
 def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
@@ -339,10 +486,23 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
         source_chart = find_chart_by_name_or_id(ws, source_chart_id)
         if not source_chart:
             return {"error": f"Source chart {source_chart_id} not found", "type": "ChartNotFound"}
+
+        operation = settings_layer_from_dict(args.get("settings_overrides"))
+        preset = resolve_preset(ws, args.get("preset_id"))
+        report = current_model_report(ws, source_chart.config, preset, operation)
+        _ensure_valid_report(report)
+        source_chart = materialize_effective_settings(
+            source_chart, report.effective_settings
+        )
         
         # Parse time range
-        start_dt = parse(start_str)
-        end_dt = parse(end_str)
+        start_dt = parse_event_time(start_str)
+        end_dt = parse_event_time(end_str)
+        if end_dt < start_dt:
+            return {
+                "error": "end_datetime must not be before start_datetime",
+                "type": "InvalidArgument",
+            }
         
         # Parse time step
         def parse_time_step(step_str: str) -> timedelta:
@@ -366,12 +526,19 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
                 return timedelta(hours=1)
         
         step_delta = parse_time_step(time_step)
+        if step_delta.total_seconds() <= 0:
+            return {"error": "time_step must be positive", "type": "InvalidArgument"}
         
         # Generate time points
         time_points = []
         current = start_dt
         while current <= end_dt:
             time_points.append(current)
+            if len(time_points) > 50_000:
+                return {
+                    "error": "transit series exceeds the 50000-step limit",
+                    "type": "InvalidArgument",
+                }
             current += step_delta
         
         # Optionally use DuckDB storage for batch operations
@@ -389,12 +556,38 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
         
         # Compute positions for each timepoint
         results = []
+        effective_bodies = list(report.effective_settings.default_bodies)
+        source_objects = (
+            list(transited_objects)
+            if transited_objects is not None
+            else effective_bodies
+        )
+        transit_objects = (
+            list(transiting_objects)
+            if transiting_objects is not None
+            else list(
+                report.effective_settings.default_transit_bodies
+                or effective_bodies
+            )
+        )
+        selected_aspects = (
+            list(aspect_types)
+            if aspect_types is not None
+            else list(
+                report.effective_settings.default_transit_aspects
+                or report.effective_settings.default_aspects
+            )
+        )
+
+        source_chart.config.observable_objects = source_objects
         source_positions = compute_positions_for_chart(
-            source_chart, 
+            source_chart,
             ws=ws,
             include_physical=include_physical,
             include_topocentric=include_topocentric
         )
+        if source_objects == []:
+            source_positions = {}
         
         # Get engine info for storage
         cfg = getattr(source_chart, 'config', None)
@@ -402,46 +595,12 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
         eph_file = cfg.override_ephemeris if cfg else None
         
         for tp in time_points:
-            # Create temporary transit chart
-            # Extract location from source chart
-            subj = getattr(source_chart, 'subject', None)
-            loc = getattr(subj, 'location', None) if subj else None
-            
-            if loc:
-                # Prefer stored coordinates over place names to avoid a geocoding round trip.
-                lat = getattr(loc, 'latitude', None) if hasattr(loc, 'latitude') else None
-                lon = getattr(loc, 'longitude', None) if hasattr(loc, 'longitude') else None
-                if isinstance(loc, dict):
-                    if lat is None:
-                        lat = loc.get('latitude')
-                    if lon is None:
-                        lon = loc.get('longitude')
-                if lat is not None and lon is not None:
-                    loc_str = f"{lat},{lon}"
-                else:
-                    loc_str = getattr(loc, 'name', '') if hasattr(loc, 'name') else ''
-                    if not loc_str and isinstance(loc, dict):
-                        loc_str = loc.get('name', '')
-                    if not loc_str:
-                        # Fallback to workspace default location
-                        if ws and ws.default:
-                            loc_str = getattr(ws.default, 'location_name', '') or 'Prague'
-                        else:
-                            loc_str = 'Prague'
-            else:
-                # Fallback to workspace default location
-                if ws and ws.default:
-                    loc_str = getattr(ws.default, 'location_name', '') or 'Prague'
-                else:
-                    loc_str = 'Prague'
-            
-            transit_chart = build_chart_instance(
-                name=f"transit_{source_chart_id}",
-                dt_str=tp.isoformat(),
-                loc_text=loc_str,
-                mode=ChartMode.EVENT,
-                ws=ws
-            )
+            transit_chart = deepcopy(source_chart)
+            transit_chart.id = f"transit_{source_chart_id}"
+            transit_chart.subject.id = transit_chart.id
+            transit_chart.subject.name = transit_chart.id
+            transit_chart.subject.event_time = tp
+            transit_chart.config.observable_objects = transit_objects
             
             # Compute transit positions
             transit_positions = compute_positions_for_chart(
@@ -450,6 +609,8 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
                 include_physical=include_physical,
                 include_topocentric=include_topocentric
             )
+            if transit_objects == []:
+                transit_positions = {}
             
             # Store positions only - aspects are computed on-demand from positions via SQL
             # This avoids duplication and allows flexible aspect computation
@@ -466,7 +627,13 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
                     print(f"Warning: Failed to store in DuckDB: {e}", file=sys.stderr)
             
             # Compute aspects for return value (not stored - can be recomputed from positions)
-            transit_aspects = compute_aspects_for_chart(transit_chart, ws=ws)
+            transit_aspects = compute_normalized_cross_aspects(
+                transit_positions,
+                source_positions,
+                aspect_orbs=report.effective_settings.aspect_orbs,
+                selected_aspects=selected_aspects,
+                aspect_definitions=report.model.aspect_definitions,
+            )
             
             results.append({
                 "datetime": tp.isoformat(),
@@ -486,6 +653,7 @@ def cmd_compute_transit_series(args: Dict[str, Any]) -> Dict[str, Any]:
             time_step,
             results,
             use_storage,
+            warnings=report.warnings,
         )
     except Exception as e:
         return {"error": str(e), "type": "ComputationError"}
@@ -525,6 +693,19 @@ def cmd_get_workspace_settings(args: Dict[str, Any]) -> Dict[str, Any]:
         }
     except Exception as e:
         return {"error": str(e), "type": "LoadError"}
+
+
+def cmd_validate_workspace(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Load the complete workspace and return structured validation results."""
+    workspace_path = args.get("workspace_path")
+    if not workspace_path:
+        return {"error": "workspace_path is required", "type": "InvalidArgument"}
+    try:
+        return _to_primitive(
+            load_workspace_aggregate(workspace_path).validation_report()
+        )
+    except Exception as exc:
+        return {"error": str(exc), "type": "LoadError"}
 
 
 def _enum_value(enum_obj):
@@ -753,6 +934,7 @@ def main():
         "compute_chart": cmd_compute_chart,
         "compute_transit_series": cmd_compute_transit_series,
         "get_workspace_settings": cmd_get_workspace_settings,
+        "validate_workspace": cmd_validate_workspace,
         "list_charts": cmd_list_charts,
         "get_chart": cmd_get_chart,
         "sync_workspace": cmd_sync_workspace,

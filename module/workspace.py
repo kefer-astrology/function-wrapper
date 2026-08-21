@@ -6,13 +6,17 @@ try:
     from module.models import (
         Workspace, ChartPreset, ChartSubject,
         ChartInstance, ViewLayout, Annotation, ChartConfig, Location, HouseSystem, EngineType, WorkspaceDefaults,
-        BodyDefinition, ObjectType, AspectDefinition, AstroModel
+        BodyDefinition, ObjectType, AspectDefinition, AstroModel, ModelSettings, Sign, Element,
+        ZodiacType, Ayanamsa, AspectContext, ModelOverrides, OverrideEntry, TimeSystem,
+        Diagnostic, DiagnosticSeverity, LoadedWorkspace
     )
 except ImportError:
     from models import (
         Workspace, ChartPreset, ChartSubject,
         ChartInstance, ViewLayout, Annotation, ChartConfig, Location, HouseSystem, EngineType, WorkspaceDefaults,
-        BodyDefinition, ObjectType, AspectDefinition, AstroModel
+        BodyDefinition, ObjectType, AspectDefinition, AstroModel, ModelSettings, Sign, Element,
+        ZodiacType, Ayanamsa, AspectContext, ModelOverrides, OverrideEntry, TimeSystem,
+        Diagnostic, DiagnosticSeverity, LoadedWorkspace
     )
 try:
     from module.utils import (
@@ -25,6 +29,8 @@ try:
         load_sfs_models_from_dir,
         parse_sfs_content,
         export_workspace_yaml,
+        parse_chart_config,
+        parse_chart_yaml,
     )
 except ImportError:
     from utils import (
@@ -37,12 +43,16 @@ except ImportError:
         load_sfs_models_from_dir,
         parse_sfs_content,
         export_workspace_yaml,
+        parse_chart_config,
+        parse_chart_yaml,
     )
 
 try:
     from module.services import get_active_model
+    from module.model_catalog import builtin_standard_model
 except ImportError:
     from services import get_active_model
+    from model_catalog import builtin_standard_model
 
 # ─────────────────────
 # ⚙️ CONFIGURATION
@@ -84,6 +94,141 @@ def load_workspace(workspace_path: str) -> Workspace:
     manifest = read_yaml_file(workspace_path)
 
     return _load_workspace_from_manifest(manifest, base_dir)
+
+
+def load_workspace_aggregate(workspace_path: str) -> LoadedWorkspace:
+    """Strictly load every referenced item and retain structured diagnostics."""
+    manifest_path = Path(workspace_path)
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Workspace file not found: {workspace_path}")
+    manifest = read_yaml_file(str(manifest_path))
+    if not isinstance(manifest, dict):
+        raise ValueError("Workspace manifest must be a mapping")
+    base_dir = str(manifest_path.parent)
+    diagnostics: List[Diagnostic] = []
+
+    def reference_data(reference: Any, kind: str) -> dict:
+        if isinstance(reference, str):
+            value = _load_yaml_file(base_dir, reference)
+        elif isinstance(reference, dict):
+            value = dict(reference)
+        else:
+            raise ValueError(f"{kind} reference must be a path or mapping")
+        if not isinstance(value, dict):
+            raise ValueError(f"{kind} reference must contain a mapping")
+        return value
+
+    def load_many(key: str, parser: Callable[[dict], Any]) -> List[Any]:
+        output: List[Any] = []
+        references = manifest.get(key, []) or []
+        if not isinstance(references, list):
+            diagnostics.append(Diagnostic(
+                code="workspace_reference_list_invalid",
+                severity=DiagnosticSeverity.ERROR,
+                message=f"Workspace field '{key}' must be a list",
+                path=f"workspace.{key}",
+            ))
+            return output
+        for index, reference in enumerate(references):
+            path = f"workspace.{key}[{index}]"
+            try:
+                output.append(parser(reference_data(reference, key.rstrip("s"))))
+            except Exception as exc:
+                diagnostics.append(Diagnostic(
+                    code="referenced_item_load_failed",
+                    severity=DiagnosticSeverity.ERROR,
+                    message=f"Failed to load {key.rstrip('s')} reference: {exc}",
+                    path=path,
+                ))
+        return output
+
+    subjects = load_many(
+        "subjects",
+        lambda raw: parse_chart_yaml({
+            "id": raw.get("id") or raw.get("name") or "subject",
+            "subject": raw,
+            "config": {},
+        }).subject,
+    )
+    charts = load_many("charts", parse_chart_yaml)
+    chart_presets = load_many(
+        "chart_presets",
+        lambda raw: ChartPreset(
+            name=str(raw.get("name") or ""),
+            config=parse_chart_config(raw.get("config")),
+        ),
+    )
+    layouts = load_many("layouts", lambda raw: ViewLayout(**raw))
+
+    annotations: List[Annotation] = []
+    for index, reference in enumerate(manifest.get("annotations", []) or []):
+        try:
+            if isinstance(reference, str):
+                full_path = resolve_under_base(base_dir, reference)
+                annotations.append(Annotation(
+                    title=Path(reference).stem,
+                    content=Path(full_path).read_text(encoding="utf-8"),
+                    created=None,
+                    author="unknown",
+                ))
+            elif isinstance(reference, dict):
+                annotations.append(Annotation(**reference))
+            else:
+                raise ValueError("annotation reference must be a path or mapping")
+        except Exception as exc:
+            diagnostics.append(Diagnostic(
+                code="referenced_item_load_failed",
+                severity=DiagnosticSeverity.ERROR,
+                message=f"Failed to load annotation reference: {exc}",
+                path=f"workspace.annotations[{index}]",
+            ))
+
+    workspace = Workspace(
+        owner=str(manifest.get("owner") or ""),
+        active_model=manifest.get("active_model"),
+        chart_presets=chart_presets,
+        subjects=subjects,
+        charts=charts,
+        layouts=layouts,
+        annotations=annotations,
+        models=_parse_models(manifest.get("models")),
+        model_overrides=_parse_model_overrides(manifest.get("model_overrides")),
+        aspects=list(manifest.get("aspects", []) or []),
+        bodies=list(manifest.get("bodies", []) or []),
+        default=_parse_workspace_defaults(manifest),
+    )
+
+    try:
+        from module.resolution import current_model_report
+    except ImportError:
+        from resolution import current_model_report
+    diagnostics.extend(current_model_report(workspace).diagnostics)
+    for index, subject in enumerate(subjects):
+        if subject.event_time is None:
+            diagnostics.append(Diagnostic(
+                code="subject_event_time_missing",
+                severity=DiagnosticSeverity.ERROR,
+                message=f"Subject '{subject.id}' has no valid event_time",
+                path=f"workspace.subjects[{index}].event_time",
+            ))
+    for chart in charts:
+        diagnostics.extend(current_model_report(workspace, chart.config).diagnostics)
+        if chart.subject.event_time is None:
+            diagnostics.append(Diagnostic(
+                code="subject_event_time_missing",
+                severity=DiagnosticSeverity.ERROR,
+                message=f"Subject '{chart.subject.id}' has no valid event_time",
+                path=f"workspace.charts.{chart.id}.subject.event_time",
+            ))
+
+    unique: Dict[Tuple[str, str, Optional[str]], Diagnostic] = {}
+    for diagnostic in diagnostics:
+        unique[(diagnostic.code, diagnostic.message, diagnostic.path)] = diagnostic
+    return LoadedWorkspace(
+        manifest=dict(manifest),
+        workspace=workspace,
+        diagnostics=list(unique.values()),
+    )
 
 
 def save_workspace_flat(workspace: Workspace, path: str, format: str = "yaml") -> None:
@@ -137,6 +282,130 @@ def _safe_engine(val: Any) -> Optional[EngineType]:
         return getattr(EngineType, s.upper(), None)
     except Exception:
         return None
+
+
+def _safe_enum(value: Any, enum_type: type, default: Any = None) -> Any:
+    if value is None or isinstance(value, enum_type):
+        return value if value is not None else default
+    try:
+        return enum_type(value)
+    except Exception:
+        try:
+            return enum_type[str(value).strip().upper()]
+        except Exception:
+            return default
+
+
+def _parse_model(raw: dict, fallback_name: str) -> AstroModel:
+    body_definitions = []
+    for body in raw.get("body_definitions", []) or []:
+        if not isinstance(body, dict):
+            continue
+        body_definitions.append(BodyDefinition(
+            id=str(body.get("id", "")),
+            glyph=str(body.get("glyph", "")),
+            formula=str(body.get("formula", "")),
+            element=_safe_enum(body.get("element"), Element),
+            avg_speed=float(body.get("avg_speed", 0.0) or 0.0),
+            max_orb=float(body.get("max_orb", 0.0) or 0.0),
+            i18n=dict(body.get("i18n", {}) or {}),
+            object_type=_safe_enum(body.get("object_type"), ObjectType),
+            computation_map=dict(body.get("computation_map", {}) or {}),
+            requires_location=bool(body.get("requires_location", False)),
+            requires_house_system=bool(body.get("requires_house_system", False)),
+        ))
+
+    aspect_definitions = []
+    for aspect in raw.get("aspect_definitions", []) or []:
+        if not isinstance(aspect, dict):
+            continue
+        contexts = aspect.get("valid_contexts")
+        aspect_definitions.append(AspectDefinition(
+            id=str(aspect.get("id", "")),
+            glyph=str(aspect.get("glyph", "")),
+            angle=float(aspect.get("angle", 0.0) or 0.0),
+            default_orb=float(aspect.get("default_orb", 0.0) or 0.0),
+            i18n=dict(aspect.get("i18n", {}) or {}),
+            color=aspect.get("color"),
+            importance=aspect.get("importance"),
+            line_style=aspect.get("line_style"),
+            line_width=aspect.get("line_width"),
+            show_label=aspect.get("show_label"),
+            valid_contexts=(
+                [_safe_enum(value, AspectContext) for value in contexts]
+                if contexts is not None else None
+            ),
+        ))
+
+    signs = []
+    for sign in raw.get("signs", []) or []:
+        if not isinstance(sign, dict):
+            continue
+        signs.append(Sign(
+            name=str(sign.get("name", "")),
+            glyph=str(sign.get("glyph", "")),
+            abbreviation=str(sign.get("abbreviation", "")),
+            element=_safe_enum(sign.get("element"), Element, Element.FIRE),
+            i18n=dict(sign.get("i18n", {}) or {}),
+        ))
+
+    settings_raw = raw.get("settings")
+    settings = None
+    if isinstance(settings_raw, dict):
+        settings = ModelSettings(
+            default_house_system=_safe_enum(
+                settings_raw.get("default_house_system"), HouseSystem
+            ),
+            default_aspects=list(settings_raw.get("default_aspects", []) or []),
+            default_bodies=list(settings_raw.get("default_bodies", []) or []),
+            standard_orb=float(settings_raw.get("standard_orb", 0.0) or 0.0),
+            default_transit_aspects=settings_raw.get("default_transit_aspects"),
+            default_direction_aspects=settings_raw.get("default_direction_aspects"),
+            default_transit_bodies=settings_raw.get("default_transit_bodies"),
+            default_direction_bodies=settings_raw.get("default_direction_bodies"),
+            degrees_in_circle=float(settings_raw.get("degrees_in_circle", 360.0)),
+            obliquity_j2000=float(settings_raw.get("obliquity_j2000", 23.4392911)),
+            coordinate_tolerance=float(settings_raw.get("coordinate_tolerance", 0.0001)),
+        )
+
+    return AstroModel(
+        name=str(raw.get("name") or fallback_name),
+        body_definitions=body_definitions,
+        aspect_definitions=aspect_definitions,
+        signs=signs,
+        settings=settings,
+        engine=_safe_engine(raw.get("engine")),
+        zodiac_type=_safe_enum(raw.get("zodiac_type"), ZodiacType),
+        ayanamsa=_safe_enum(raw.get("ayanamsa"), Ayanamsa),
+    )
+
+
+def _parse_models(raw_models: Any) -> Dict[str, AstroModel]:
+    if not isinstance(raw_models, dict):
+        return {}
+    return {
+        str(name): _parse_model(raw, str(name))
+        for name, raw in raw_models.items()
+        if isinstance(raw, dict)
+    }
+
+
+def _parse_model_overrides(raw: Any) -> Optional[ModelOverrides]:
+    if not isinstance(raw, dict):
+        return None
+
+    def entries(name: str) -> List[OverrideEntry]:
+        return [
+            OverrideEntry(**entry)
+            for entry in raw.get(name, []) or []
+            if isinstance(entry, dict)
+        ]
+
+    return ModelOverrides(
+        points=entries("points"),
+        aspects=entries("aspects"),
+        override_orbs=dict(raw.get("override_orbs", {}) or {}),
+    )
 
 
 def _load_yaml_file(base_dir: str, path: str) -> dict:
@@ -202,7 +471,7 @@ def _load_chart_presets(base_dir: str, manifest: dict) -> List[ChartPreset]:
                 continue
             cfg = data.get("config")
             if isinstance(cfg, dict):
-                data["config"] = ChartConfig(**cfg)
+                data["config"] = parse_chart_config(cfg)
             chart_presets.append(ChartPreset(**data))
         except Exception:
             continue
@@ -225,15 +494,7 @@ def _load_charts(base_dir: str, manifest: dict) -> List[ChartInstance]:
             data = _load_yaml_file(base_dir, p) if isinstance(p, str) else (p if isinstance(p, dict) else None)
             if not isinstance(data, dict):
                 continue
-            subj = data.get("subject")
-            cfg = data.get("config")
-            if isinstance(subj, dict):
-                data["subject"] = ChartSubject(**subj)
-            if isinstance(cfg, dict):
-                data["config"] = ChartConfig(**cfg)
-            # Ignore computed_chart on load if present (recomputable)
-            data.pop("computed_chart", None)
-            charts.append(ChartInstance(**data))
+            charts.append(parse_chart_yaml(data))
         except Exception:
             continue
     return charts
@@ -326,6 +587,8 @@ def _parse_workspace_defaults(manifest: dict) -> WorkspaceDefaults:
         default_house_system=None,  # Will be set from model if needed
         default_bodies=default_block.get('default_bodies'),
         default_aspects=default_block.get('default_aspects'),
+        default_aspect_orbs=default_block.get('default_aspect_orbs'),
+        default_aspect_colors=default_block.get('default_aspect_colors'),
         element_colors=default_block.get('element_colors'),
         radix_point_colors=default_block.get('radix_point_colors'),
         time_system=default_block.get('time_system'),
@@ -367,8 +630,10 @@ def _load_workspace_from_manifest(manifest: dict, base_dir: str) -> Workspace:
         charts=charts,
         layouts=layouts,
         annotations=annotations,
-        model_overrides=None,
+        models=_parse_models(manifest.get("models")),
+        model_overrides=_parse_model_overrides(manifest.get("model_overrides")),
         aspects=aspects or [],
+        bodies=list(manifest.get("bodies", []) or []),
         default=ws_defaults,
     )
     return ws
@@ -383,98 +648,11 @@ def _load_workspace_from_manifest(manifest: dict, base_dir: str) -> Workspace:
 
 
 def get_default_observable_objects() -> Dict[str, BodyDefinition]:
-    """Get default observable object definitions.
-    
-    Returns:
-        Dictionary mapping object_id -> BodyDefinition for standard objects
-        (planets, angles, lunar nodes, calculated points) that are commonly
-        available in kerykeion and can be computed.
-    """
-    defaults = {}
-    
-    # Standard planets (available in both JPL and kerykeion)
-    planets = [
-        ("sun", "☉", "Planet", ObjectType.PLANET, {"jpl": "sun", "swisseph": "sun"}),
-        ("moon", "☽", "Planet", ObjectType.PLANET, {"jpl": "moon", "swisseph": "moon"}),
-        ("mercury", "☿", "Planet", ObjectType.PLANET, {"jpl": "mercury", "swisseph": "mercury"}),
-        ("venus", "♀", "Planet", ObjectType.PLANET, {"jpl": "venus", "swisseph": "venus"}),
-        ("mars", "♂", "Planet", ObjectType.PLANET, {"jpl": "mars", "swisseph": "mars"}),
-        ("jupiter", "♃", "Planet", ObjectType.PLANET, {"jpl": "jupiter", "swisseph": "jupiter"}),
-        ("saturn", "♄", "Planet", ObjectType.PLANET, {"jpl": "saturn", "swisseph": "saturn"}),
-        ("uranus", "♅", "Planet", ObjectType.PLANET, {"jpl": "uranus", "swisseph": "uranus"}),
-        ("neptune", "♆", "Planet", ObjectType.PLANET, {"jpl": "neptune", "swisseph": "neptune"}),
-        ("pluto", "♇", "Planet", ObjectType.PLANET, {"jpl": "pluto", "swisseph": "pluto"}),
-    ]
-    
-    # Angles (kerykeion only, requires location)
-    angles = [
-        ("asc", "Asc", "Angle", ObjectType.ANGLE, {"swisseph": "asc"}, True, False),
-        ("mc", "MC", "Angle", ObjectType.ANGLE, {"swisseph": "mc"}, True, True),
-        ("ic", "IC", "Angle", ObjectType.ANGLE, {"swisseph": "ic"}, True, True),
-        ("desc", "Desc", "Angle", ObjectType.ANGLE, {"swisseph": "desc"}, True, False),
-    ]
-    
-    # Lunar nodes (kerykeion)
-    nodes = [
-        ("north_node", "☊", "Lunar Node", ObjectType.LUNAR_NODE, {"swisseph": "north_node"}),
-        ("south_node", "☋", "Lunar Node", ObjectType.LUNAR_NODE, {"swisseph": "south_node"}),
-    ]
-    
-    # Calculated points (kerykeion)
-    calculated = [
-        ("lilith", "⚸", "Calculated Point", ObjectType.CALCULATED_POINT, {"swisseph": "lilith"}),
-        ("chiron", "⚷", "Asteroid", ObjectType.ASTEROID, {"swisseph": "chiron"}),
-    ]
-    
-    for planet_data in planets:
-        obj_id, glyph, element, obj_type, comp_map = planet_data
-        defaults[obj_id] = BodyDefinition(
-            id=obj_id,
-            glyph=glyph,
-            formula=obj_id,
-            element=element,
-            avg_speed=0.0,
-            max_orb=0.0,
-            i18n={"Caption": obj_id.capitalize()},
-            object_type=obj_type,
-            computation_map=comp_map,
-            requires_location=False,
-            requires_house_system=False,
-        )
-    
-    for angle_data in angles:
-        obj_id, glyph, element, obj_type, comp_map, req_loc, req_house = angle_data
-        defaults[obj_id] = BodyDefinition(
-            id=obj_id,
-            glyph=glyph,
-            formula=obj_id,
-            element=element,
-            avg_speed=0.0,
-            max_orb=0.0,
-            i18n={"Caption": obj_id.upper()},
-            object_type=obj_type,
-            computation_map=comp_map,
-            requires_location=req_loc,
-            requires_house_system=req_house,
-        )
-    
-    for calc_data in nodes + calculated:
-        obj_id, glyph, element, obj_type, comp_map = calc_data
-        defaults[obj_id] = BodyDefinition(
-            id=obj_id,
-            glyph=glyph,
-            formula=obj_id,
-            element=element,
-            avg_speed=0.0,
-            max_orb=0.0,
-            i18n={"Caption": obj_id.replace("_", " ").title()},
-            object_type=obj_type,
-            computation_map=comp_map,
-            requires_location=False,
-            requires_house_system=False,
-        )
-    
-    return defaults
+    """Return the body catalog from the one canonical built-in model."""
+    return {
+        definition.id: definition
+        for definition in builtin_standard_model().body_definitions
+    }
 
 
 def get_all_observable_objects(ws: Optional['Workspace'] = None, model: Optional[AstroModel] = None) -> Dict[str, BodyDefinition]:
@@ -512,40 +690,11 @@ def get_all_observable_objects(ws: Optional['Workspace'] = None, model: Optional
 
 
 def get_default_aspect_definitions() -> Dict[str, AspectDefinition]:
-    """Get default aspect definitions.
-    
-    Returns:
-        Dictionary mapping aspect_id -> AspectDefinition for standard aspects
-        (conjunction, opposition, trine, square, sextile, etc.)
-    """
-    defaults: Dict[str, AspectDefinition] = {}
-    aspects_path = Path(__file__).with_name("default_aspects.yaml")
-    aspects_data = None
-    if aspects_path.exists():
-        try:
-            aspects_data = read_yaml_file(aspects_path)
-        except (OSError, ValueError):
-            aspects_data = None
-    if isinstance(aspects_data, list):
-        for item in aspects_data:
-            if not isinstance(item, dict):
-                continue
-            asp_id = item.get("id")
-            if not asp_id:
-                continue
-            defaults[asp_id] = AspectDefinition(
-                id=asp_id,
-                glyph=item.get("glyph", ""),
-                angle=float(item.get("angle", 0.0)),
-                default_orb=float(item.get("default_orb", 0.0)),
-                i18n={"Caption": asp_id.replace("_", " ").title()},
-                color=item.get("color"),
-                importance=int(item.get("importance", 0)),
-                line_style=item.get("line_style"),
-                line_width=float(item.get("line_width", 1.0)),
-                show_label=bool(item.get("show_label", False)),
-            )
-    return defaults
+    """Return the aspect catalog from the one canonical built-in model."""
+    return {
+        definition.id: definition
+        for definition in builtin_standard_model().aspect_definitions
+    }
 
 
 def get_all_aspect_definitions(ws: Optional['Workspace'] = None, model: Optional[AstroModel] = None) -> Dict[str, AspectDefinition]:
@@ -663,6 +812,7 @@ def init_workspace(base_dir: Union[str, Path], owner: str, active_model: str, de
             "default_house_system": None,
             "default_bodies": None,
             "default_aspects": None,
+            "default_aspect_orbs": None,
         },
         # modular refs
         "chart_presets": [],
@@ -732,6 +882,7 @@ def _build_default_block(workspace: Workspace) -> dict:
         "default_house_system": (getattr(d.default_house_system, 'value', d.default_house_system) if d.default_house_system else None),
         "default_bodies": (d.default_bodies if d.default_bodies else None),
         "default_aspects": (d.default_aspects if d.default_aspects else None),
+        "default_aspect_orbs": (d.default_aspect_orbs if getattr(d, 'default_aspect_orbs', None) else None),
     }
 
 

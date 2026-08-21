@@ -13,6 +13,15 @@ except ImportError:
 PositionResult = Dict[str, Union[float, Dict[str, float]]]
 DEGREES_IN_CIRCLE = 360.0
 
+_NORMALIZED_ASPECT_SPECS: List[tuple[str, float, float]] = [
+    ("conjunction", 0.0, 8.0),
+    ("sextile", 60.0, 6.0),
+    ("square", 90.0, 8.0),
+    ("trine", 120.0, 8.0),
+    ("quincunx", 150.0, 3.0),
+    ("opposition", 180.0, 8.0),
+]
+
 
 @dataclass
 class ChartData:
@@ -80,6 +89,159 @@ def _normalize_deg(deg: float) -> float:
     return deg % DEGREES_IN_CIRCLE
 
 
+def _shortest_arc_deg(a: float, b: float) -> float:
+    diff = abs(_normalize_deg(a) - _normalize_deg(b))
+    if diff > 180.0:
+        diff = 360.0 - diff
+    return diff
+
+
+def _extract_longitude_for_aspect_detection(value: Any) -> Optional[float]:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, dict):
+        lon = value.get("longitude")
+        if isinstance(lon, (int, float)):
+            return float(lon)
+    return None
+
+
+def compute_normalized_chart_aspects(
+    positions: Dict[str, Any],
+    aspect_orbs: Optional[Dict[str, float]] = None,
+    selected_aspects: Optional[List[str]] = None,
+    aspect_definitions: Optional[List[Any]] = None,
+) -> List[Dict[str, Any]]:
+    """Compute chart aspects from resolved model definitions and effective orbs."""
+    normalized_positions: Dict[str, float] = {}
+    for key, value in positions.items():
+        lon = _extract_longitude_for_aspect_detection(value)
+        if lon is not None:
+            normalized_positions[key] = lon
+
+    selected = None
+    if selected_aspects is not None:
+        selected = {str(item).strip().lower() for item in selected_aspects}
+
+    specs: List[tuple[str, float, float]] = []
+    orb_map = aspect_orbs or {}
+    definitions = (
+        [
+            (
+                str(definition.id),
+                float(definition.angle),
+                float(definition.default_orb),
+            )
+            for definition in aspect_definitions
+        ]
+        if aspect_definitions is not None
+        else _NORMALIZED_ASPECT_SPECS
+    )
+    for aspect_id, angle, default_orb in definitions:
+        if selected is not None and aspect_id not in selected:
+            continue
+        orb = orb_map.get(aspect_id, default_orb)
+        try:
+            orb_value = max(0.0, float(orb))
+        except (TypeError, ValueError):
+            orb_value = default_orb
+        specs.append((aspect_id, angle, orb_value))
+
+    ids = sorted(normalized_positions.keys())
+    output: List[Dict[str, Any]] = []
+    for index, source_id in enumerate(ids):
+        source_lon = normalized_positions[source_id]
+        for target_id in ids[index + 1:]:
+            target_lon = normalized_positions[target_id]
+            angle = _shortest_arc_deg(source_lon, target_lon)
+            for aspect_id, exact_angle, allowed_orb in specs:
+                normalized_exact = 360.0 - exact_angle if exact_angle > 180.0 else exact_angle
+                orb = abs(angle - normalized_exact)
+                if orb <= allowed_orb:
+                    output.append(
+                        {
+                            "from": source_id,
+                            "to": target_id,
+                            "type": aspect_id,
+                            "angle": angle,
+                            "orb": orb,
+                            "exact_angle": exact_angle,
+                            "applying": False,
+                            "separating": False,
+                        }
+                    )
+                    break
+    return output
+
+
+def compute_normalized_cross_aspects(
+    source_positions: Dict[str, Any],
+    target_positions: Dict[str, Any],
+    aspect_orbs: Optional[Dict[str, float]] = None,
+    selected_aspects: Optional[List[str]] = None,
+    aspect_definitions: Optional[List[Any]] = None,
+) -> List[Dict[str, Any]]:
+    """Compute aspects between two charts using the resolved model contract."""
+    source = {
+        key: longitude
+        for key, value in source_positions.items()
+        if (longitude := _extract_longitude_for_aspect_detection(value)) is not None
+    }
+    target = {
+        key: longitude
+        for key, value in target_positions.items()
+        if (longitude := _extract_longitude_for_aspect_detection(value)) is not None
+    }
+    selected = (
+        {str(item).strip().lower() for item in selected_aspects}
+        if selected_aspects is not None
+        else None
+    )
+    definitions = (
+        [
+            (str(item.id), float(item.angle), float(item.default_orb))
+            for item in aspect_definitions
+        ]
+        if aspect_definitions is not None
+        else _NORMALIZED_ASPECT_SPECS
+    )
+    orb_map = aspect_orbs or {}
+    specs = []
+    for aspect_id, exact_angle, default_orb in definitions:
+        if selected is not None and aspect_id not in selected:
+            continue
+        try:
+            allowed_orb = max(0.0, float(orb_map.get(aspect_id, default_orb)))
+        except (TypeError, ValueError):
+            allowed_orb = default_orb
+        specs.append((aspect_id, exact_angle, allowed_orb))
+
+    output: List[Dict[str, Any]] = []
+    for source_id in sorted(source):
+        for target_id in sorted(target):
+            angle = _shortest_arc_deg(source[source_id], target[target_id])
+            for aspect_id, exact_angle, allowed_orb in specs:
+                normalized_exact = (
+                    360.0 - exact_angle if exact_angle > 180.0 else exact_angle
+                )
+                orb = abs(angle - normalized_exact)
+                if orb <= allowed_orb:
+                    output.append(
+                        {
+                            "from": source_id,
+                            "to": target_id,
+                            "type": aspect_id,
+                            "angle": angle,
+                            "orb": orb,
+                            "exact_angle": exact_angle,
+                            "applying": False,
+                            "separating": False,
+                        }
+                    )
+                    break
+    return output
+
+
 def _julian_day_from_unix(unix_secs: float) -> float:
     return 2440587.5 + unix_secs / 86400.0
 
@@ -132,7 +294,7 @@ def _ascendant_lon(ramc_deg: float, obliquity_deg: float, geo_lat_deg: float) ->
     y = -math.cos(ramc)
     x = math.sin(eps) * math.tan(lat) + math.cos(eps) * math.sin(ramc)
     asc = math.degrees(math.atan2(y, x))
-    return _normalize_deg(asc)
+    return _normalize_deg(asc + 180.0)
 
 
 def _compute_axes(jd_ut: float, geo_lat_deg: float, geo_lon_deg: float) -> Dict[str, float]:
@@ -153,55 +315,74 @@ def _whole_sign_cusps(asc_lon_deg: float) -> List[float]:
     return [_normalize_deg(first_house_start + i * 30.0) for i in range(12)]
 
 
-def _local_ramc_from_fraction(anchor_deg: float, fraction: float, sa_deg: float) -> float:
-    return _normalize_deg(anchor_deg + fraction * sa_deg)
+def _angular_delta_deg_shortest(from_deg: float, to_deg: float) -> float:
+    delta = _normalize_deg(to_deg) - _normalize_deg(from_deg)
+    if delta > 180.0:
+        delta -= 360.0
+    elif delta < -180.0:
+        delta += 360.0
+    return delta
 
 
-def _placidus_cusp(anchor_deg: float, fraction: float, eps_rad: float, lat_rad: float) -> float:
-    lon = anchor_deg
-    for _ in range(20):
-        lon_rad = math.radians(lon)
-        dec = math.asin(math.sin(eps_rad) * math.sin(lon_rad))
-        cos_dec = math.cos(dec)
-        if abs(cos_dec) < 1e-10:
-            break
-        cos_sa = -(math.tan(lat_rad) * math.tan(dec))
-        if abs(cos_sa) > 1.0:
-            break
-        sa = math.degrees(math.acos(cos_sa))
-        ramc_cusp = _local_ramc_from_fraction(anchor_deg, fraction, sa)
-        ramc_rad = math.radians(ramc_cusp)
-        new_lon = math.degrees(
-            math.atan2(math.sin(ramc_rad), math.cos(ramc_rad) * math.cos(eps_rad))
+def _placidus_cusp(
+    rectasc_deg: float,
+    initial_pole_height_deg: float,
+    divisor: float,
+    obliquity_deg: float,
+    lat_rad: float,
+) -> float:
+    cusp = _great_circle_ecliptic_intersection(rectasc_deg, initial_pole_height_deg, obliquity_deg)
+    tan_lat = math.tan(lat_rad)
+
+    for _ in range(100):
+        decl_tan = math.tan(
+            math.asin(math.sin(math.radians(obliquity_deg)) * math.sin(math.radians(cusp)))
         )
-        new_lon = _normalize_deg(new_lon)
-        if abs(new_lon - lon) < 1e-6:
-            return new_lon
-        lon = new_lon
-    return lon
+        if abs(decl_tan) < 1e-12:
+            return rectasc_deg
+
+        asin_arg = max(-1.0, min(1.0, tan_lat * decl_tan))
+        pole_height = math.degrees(
+            math.atan(math.sin(math.asin(asin_arg) / divisor) / decl_tan)
+        )
+        next_cusp = _great_circle_ecliptic_intersection(rectasc_deg, pole_height, obliquity_deg)
+
+        if abs(_angular_delta_deg_shortest(cusp, next_cusp)) < 1.0 / 360_000.0:
+            return next_cusp
+        cusp = next_cusp
+
+    return cusp
 
 
 def _placidus_cusps(
     jd_ut: float,
     geo_lat_deg: float,
+    geo_lon_deg: float,
     asc_lon_deg: float,
     mc_lon_deg: float,
 ) -> tuple[List[float], List[str]]:
-    if abs(geo_lat_deg) > 66.0:
+    eps_deg = _mean_obliquity_deg(jd_ut)
+    if abs(geo_lat_deg) >= 90.0 - eps_deg:
         return (
             _whole_sign_cusps(asc_lon_deg),
             ["placidus_undefined_at_latitude; whole_sign_used"],
         )
 
-    eps = math.radians(_mean_obliquity_deg(jd_ut))
+    ramc = _local_sidereal_time_deg(jd_ut, geo_lon_deg)
     lat = math.radians(geo_lat_deg)
     desc = _normalize_deg(asc_lon_deg + 180.0)
     ic = _normalize_deg(mc_lon_deg + 180.0)
 
-    h11 = _placidus_cusp(mc_lon_deg, 1.0 / 3.0, eps, lat)
-    h12 = _placidus_cusp(mc_lon_deg, 2.0 / 3.0, eps, lat)
-    h2 = _placidus_cusp(ic, 2.0 / 3.0, eps, lat)
-    h3 = _placidus_cusp(ic, 1.0 / 3.0, eps, lat)
+    tan_eps = math.tan(math.radians(eps_deg))
+    a = math.degrees(math.asin(math.tan(lat) * tan_eps))
+    fh1 = math.degrees(math.atan(math.sin(math.radians(a / 3.0)) / tan_eps))
+    fh2 = math.degrees(math.atan(math.sin(math.radians(a * 2.0 / 3.0)) / tan_eps))
+
+    h11 = _placidus_cusp(_normalize_deg(ramc + 30.0), fh1, 3.0, eps_deg, lat)
+    h12 = _placidus_cusp(_normalize_deg(ramc + 60.0), fh2, 1.5, eps_deg, lat)
+    h2 = _placidus_cusp(_normalize_deg(ramc + 120.0), fh2, 1.5, eps_deg, lat)
+    h3 = _placidus_cusp(_normalize_deg(ramc + 150.0), fh1, 3.0, eps_deg, lat)
+
     h5 = _normalize_deg(h11 + 180.0)
     h6 = _normalize_deg(h12 + 180.0)
     h8 = _normalize_deg(h2 + 180.0)
@@ -221,6 +402,93 @@ def _placidus_cusps(
         h11,
         h12,
     ], [])
+
+
+def _great_circle_ecliptic_intersection_q1(
+    x_deg: float, pole_height_deg: float, obliquity_deg: float
+) -> float:
+    x = math.radians(x_deg)
+    pole_height = math.radians(pole_height_deg)
+    eps = math.radians(obliquity_deg)
+    denominator = -math.tan(pole_height) * math.sin(eps) + math.cos(eps) * math.cos(x)
+    angle = math.degrees(math.atan2(math.sin(x), denominator))
+    return angle + 180.0 if angle < 0.0 else angle
+
+
+def _great_circle_ecliptic_intersection(
+    equator_crossing_deg: float, pole_height_deg: float, obliquity_deg: float
+) -> float:
+    x = _normalize_deg(equator_crossing_deg)
+    if abs(90.0 - pole_height_deg) < 1e-10:
+        return 180.0
+    if abs(90.0 + pole_height_deg) < 1e-10:
+        return 0.0
+
+    quadrant = math.floor(x / 90.0) + 1
+    if quadrant == 1:
+        projected = _great_circle_ecliptic_intersection_q1(x, pole_height_deg, obliquity_deg)
+    elif quadrant == 2:
+        projected = 180.0 - _great_circle_ecliptic_intersection_q1(
+            180.0 - x, -pole_height_deg, obliquity_deg
+        )
+    elif quadrant == 3:
+        projected = 180.0 + _great_circle_ecliptic_intersection_q1(
+            x - 180.0, -pole_height_deg, obliquity_deg
+        )
+    else:
+        projected = 360.0 - _great_circle_ecliptic_intersection_q1(
+            360.0 - x, pole_height_deg, obliquity_deg
+        )
+    return _normalize_deg(projected)
+
+
+def _campanus_cusps(
+    jd_ut: float,
+    geo_lat_deg: float,
+    geo_lon_deg: float,
+    asc_lon_deg: float,
+    mc_lon_deg: float,
+) -> tuple[List[float], List[str]]:
+    eps = _mean_obliquity_deg(jd_ut)
+    ramc = _local_sidereal_time_deg(jd_ut, geo_lon_deg)
+
+    lat = math.radians(geo_lat_deg)
+    sin_lat = math.sin(lat)
+    cos_lat = math.cos(lat)
+    if abs(cos_lat) < 1e-12:
+        return (
+            _whole_sign_cusps(asc_lon_deg),
+            ["campanus_undefined_at_geographic_pole; whole_sign_used"],
+        )
+
+    sqrt3 = math.sqrt(3.0)
+    fh1 = math.degrees(math.asin(sin_lat * 0.5))
+    fh2 = math.degrees(math.asin(sin_lat * sqrt3 * 0.5))
+    xh1 = math.degrees(math.atan(sqrt3 / cos_lat))
+    xh2 = math.degrees(math.atan((1.0 / sqrt3) / cos_lat))
+
+    h11 = _great_circle_ecliptic_intersection(ramc + 90.0 - xh1, fh1, eps)
+    h12 = _great_circle_ecliptic_intersection(ramc + 90.0 - xh2, fh2, eps)
+    h2 = _great_circle_ecliptic_intersection(ramc + 90.0 + xh2, fh2, eps)
+    h3 = _great_circle_ecliptic_intersection(ramc + 90.0 + xh1, fh1, eps)
+
+    desc = _normalize_deg(asc_lon_deg + 180.0)
+    ic = _normalize_deg(mc_lon_deg + 180.0)
+    cusps = [
+        asc_lon_deg,
+        h2,
+        h3,
+        ic,
+        _normalize_deg(h11 + 180.0),
+        _normalize_deg(h12 + 180.0),
+        desc,
+        _normalize_deg(h2 + 180.0),
+        _normalize_deg(h3 + 180.0),
+        mc_lon_deg,
+        h11,
+        h12,
+    ]
+    return cusps, []
 
 
 def _chart_axes_and_house_cusps(chart: ChartInstance) -> tuple[Dict[str, float], List[float], List[str]]:
@@ -245,12 +513,25 @@ def _chart_axes_and_house_cusps(chart: ChartInstance) -> tuple[Dict[str, float],
         house_cusps, warnings = _placidus_cusps(
             jd_ut,
             float(latitude),
+            float(longitude),
             axes["asc"],
             axes["mc"],
         )
-    else:
+    elif house_system_value == "Campanus":
+        house_cusps, warnings = _campanus_cusps(
+            jd_ut,
+            float(latitude),
+            float(longitude),
+            axes["asc"],
+            axes["mc"],
+        )
+    elif house_system_value in (None, "Whole Sign"):
         house_cusps = _whole_sign_cusps(axes["asc"])
         warnings = []
+    else:
+        house_cusps = _whole_sign_cusps(axes["asc"])
+        name = house_system_value.lower()
+        warnings = [f"house_system_{name}_not_yet_supported: whole_sign_used"]
 
     return axes, house_cusps, warnings
 

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict
+from typing import Any, Optional, List, Dict
 from enum import Enum
 
 
@@ -110,6 +110,19 @@ class TimeSystem(str, Enum):
     ISO_WEEK_DATE = "iso_week_date"  # ISO week format (YYYY-Www-d)
     COMPACT_DATE = "compact_date"  # Compact format (YYYYMMDD)
 
+class SettingSource(str, Enum):
+    APPLICATION = "application"
+    MODEL = "model"
+    WORKSPACE = "workspace"
+    PRESET = "preset"
+    CHART = "chart"
+    OPERATION = "operation"
+
+
+class DiagnosticSeverity(str, Enum):
+    ERROR = "error"
+    WARNING = "warning"
+
 
 # ─── VALUE OBJECTS ───
 
@@ -133,19 +146,20 @@ class DateRange:
 class ChartSubject:
     id: str
     name: str
-    event_time: datetime
+    event_time: Optional[datetime]
     location: Location
 
 
 @dataclass
 class ChartConfig:
     mode: ChartMode
-    house_system: HouseSystem
+    house_system: Optional[HouseSystem]
     zodiac_type: ZodiacType
     included_points: List[str]
     aspect_orbs: Dict[str, float]
     display_style: str
     color_theme: str
+    selected_aspects: Optional[List[str]] = None
     override_ephemeris: Optional[str] = None
     model: Optional[str] = None
     engine: Optional[EngineType] = None
@@ -198,6 +212,41 @@ class Horoscope:
     bodies: List[CelestialBody]
     houses: List[House]
     aspects: List[Aspect]
+
+
+@dataclass(frozen=True)
+class ComputedAspect:
+    from_id: str
+    to_id: str
+    type: str
+    angle: float
+    orb: float
+    exact_angle: float
+    applying: bool = False
+    separating: bool = False
+
+
+@dataclass(frozen=True)
+class ChartAxes:
+    asc: float
+    desc: float
+    mc: float
+    ic: float
+
+
+@dataclass
+class ChartCalculation:
+    positions: Dict[str, Any]
+    motion: Dict[str, Any]
+    aspects: List[Dict[str, Any]]
+    axes: Dict[str, float]
+    house_cusps: List[float]
+    moon_details: Optional[Dict[str, Any]]
+    chart_id: str
+    backend_used: str
+    fallback_used: bool
+    ephemeris_source: Optional[str]
+    warnings: List[str]
 
 
 # ─── ASTROMODEL & DEFINITIONS ───
@@ -274,7 +323,7 @@ class AstroModel:
     body_definitions: List[BodyDefinition]
     aspect_definitions: List[AspectDefinition]
     signs: List[Sign]
-    settings: ModelSettings
+    settings: Optional[ModelSettings]
     engine: Optional[EngineType] = None
     zodiac_type: Optional[ZodiacType] = None
     ayanamsa: Optional[Ayanamsa] = None
@@ -403,6 +452,8 @@ class WorkspaceDefaults:
     default_house_system: Optional[HouseSystem] = None
     default_bodies: Optional[List[str]] = None  # Default celestial bodies to compute
     default_aspects: Optional[List[str]] = None  # Default aspects to compute
+    default_aspect_orbs: Optional[Dict[str, float]] = None
+    default_aspect_colors: Optional[Dict[str, str]] = None
 
     # Ephemeris settings
     ephemeris_engine: Optional[EngineType] = None
@@ -488,3 +539,134 @@ class Workspace:
     # Loaded model catalogs available in this workspace, keyed by name
     models: Dict[str, AstroModel] = field(default_factory=dict)
     model_overrides: Optional[ModelOverrides] = None
+
+
+@dataclass(frozen=True)
+class WorkspaceEntityCounts:
+    subjects: int
+    charts: int
+    chart_presets: int
+    layouts: int
+    annotations: int
+
+
+@dataclass
+class WorkspaceValidationReport:
+    owner: str
+    active_model: Optional[str]
+    valid: bool
+    counts: WorkspaceEntityCounts
+    diagnostics: List["Diagnostic"]
+
+
+@dataclass
+class LoadedWorkspace:
+    manifest: Dict[str, Any]
+    workspace: Workspace
+    diagnostics: List["Diagnostic"]
+
+    def validation_report(self) -> WorkspaceValidationReport:
+        counts = WorkspaceEntityCounts(
+            subjects=len(self.workspace.subjects),
+            charts=len(self.workspace.charts),
+            chart_presets=len(self.workspace.chart_presets),
+            layouts=len(self.workspace.layouts),
+            annotations=len(self.workspace.annotations),
+        )
+        return WorkspaceValidationReport(
+            owner=self.workspace.owner,
+            active_model=self.workspace.active_model,
+            valid=not any(
+                diagnostic.severity == DiagnosticSeverity.ERROR
+                for diagnostic in self.diagnostics
+            ),
+            counts=counts,
+            diagnostics=list(self.diagnostics),
+        )
+
+
+@dataclass(frozen=True)
+class Diagnostic:
+    code: str
+    severity: DiagnosticSeverity
+    message: str
+    path: Optional[str] = None
+
+
+@dataclass
+class SettingsLayer:
+    house_system: Optional[HouseSystem] = None
+    bodies: Optional[List[str]] = None
+    aspects: Optional[List[str]] = None
+    aspect_orbs: Dict[str, float] = field(default_factory=dict)
+    engine: Optional[EngineType] = None
+    zodiac_type: Optional[ZodiacType] = None
+    ayanamsa: Optional[Ayanamsa] = None
+    time_system: Optional[TimeSystem] = None
+
+
+@dataclass
+class EffectiveSettingsSources:
+    default_house_system: Optional[SettingSource]
+    default_bodies: SettingSource
+    default_aspects: SettingSource
+    aspect_orbs: Dict[str, SettingSource]
+    standard_orb: SettingSource
+    engine: Optional[SettingSource]
+    zodiac_type: Optional[SettingSource]
+    ayanamsa: Optional[SettingSource]
+    time_system: Optional[SettingSource]
+    computational_constants: SettingSource
+
+
+@dataclass
+class EffectiveModelSettings:
+    default_house_system: Optional[HouseSystem]
+    default_bodies: List[str]
+    default_aspects: List[str]
+    default_transit_aspects: Optional[List[str]]
+    default_direction_aspects: Optional[List[str]]
+    default_transit_bodies: Optional[List[str]]
+    default_direction_bodies: Optional[List[str]]
+    aspect_orbs: Dict[str, float]
+    standard_orb: float
+    engine: Optional[EngineType]
+    zodiac_type: Optional[ZodiacType]
+    ayanamsa: Optional[Ayanamsa]
+    time_system: Optional[TimeSystem]
+    degrees_in_circle: float
+    obliquity_j2000: float
+    coordinate_tolerance: float
+    sources: EffectiveSettingsSources
+
+
+@dataclass
+class CurrentModelReport:
+    requested_model: Optional[str]
+    resolved_model: str
+    source: str
+    available_models: List[str]
+    model: AstroModel
+    effective_settings: EffectiveModelSettings
+    model_overrides: Optional[ModelOverrides]
+    warnings: List[str]
+    diagnostics: List[Diagnostic]
+
+
+@dataclass
+class TransitSeriesStep:
+    datetime: str
+    transit_positions: Dict[str, Any]
+    aspects: List[Dict[str, Any]]
+
+
+@dataclass
+class TransitSeriesCalculation:
+    source_chart_id: str
+    time_range: Dict[str, str]
+    time_step: str
+    results: List[TransitSeriesStep]
+    backend_used: str
+    fallback_used: bool
+    ephemeris_source: Optional[str]
+    warnings: List[str]

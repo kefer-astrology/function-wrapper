@@ -1,7 +1,7 @@
 from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
-from datetime import datetime
+from datetime import datetime, timezone
 import math
 import sys
 import logging
@@ -76,6 +76,96 @@ except ImportError:
 DEGREES_IN_CIRCLE = 360.0  # Full circle in degrees
 OBLIQUITY_J2000_DEGREES = 23.4392911  # J2000.0 obliquity of the ecliptic in degrees
 COORDINATE_TOLERANCE = 0.0001  # Coordinate comparison tolerance
+
+# Lunar nodes computed natively on the JPL/Skyfield path (do not merge from Kerykeion).
+_JPL_NATIVE_LUNAR_NODES = frozenset(
+    {
+        "north_node",
+        "south_node",
+        "mean_node",
+        "mean_south_node",
+        "true_north_node",
+        "true_south_node",
+        "true_node",
+    }
+)
+
+
+def _jd_ut_from_datetime_utc(dt: datetime) -> float:
+    """Julian day (UT) consistent with the Rust `julian_day_from_unix` convention."""
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(timezone.utc)
+    unix = dt.timestamp()
+    return 2440587.5 + unix / 86400.0
+
+
+def _mean_lunar_node_lon_deg(jd_ut: float) -> float:
+    """Mean ascending node longitude (degrees, [0,360)) — IAU polynomial, matches Rust `mean_node_lon`."""
+    t = (jd_ut - 2451545.0) / 36525.0
+    omega = (
+        125.04455501
+        - 1934.13626197 * t
+        + 0.00207581 * t * t
+        + 0.00000215 * t * t * t
+    ) % DEGREES_IN_CIRCLE
+    if omega < 0:
+        omega += DEGREES_IN_CIRCLE
+    return omega
+
+
+def _icrf_vec_to_ecliptic_xyz(x: float, y: float, z: float, obl_deg: float) -> tuple[float, float, float]:
+    obl = math.radians(obl_deg)
+    xe = x
+    ye = y * math.cos(obl) + z * math.sin(obl)
+    ze = -y * math.sin(obl) + z * math.cos(obl)
+    return xe, ye, ze
+
+
+def _ecliptic_lon_deg_from_icrf_vec(x: float, y: float, z: float, obl_deg: float) -> float:
+    xe, ye, _ = _icrf_vec_to_ecliptic_xyz(x, y, z, obl_deg)
+    lon = math.degrees(math.atan2(ye, xe)) % DEGREES_IN_CIRCLE
+    if lon < 0:
+        lon += DEGREES_IN_CIRCLE
+    return lon
+
+
+def _true_node_tropical_deg(
+    rx: float,
+    ry: float,
+    rz: float,
+    vx: float,
+    vy: float,
+    vz: float,
+    vernal_equinox_offset: float,
+) -> Optional[float]:
+    """Osculating true ascending node; tropical via J2000 obliquity + vernal offset (matches JPL planet pipeline)."""
+    hx = ry * vz - rz * vy
+    hy = rz * vx - rx * vz
+    hz = rx * vy - ry * vx
+    h_sq = hx * hx + hy * hy + hz * hz
+    if not math.isfinite(h_sq) or h_sq < 1e-50:
+        return None
+    obl = math.radians(OBLIQUITY_J2000_DEGREES)
+    kx, ky, kz = 0.0, -math.sin(obl), math.cos(obl)
+    nx = ky * hz - kz * hy
+    ny = kz * hx - kx * hz
+    nz = kx * hy - ky * hx
+    n_sq = nx * nx + ny * ny + nz * nz
+    if not math.isfinite(n_sq) or n_sq < 1e-60:
+        return None
+    nn = math.sqrt(n_sq)
+    nxs, nys, nzs = nx / nn, ny / nn, nz / nn
+    lam = _ecliptic_lon_deg_from_icrf_vec(nxs, nys, nzs, OBLIQUITY_J2000_DEGREES)
+    tropical = (lam - vernal_equinox_offset) % DEGREES_IN_CIRCLE
+    if tropical < 0:
+        tropical += DEGREES_IN_CIRCLE
+
+    _, _, mz_e = _icrf_vec_to_ecliptic_xyz(rx, ry, rz, OBLIQUITY_J2000_DEGREES)
+    _, _, vz_e = _icrf_vec_to_ecliptic_xyz(vx, vy, vz, OBLIQUITY_J2000_DEGREES)
+    ascending = mz_e * vz_e < 0.0 or (abs(mz_e) < 1e-9 and vz_e > 0.0)
+    if not ascending:
+        tropical = (tropical + 180.0) % DEGREES_IN_CIRCLE
+    return tropical
 
 
 # ─────────────────────
@@ -929,6 +1019,52 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                 if lon_deg_tropical is not None:
                     positions[planet] = lon_deg_tropical
 
+        def _wants_lunar_nodes() -> bool:
+            if not requested_objects:
+                return True
+            return any(o in _JPL_NATIVE_LUNAR_NODES for o in requested_objects)
+
+        if _wants_lunar_nodes() and not extended:
+            jd_ut = _jd_ut_from_datetime_utc(dt_aware)
+            mean_lon = _mean_lunar_node_lon_deg(jd_ut)
+            ro = requested_objects
+
+            def w(key: str) -> bool:
+                return ro is None or key in ro
+
+            true_nn: Optional[float] = None
+            try:
+                geom = (eph["moon"] - eph["earth"]).at(t)
+                r = geom.position.km
+                v = geom.velocity.km_per_s
+                true_nn = _true_node_tropical_deg(
+                    float(r[0]),
+                    float(r[1]),
+                    float(r[2]),
+                    float(v[0]),
+                    float(v[1]),
+                    float(v[2]),
+                    vernal_equinox_offset,
+                )
+            except Exception as exc:
+                logger.warning("JPL lunar node computation failed: %s", exc)
+
+            if w("north_node"):
+                positions["north_node"] = mean_lon
+            if w("mean_node"):
+                positions["mean_node"] = mean_lon
+            if w("south_node"):
+                positions["south_node"] = (mean_lon + 180.0) % DEGREES_IN_CIRCLE
+            if w("mean_south_node"):
+                positions["mean_south_node"] = (mean_lon + 180.0) % DEGREES_IN_CIRCLE
+            if true_nn is not None:
+                if w("true_north_node") or w("true_node"):
+                    positions["true_north_node"] = true_nn
+                    if w("true_node"):
+                        positions["true_node"] = true_nn
+                if w("true_south_node"):
+                    positions["true_south_node"] = (true_nn + 180.0) % DEGREES_IN_CIRCLE
+
         return positions
     else:
         # Return empty dict to maintain consistent return type
@@ -1168,6 +1304,7 @@ def compute_aspects_for_chart(
         # Try to get from chart config
         cfg = _safe_get_attr(chart, 'config')
         aspect_orbs = _safe_get_attr(cfg, 'aspect_orbs') if cfg else None
+        selected_aspects = _safe_get_attr(cfg, 'selected_aspects') if cfg else None
         
         # Get aspect definitions from workspace/model
         aspect_definitions = []
@@ -1178,6 +1315,13 @@ def compute_aspects_for_chart(
                     # Get aspect definitions from model
                     aspect_definitions = list(getattr(model, 'aspect_definitions', []) or [])
                     
+                    if selected_aspects:
+                        selected_set = {str(aspect_id).strip().lower() for aspect_id in selected_aspects}
+                        aspect_definitions = [
+                            asp_def for asp_def in aspect_definitions
+                            if getattr(asp_def, 'id', '').strip().lower() in selected_set
+                        ]
+
                     # Apply orb overrides from chart config
                     if aspect_orbs:
                         # Create new aspect definitions with overridden orbs
@@ -1223,6 +1367,13 @@ def compute_aspects_for_chart(
                     AspectDefinition(id='sextile', glyph='⚹', angle=60.0, default_orb=6.0, i18n={}),
                 ]
     
+    if aspect_definitions and selected_aspects:
+        selected_set = {str(aspect_id).strip().lower() for aspect_id in selected_aspects}
+        aspect_definitions = [
+            asp_def for asp_def in aspect_definitions
+            if getattr(asp_def, 'id', '').strip().lower() in selected_set
+        ]
+
     # Compute aspects
     aspects = compute_aspects(bodies, aspect_definitions)
     
@@ -1433,8 +1584,12 @@ def resolve_effective_defaults(ws: 'Workspace', model: Optional[AstroModel]) -> 
     out['zodiac_type'] = getattr(model, 'zodiac_type', None)
     out['ayanamsa'] = getattr(model, 'ayanamsa', None)
 
-    # Aspect orbs map from model
-    out['aspect_orbs'] = _build_aspect_orbs(model)
+    # Aspect orbs map from model, overridden by workspace defaults when present
+    aspect_orbs = _build_aspect_orbs(model)
+    ws_aspect_orbs = getattr(d, 'default_aspect_orbs', None) if d else None
+    if ws_aspect_orbs:
+        aspect_orbs.update(dict(ws_aspect_orbs))
+    out['aspect_orbs'] = aspect_orbs
     return out
 
 
@@ -1471,7 +1626,11 @@ def compute_positions(engine: Optional[EngineType], name: str, dt_str: str, loc_
             non_planet_objects = []
             if requested_objects:
                 jpl_planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
-                non_planet_objects = [obj for obj in requested_objects if obj not in jpl_planets]
+                non_planet_objects = [
+                    obj
+                    for obj in requested_objects
+                    if obj not in jpl_planets and obj not in _JPL_NATIVE_LUNAR_NODES
+                ]
             
             if non_planet_objects:
                 # Get additional objects from kerykeion
@@ -1566,7 +1725,7 @@ def compute_swiss_positions_for_chart(
     cfg = _safe_get_attr(chart, 'config')
 
     requested_objects = _safe_get_attr(cfg, 'observable_objects') if cfg else None
-    if not requested_objects and ws:
+    if requested_objects is None and ws:
         try:
             model = get_active_model(ws)
             if model:
@@ -1597,7 +1756,7 @@ def compute_jpl_positions_for_chart(
     cfg = _safe_get_attr(chart, 'config')
 
     requested_objects = _safe_get_attr(cfg, 'observable_objects') if cfg else None
-    if not requested_objects and ws:
+    if requested_objects is None and ws:
         try:
             model = get_active_model(ws)
             if model:
@@ -1620,7 +1779,11 @@ def compute_jpl_positions_for_chart(
 
     if requested_objects:
         jpl_planets = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
-        non_planet_objects = [obj for obj in requested_objects if obj not in jpl_planets]
+        non_planet_objects = [
+            obj
+            for obj in requested_objects
+            if obj not in jpl_planets and obj not in _JPL_NATIVE_LUNAR_NODES
+        ]
 
         if non_planet_objects:
             try:
@@ -1970,7 +2133,7 @@ def build_radix_figure_for_chart(chart: ChartInstance, engine_override: Optional
         # Get observable objects: prefer chart config, then workspace defaults, then model defaults
         cfg = _safe_get_attr(chart, 'config')
         requested_objects = _safe_get_attr(cfg, 'observable_objects') if cfg else None
-        if not requested_objects and ws:
+        if requested_objects is None and ws:
             try:
                 model = get_active_model(ws)
                 if model:

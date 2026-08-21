@@ -4,12 +4,14 @@ from fastapi import FastAPI, HTTPException, Query
 
 try:
     from module.cli import (
-        _build_chart_response,
+        _build_chart_response_from_chart_data,
         cmd_compute_chart,
+        cmd_compute_chart_from_data,
         cmd_compute_transit_series,
         cmd_export_parquet,
         cmd_get_chart,
         cmd_get_workspace_settings,
+        cmd_validate_workspace,
         cmd_list_charts,
         cmd_sync_workspace,
     )
@@ -22,15 +24,18 @@ try:
         SyncWorkspaceRequest,
     )
     from module.utils import parse_chart_yaml
-    from module.services import compute_positions_for_chart, compute_aspects_for_chart
+    from module.services import compute_chart_data_for_chart
+    from module.astronomy import compute_normalized_chart_aspects
 except ImportError:
     from cli import (
-        _build_chart_response,
+        _build_chart_response_from_chart_data,
         cmd_compute_chart,
+        cmd_compute_chart_from_data,
         cmd_compute_transit_series,
         cmd_export_parquet,
         cmd_get_chart,
         cmd_get_workspace_settings,
+        cmd_validate_workspace,
         cmd_list_charts,
         cmd_sync_workspace,
     )
@@ -43,7 +48,8 @@ except ImportError:
         SyncWorkspaceRequest,
     )
     from utils import parse_chart_yaml
-    from services import compute_positions_for_chart, compute_aspects_for_chart
+    from services import compute_chart_data_for_chart
+    from astronomy import compute_normalized_chart_aspects
 
 
 def _raise_for_error(result: Dict[str, Any]) -> Dict[str, Any]:
@@ -85,6 +91,10 @@ def create_app() -> FastAPI:
     def get_workspace_settings(workspace_path: str = Query(..., description="Path to workspace.yaml")):
         return _raise_for_error(cmd_get_workspace_settings({"workspace_path": workspace_path}))
 
+    @app.get("/workspace/validate")
+    def validate_workspace(workspace_path: str = Query(..., description="Path to workspace.yaml")):
+        return _raise_for_error(cmd_validate_workspace({"workspace_path": workspace_path}))
+
     @app.get("/charts")
     def list_charts(workspace_path: str = Query(..., description="Path to workspace.yaml")):
         return _raise_for_error(cmd_list_charts({"workspace_path": workspace_path}))
@@ -99,16 +109,7 @@ def create_app() -> FastAPI:
 
     @app.post("/charts/compute-from-data")
     def compute_chart_from_data(payload: ComputeChartFromDataRequest):
-        try:
-            chart = parse_chart_yaml(payload.chart_json)
-            positions = compute_positions_for_chart(chart)
-            aspects = compute_aspects_for_chart(chart)
-            return _build_chart_response(chart, positions or {}, aspects or [], chart.id, False)
-        except Exception as exc:
-            raise HTTPException(
-                status_code=400,
-                detail={"type": "ComputationError", "message": str(exc)},
-            )
+        return _raise_for_error(cmd_compute_chart_from_data(payload.model_dump()))
 
     @app.post("/transits/compute-series")
     def compute_transit_series(payload: ComputeTransitSeriesRequest):

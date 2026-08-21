@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 from pydantic import BaseModel, Field
 
@@ -9,6 +9,13 @@ class ComputeChartRequest(BaseModel):
     include_physical: bool = False
     include_topocentric: bool = False
     store_in_db: bool = False
+    preset_id: Optional[str] = None
+    settings_overrides: Optional[Dict[str, Any]] = None
+
+
+class ComputeChartFromDataRequest(BaseModel):
+    chart_json: Dict[str, Any]
+    settings_overrides: Optional[Dict[str, Any]] = None
 
 
 class ComputeTransitSeriesRequest(BaseModel):
@@ -22,6 +29,8 @@ class ComputeTransitSeriesRequest(BaseModel):
     aspect_types: Optional[List[str]] = None
     include_physical: bool = False
     include_topocentric: bool = False
+    preset_id: Optional[str] = None
+    settings_overrides: Optional[Dict[str, Any]] = None
 
 
 class SyncWorkspaceRequest(BaseModel):
@@ -40,4 +49,3 @@ class ExportParquetRequest(BaseModel):
 class HealthResponse(BaseModel):
     status: str = Field(default="ok")
     service: str = Field(default="kefer-api")
-

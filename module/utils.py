@@ -22,14 +22,14 @@ try:
     # For running as part of the package (e.g. from root or in tests)
     from module.models import (
         AspectDefinition, AstroModel, BodyDefinition, DateRange, HouseSystem, ChartConfig, ChartInstance, ChartSubject,
-        Location, ModelSettings, Sign, ChartMode, EngineType, ZodiacType, Ayanamsa,
+        Location, ModelSettings, Sign, ChartMode, EngineType, ZodiacType, Ayanamsa, TimeSystem,
         Workspace, EphemerisSource, WorkspaceDefaults
     )
 except ImportError:
     # For running directly (e.g. python3 module/utils.py)
     from models import (
         AspectDefinition, AstroModel, BodyDefinition, DateRange, HouseSystem, ChartConfig, ChartInstance, ChartSubject,
-        Location, ModelSettings, Sign, ChartMode, EngineType, ZodiacType, Ayanamsa,
+        Location, ModelSettings, Sign, ChartMode, EngineType, ZodiacType, Ayanamsa, TimeSystem,
         Workspace, EphemerisSource, WorkspaceDefaults
     )
 
@@ -37,6 +37,10 @@ try:
     from module.logging_config import get_logger
 except ImportError:
     from logging_config import get_logger
+try:
+    from module.event_time import parse_event_time, validate_timezone_name
+except ImportError:
+    from event_time import parse_event_time, validate_timezone_name
 
 # simple in-process cache to avoid repeated geocoding of same string
 _GEOCODE_CACHE: dict[str, Optional[GeoLocation]] = {}
@@ -460,9 +464,10 @@ def prepare_horoscope(
             house_system=house,
             zodiac_type=zodiac,
             included_points=[],
-            aspect_orbs={'a': 1.5},
+            aspect_orbs={},
             display_style="",
             color_theme="",
+            selected_aspects=None,
             override_ephemeris=ephemeris_path,
             engine=engine,
         )
@@ -689,15 +694,21 @@ def location_equals(loc1: Location, loc2: Location) -> bool:
 def default_ephemeris_path() -> str:
     """Return the default path to the local JPL ephemeris file.
 
-    Prefers de440s.bsp (343-asteroid integration, 1900-2050) when present,
-    falling back to the legacy de421.bsp.
+    Requires ``de440s.bsp`` (preferred) or ``de440.bsp`` under ``source/``.
+    Legacy ``de421`` is no longer used as a fallback.
     """
     base_dir = Path(__file__).resolve().parent.parent  # .../function-wrapper/module -> .../function-wrapper
-    source_dir = base_dir / 'source'
-    de440s = source_dir / 'de440s.bsp'
+    source_dir = base_dir / "source"
+    de440s = source_dir / "de440s.bsp"
     if de440s.exists():
         return str(de440s)
-    return str(source_dir / 'de421.bsp')
+    de440 = source_dir / "de440.bsp"
+    if de440.exists():
+        return str(de440)
+    raise FileNotFoundError(
+        f"No de440s.bsp or de440.bsp found under {source_dir}. "
+        "Download from NAIF or copy from the Tauri bundle (see ephemeris manager docs)."
+    )
 
 def ensure_aware(dt: datetime, tz_name: Optional[str] = None) -> datetime:
     """Return a timezone-aware datetime.
@@ -864,6 +875,42 @@ def _to_primitive(obj: Any) -> Any:
         return [_to_primitive(v) for v in obj]
     return obj
 
+def parse_chart_config(data: Optional[dict]) -> ChartConfig:
+    """Parse a chart configuration while preserving absent versus empty fields."""
+    cfg_d = data or {}
+
+    def _enum_or(val, enum_cls, default):
+        if val is None:
+            return default
+        try:
+            return enum_cls(val)
+        except Exception:
+            return getattr(enum_cls, str(val).upper(), default)
+
+    selected_raw = cfg_d.get("selected_aspects")
+    observable_raw = cfg_d.get("observable_objects")
+    return ChartConfig(
+        mode=_enum_or(cfg_d.get("mode", "NATAL"), ChartMode, ChartMode.NATAL),
+        house_system=_enum_or(cfg_d.get("house_system"), HouseSystem, None),
+        zodiac_type=_enum_or(
+            cfg_d.get("zodiac_type", "TROPICAL"),
+            ZodiacType,
+            ZodiacType.TROPICAL,
+        ),
+        included_points=list(cfg_d.get("included_points", []) or []),
+        aspect_orbs=dict(cfg_d.get("aspect_orbs", {}) or {}),
+        display_style=str(cfg_d.get("display_style", "") or ""),
+        color_theme=str(cfg_d.get("color_theme", "") or ""),
+        selected_aspects=None if selected_raw is None else list(selected_raw),
+        override_ephemeris=cfg_d.get("override_ephemeris"),
+        model=cfg_d.get("model"),
+        engine=_enum_or(cfg_d.get("engine"), EngineType, None),
+        ayanamsa=_enum_or(cfg_d.get("ayanamsa"), Ayanamsa, None),
+        observable_objects=None if observable_raw is None else list(observable_raw),
+        time_system=_enum_or(cfg_d.get("time_system"), TimeSystem, None),
+    )
+
+
 def parse_chart_yaml(data: dict) -> ChartInstance:
     """Construct a ChartInstance from a YAML-mapped dict with safe coercions.
     
@@ -887,64 +934,37 @@ def parse_chart_yaml(data: dict) -> ChartInstance:
     if not isinstance(subj_d, dict):
         raise ValueError('Invalid subject in chart YAML')
     name = subj_d.get('name') or data.get('id') or 'chart'
-    # event_time
-    et = subj_d.get('event_time')
-    if isinstance(et, str):
-        try:
-            et = parse(et)
-        except Exception:
-            et = now_utc()
-    elif not isinstance(et, (datetime, date, time)):
-        et = now_utc()
     # location
     loc_d = subj_d.get('location') or {}
     if isinstance(loc_d, dict):
+        timezone_name = loc_d.get("timezone") or "UTC"
+        validate_timezone_name(timezone_name)
         loc = Location(
             name=loc_d.get('name') or '',
             latitude=float(loc_d.get('latitude') or 0.0),
             longitude=float(loc_d.get('longitude') or 0.0),
-            timezone=loc_d.get('timezone') or 'UTC',
+            timezone=timezone_name,
         )
     else:
         # allow free-text location; geocode to model
         loc = Actual(str(loc_d or ''), t='loc').to_model_location()
 
+    raw_event_time = subj_d.get("event_time")
+    # Missing values remain representable so aggregate validation can report
+    # them alongside other workspace errors. Invalid non-empty values fail.
+    et = (
+        None
+        if raw_event_time is None or raw_event_time == ""
+        else parse_event_time(raw_event_time)
+    )
     subject = ChartSubject(
         id=subj_d.get('id') or name,
         name=name,
-        event_time=et if isinstance(et, datetime) else datetime.combine(et, time.min),
+        event_time=et,
         location=loc,
     )
 
-    # Config
-    cfg_d = data.get('config') or {}
-    # enums with graceful fallback
-    def _enum_or(val, enum_cls, default):
-        if val is None:
-            return default
-        try:
-            # allow direct value (e.g., "jpl")
-            return enum_cls(val)
-        except Exception:
-            try:
-                # allow by name (e.g., "PLACIDUS")
-                return getattr(enum_cls, str(val).upper(), default)
-            except Exception:
-                return default
-
-    cfg = ChartConfig(
-        mode=_enum_or(cfg_d.get('mode', 'NATAL'), ChartMode, ChartMode.NATAL),
-        house_system=_enum_or(cfg_d.get('house_system', 'PLACIDUS'), HouseSystem, HouseSystem.PLACIDUS),
-        zodiac_type=_enum_or(cfg_d.get('zodiac_type', 'TROPICAL'), ZodiacType, ZodiacType.TROPICAL),
-        included_points=list(cfg_d.get('included_points', []) or []),
-        aspect_orbs=dict(cfg_d.get('aspect_orbs', {}) or {}),
-        display_style=str(cfg_d.get('display_style', '') or ''),
-        color_theme=str(cfg_d.get('color_theme', '') or ''),
-        override_ephemeris=cfg_d.get('override_ephemeris'),
-        model=cfg_d.get('model'),
-        engine=_enum_or(cfg_d.get('engine'), EngineType, None),
-        ayanamsa=_enum_or(cfg_d.get('ayanamsa'), Ayanamsa, None),
-    )
+    cfg = parse_chart_config(data.get("config"))
 
     cid = data.get('id') or subject.id or name
     tags = [t for t in (data.get('tags') or []) if t]
