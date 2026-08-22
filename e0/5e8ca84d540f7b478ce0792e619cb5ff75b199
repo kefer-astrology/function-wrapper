@@ -1,0 +1,81 @@
+tests/test_cli.py
+  s_9947e33d59ecbf::t_fc2f0d1b90de92 132-133,138,141,146,152,155,159,161,164-165,169-170
+tests/sample_stress/workspace.yaml
+  5f3e30a14c236664 1-15,18-19,22-23
+  s_9947e33d59ecbf::t_982e7c3747d238 16
+  63528e3130c06ca4 20-21
+  s_9947e33d59ecbf::t_9096f2f0b296a4 17
+tests/test_contract_parity.py
+  s_b142655913c802::t_da38cdc489ec58 248
+  s_9947e33d59ecbf::t_d7ac734a38c5ef 247
+  s_9947e33d59ecbf::t_f662f8036e77af 244-246
+  s_b142655913c802::t_ef7b90032ce30c 249-251
+  s_9947e33d59ecbf::t_681a67ea0f3f23 1-243,252-347
+tests/test_engines.py
+  s_9947e33d59ecbf::t_27a6f949bf5b85 22
+  s_9947e33d59ecbf::t_57dbf22131f481 2
+  s_9947e33d59ecbf::t_e234ab990b9a58 91-102,106,109,115-122,127,133
+tests/sample_stress/charts/stress-test-base.yml
+  s_9947e33d59ecbf::t_982e7c3747d238 16,19
+  63528e3130c06ca4 1-15,17-18,20-27
+tests/test_comprehensive.py
+  s_9947e33d59ecbf::t_e17199cf28dc34 380,382-383,385-386,389-390,394,396-397,401-405,408
+  s_9947e33d59ecbf::t_b31176541e763d 191-194,197,200-201,203-206
+  s_9947e33d59ecbf::t_b30a269299a65c 4
+tests/test_storage_stress.py
+  s_9947e33d59ecbf::t_6a79888a0ab197 176
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "e05e8ca84d540f7b478ce0792e619cb5ff75b199",
+  "prompts": {
+    "5f3e30a14c236664": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019dcae7-407f-7472-807b-a4c451e03489",
+        "model": "gpt-5.4"
+      },
+      "human_author": null,
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 19,
+      "overriden_lines": 0
+    },
+    "63528e3130c06ca4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7171ea4d-6806-403c-af13-c5054ddb198b",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "kubow",
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 26,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_9947e33d59ecbf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "153437b8-87dc-4acc-87be-dc35f35bbe1d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    },
+    "s_b142655913c802": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6daf9a26-2b49-4133-abf3-9d6896769a3a",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": null
+    }
+  }
+}
