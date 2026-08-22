@@ -12,15 +12,14 @@ def run_tui():
         from module.services import Subject
         from module.utils import Actual
         from module.ui_translations import change_language
-        from module.z_visual import display_radial, display_3d
-        from module.services import create_relation_svg
+        from module.z_visual import build_synastry_figure, write_plotly_svg
     except ImportError:
         # Fallback for direct execution
         try:
-            from services import Subject, create_relation_svg
+            from services import Subject
             from utils import Actual
             from ui_translations import change_language
-            from z_visual import display_radial, display_3d
+            from z_visual import build_synastry_figure, write_plotly_svg
         except ImportError as e:
             print(f"Failed to import required modules: {e}")
             print("\nMake sure you have installed the required dependencies:")
@@ -45,9 +44,8 @@ def run_tui():
             print("\nObjects:", objs)
             print("Degrees:", degrees)
             try:
-                rep = s.report()
                 print("\n--- Report ---")
-                print(rep.print_report())
+                print(s.report())
             except Exception as e:
                 print(f"(report unavailable) {e}")
         except Exception as e:
@@ -71,10 +69,9 @@ def run_tui():
             s2 = Subject(n2)
             s2.at_place(p2)
             s2.at_time(d2)
-            # Use create_relation_svg from services
-            from kerykeion import AstrologicalSubject
-            chart = create_relation_svg(s1.computed, s2.computed, chart_type="Synastry")
-            print("Synastry SVG generated.")
+            fig = build_synastry_figure(s1.positions, s2.positions, s1.name, s2.name)
+            svg_path = write_plotly_svg(fig)
+            print(f"Synastry SVG generated: {svg_path}")
         except Exception as e:
             print(f"Could not render SVG: {e}")
             return 1

@@ -4,6 +4,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import datetime, date, time, timedelta
 from dateutil.parser import parse
 from enum import Enum
+from functools import lru_cache
 from geopy.geocoders import Nominatim
 from geopy.location import Location as GeoLocation
 from geopy.exc import GeopyError
@@ -67,20 +68,28 @@ def find_vernal_equinox_datetime(year: int) -> datetime:
     return datetime(year, 3, 20, 12, 0, 0, tzinfo=pytz.UTC)
 
 
+@lru_cache(maxsize=64)
 def compute_vernal_equinox_offset(year: int, eph, observer, ts) -> float:
     """Compute the vernal equinox offset for tropical astrology adjustment.
-    
+
     Finds the exact vernal equinox (when Sun's declination = 0°) and computes
     the Sun's ecliptic longitude at that moment. This offset is used to adjust
     JPL/Skyfield positions from J2000.0 coordinates to equinox-of-date coordinates
     for tropical astrology.
-    
+
+    Cached per (year, eph, observer, ts): the 20-sample iterative search below
+    (5 days x 4 samples/day, each a full Skyfield observe().apparent().radec()
+    call) is expensive, and every caller that loops over many timestamps within
+    the same year - e.g. storage.compute_and_store_series computing a multi-day
+    minute-by-minute transit series - was recomputing an identical result on
+    every single iteration, dominating the whole run's cost.
+
     Args:
         year: The year to compute the vernal equinox for
         eph: Skyfield ephemeris object
         observer: Skyfield Topos observer object
         ts: Skyfield timescale object
-        
+
     Returns:
         The ecliptic longitude offset in degrees [0, 360)
     """
@@ -708,6 +717,20 @@ def default_ephemeris_path() -> str:
     raise FileNotFoundError(
         f"No de440s.bsp or de440.bsp found under {source_dir}. "
         "Download from NAIF or copy from the Tauri bundle (see ephemeris manager docs)."
+    )
+
+def default_mpc_elements_path() -> str:
+    """Return the path to the vendored MPCORB element rows for Chiron/Ceres/Pallas/Juno/Vesta.
+
+    Regenerate with ``python -m devtools.fetch_mpc_bodies`` if the elements go stale.
+    """
+    base_dir = Path(__file__).resolve().parent.parent
+    path = base_dir / "source" / "mpc_bodies.dat"
+    if path.exists():
+        return str(path)
+    raise FileNotFoundError(
+        f"No mpc_bodies.dat found under {base_dir / 'source'}. "
+        "Run `python -m devtools.fetch_mpc_bodies` to generate it."
     )
 
 def ensure_aware(dt: datetime, tz_name: Optional[str] = None) -> datetime:

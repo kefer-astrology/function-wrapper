@@ -584,14 +584,14 @@ def _parse_workspace_defaults(manifest: dict) -> WorkspaceDefaults:
         default_location=default_location,
         language=default_block.get('language'),
         theme=default_block.get('theme'),
-        default_house_system=None,  # Will be set from model if needed
+        default_house_system=_safe_enum(default_block.get('default_house_system'), HouseSystem),
         default_bodies=default_block.get('default_bodies'),
         default_aspects=default_block.get('default_aspects'),
         default_aspect_orbs=default_block.get('default_aspect_orbs'),
         default_aspect_colors=default_block.get('default_aspect_colors'),
         element_colors=default_block.get('element_colors'),
         radix_point_colors=default_block.get('radix_point_colors'),
-        time_system=default_block.get('time_system'),
+        time_system=_safe_enum(default_block.get('time_system'), TimeSystem),
     )
 
 
@@ -799,7 +799,7 @@ def init_workspace(base_dir: Union[str, Path], owner: str, active_model: str, de
         "aspects": [],
         "default": {
             # Ephemeris settings
-            "ephemeris_engine": (default_ephemeris.get("backend") or "swisseph"),
+            "ephemeris_engine": (default_ephemeris.get("backend") or "jpl"),
             "ephemeris_backend": default_ephemeris.get("name"),
             # Location settings
             "location_name": (DEFAULT_LOCATION.get("name") if isinstance(DEFAULT_LOCATION, dict) else None),
@@ -883,6 +883,7 @@ def _build_default_block(workspace: Workspace) -> dict:
         "default_bodies": (d.default_bodies if d.default_bodies else None),
         "default_aspects": (d.default_aspects if d.default_aspects else None),
         "default_aspect_orbs": (d.default_aspect_orbs if getattr(d, 'default_aspect_orbs', None) else None),
+        "time_system": (getattr(d.time_system, 'value', d.time_system) if d.time_system else None),
     }
 
 

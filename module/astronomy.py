@@ -5,9 +5,9 @@ import math
 from typing import Any, Dict, List, Optional, Protocol, Union
 
 try:
-    from module.models import ChartInstance, EngineType, Workspace
+    from module.models import Ayanamsa, ChartInstance, Workspace
 except ImportError:
-    from models import ChartInstance, EngineType, Workspace
+    from models import Ayanamsa, ChartInstance, Workspace
 
 
 PositionResult = Dict[str, Union[float, Dict[str, float]]]
@@ -258,6 +258,54 @@ def _mean_obliquity_deg(jd_ut: float) -> float:
         - 0.000000164 * t * t
         + 0.000000504 * t * t * t
     )
+
+
+# Ayanamsa value at J2000.0, degrees. There is no existing numeric ayanamsa
+# table anywhere in this codebase or the sibling tauri-application repo to
+# mirror (its Rust swisseph.rs path only maps the enum to libswe's sidereal-mode
+# constants, behind a disabled-by-default feature) — this is a new, Python-only
+# reference table. Cross-check against a published ephemeris before relying on
+# it for precision work; it's a linear (precession-rate) approximation.
+_AYANAMSA_J2000_DEG: Dict[Ayanamsa, float] = {
+    Ayanamsa.LAHIRI: 23.85667,
+    Ayanamsa.FAGAN_BRADLEY: 24.73648,
+    Ayanamsa.RAMAN: 22.33667,
+    Ayanamsa.KRISHNAMURTI: 23.75722,
+    Ayanamsa.DE_LUCE: 24.04528,
+}
+
+# General precession in longitude, degrees/century (~50.29"/yr).
+_AYANAMSA_PRECESSION_DEG_PER_CENTURY = 1.396971
+
+
+def _ayanamsa_value_deg(ayanamsa: Optional[Ayanamsa], jd_ut: float) -> float:
+    """Ayanamsa (tropical - sidereal offset) for the given ayanamsa and date.
+
+    `Ayanamsa.USER_DEFINED` and unset/unknown values fall back to Fagan-Bradley
+    (matches the fallback the sibling Rust backend uses for the same enum).
+    """
+    base = _AYANAMSA_J2000_DEG.get(ayanamsa, _AYANAMSA_J2000_DEG[Ayanamsa.FAGAN_BRADLEY]) if ayanamsa is not None else _AYANAMSA_J2000_DEG[Ayanamsa.FAGAN_BRADLEY]
+    return base + _AYANAMSA_PRECESSION_DEG_PER_CENTURY * _j2000_centuries(jd_ut)
+
+
+def _shift_longitude_value(value: Any, shift_deg: float) -> Any:
+    """Shift a position value (float or dict-with-longitude) by -shift_deg, wrapped to [0,360)."""
+    if isinstance(value, (int, float)):
+        return _normalize_deg(float(value) - shift_deg)
+    if isinstance(value, dict) and isinstance(value.get("longitude"), (int, float)):
+        shifted = dict(value)
+        shifted["longitude"] = _normalize_deg(float(value["longitude"]) - shift_deg)
+        return shifted
+    return value
+
+
+def apply_ayanamsa_to_chart_data(chart_data: ChartData, ayanamsa: Optional[Ayanamsa], jd_ut: float) -> ChartData:
+    """Shift positions/axes/house_cusps from tropical to sidereal by a uniform ayanamsa offset."""
+    shift = _ayanamsa_value_deg(ayanamsa, jd_ut)
+    chart_data.positions = {k: _shift_longitude_value(v, shift) for k, v in chart_data.positions.items()}
+    chart_data.axes = {k: _normalize_deg(v - shift) for k, v in chart_data.axes.items()}
+    chart_data.house_cusps = [_normalize_deg(v - shift) for v in chart_data.house_cusps]
+    return chart_data
 
 
 def _gmst_deg(jd_ut: float) -> float:
@@ -556,43 +604,6 @@ class AstronomyBackend(Protocol):
 
 
 @dataclass(frozen=True)
-class SwissAstronomyBackend:
-    def backend_id(self) -> str:
-        return "swisseph"
-
-    def ephemeris_source(self, chart: ChartInstance) -> Optional[str]:
-        return None
-
-    def compute_positions(
-        self,
-        chart: ChartInstance,
-        ws: Optional[Workspace] = None,
-        include_physical: bool = False,
-        include_topocentric: bool = False,
-    ) -> PositionResult:
-        try:
-            from module.services import compute_swiss_positions_for_chart
-        except ImportError:
-            from services import compute_swiss_positions_for_chart
-
-        return compute_swiss_positions_for_chart(chart, ws=ws)
-
-    def compute_chart_data(
-        self,
-        chart: ChartInstance,
-        ws: Optional[Workspace] = None,
-        include_physical: bool = False,
-        include_topocentric: bool = False,
-    ) -> ChartData:
-        positions = self.compute_positions(
-            chart, ws=ws,
-            include_physical=include_physical,
-            include_topocentric=include_topocentric,
-        )
-        return _positions_to_chart_data(positions)
-
-
-@dataclass(frozen=True)
 class JplAstronomyBackend:
     ephemeris_path: Optional[str] = None
 
@@ -655,14 +666,10 @@ class JplAstronomyBackend:
 
 
 def backend_for_chart(chart: ChartInstance) -> AstronomyBackend:
+    """Skyfield/JPL is the only astronomy backend; `engine` config is accepted
+    for backward compatibility with old workspace files but does not change
+    which backend runs.
+    """
     cfg = getattr(chart, "config", None)
-    engine = getattr(cfg, "engine", None) if cfg else None
     ephemeris_path = getattr(cfg, "override_ephemeris", None) if cfg else None
-
-    if engine is None and ephemeris_path:
-        engine = EngineType.JPL
-
-    if engine == EngineType.JPL:
-        return JplAstronomyBackend(ephemeris_path=ephemeris_path)
-
-    return SwissAstronomyBackend()
+    return JplAstronomyBackend(ephemeris_path=ephemeris_path)
