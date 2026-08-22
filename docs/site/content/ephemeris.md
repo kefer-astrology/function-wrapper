@@ -26,12 +26,14 @@ The old `de421.bsp` remains in `source/` as a fallback for environments that hav
 | Mercury | 199 |
 | Venus | 299 |
 | Earth | 399 |
-| Mars | 499 |
+| Mars barycenter | 4 |
 | Jupiter barycenter | 5 |
 | Saturn barycenter | 6 |
 | Uranus barycenter | 7 |
 | Neptune barycenter | 8 |
 | Pluto barycenter | 9 |
+
+Unlike `de421.bsp`, `de440s.bsp` has **no direct `499 MARS` segment** — only `4 MARS_BARYCENTER`. `module/services.py`'s barycenter-fallback list (`outer_planets` in `_compute_single_planet_position`/`compute_jpl_positions`) includes `"mars"` for exactly this reason; the barycenter/body-center offset is negligible for ecliptic longitude.
 
 **The 343 asteroids integrated in DE440/441 are integration perturbers only.**
 Their gravitational effects are baked into the planetary positions, but their own trajectories are **not stored as queryable SPK segments** in any of the DE planetary BSP files.
@@ -115,40 +117,30 @@ You do **not** need `de441_part-2.bsp` for charts in the 1900–2050 window.
 is_de421 = eph_file and "de421" in Path(eph_file).name.lower()
 ```
 
-`de440s.bsp` does not match this check, so it follows the non-de421 path: direct planet names are tried first (`jupiter`, `saturn`, etc.) rather than barycenters. This is correct for DE440-series files, which expose individual planet objects directly.
+`de440s.bsp` does not match this check, so it follows the non-de421 path: direct planet names are tried first (`mercury`, `venus`, etc.), falling back to `"{planet} barycenter"` on `KeyError` for any planet in the barycenter-fallback list (which includes Mars — see above — plus Jupiter/Saturn/Uranus/Neptune/Pluto).
 
 No code change is needed in `services.py` when switching from `de421` to `de440s`.
 
 ---
 
-## Asteroid bodies
+## Asteroid bodies (Chiron, Ceres, Pallas, Juno, Vesta)
 
-### Current status
+These are **not available** from any DE planetary BSP file — the 343 asteroids integrated in DE440/441 are integration perturbers only, not output as queryable SPK segments (see above).
 
-Asteroids (Ceres, Pallas, Juno, Vesta, Chiron) are **not available** from any of the DE planetary files. A dedicated asteroid SPK kernel is required:
+Rather than adding a dedicated asteroid SPK kernel (`codes_300ast_20100725.bsp` or per-body files), these five bodies are computed via **MPC orbital elements** (Keplerian propagation), avoiding both kerykeion/pyswisseph and any extra multi-MB kernel:
 
-| Option | Bodies | Source |
-|--------|--------|--------|
-| Individual files (`ceres_1900_2100.bsp` etc.) | one body per file | NAIF archive |
-| `codes_300ast_20100725.bsp` (59 MB) | 300 main-belt asteroids | NAIF archive |
-| JPL Horizons REST API | any numbered asteroid | on-demand query |
+- `source/mpc_bodies.dat` vendors the 5 relevant raw rows from MPC's `MPCORB.DAT` catalog (packed fixed-width format, ~1KB — not gitignored like the `.bsp` files, since it's tiny and not independently redownloadable at build time).
+- `module/services.py::_load_mpc_orbits()` parses them via `skyfield.data.mpc.load_mpcorb_dataframe`/`mpc.mpcorb_orbit`, producing a heliocentric Kepler orbit per body, cached at module scope.
+- `compute_jpl_positions()` builds each body as `eph["sun"] + orbit` and feeds it through the same `_compute_planet_ecliptic_longitude`/`_compute_planet_extended_position` pipeline used for the 10 classic planets — no separate extraction code.
+- Regenerate the vendored elements (they're a snapshot, not live) with `python -m devtools.fetch_mpc_bodies`, which re-downloads the full `MPCORB.DAT.gz` (~90MB) once and extracts just these 5 rows.
 
-NAIF IDs for the main astrological asteroids:
+### Black Moon Lilith (mean + true)
 
-| Body | NAIF ID |
-|------|---------|
-| Ceres | 2 000 001 |
-| Pallas | 2 000 002 |
-| Juno | 2 000 003 |
-| Vesta | 2 000 004 |
-| Chiron | 2 000 060 |
+Same "no extra kernel needed" approach as the lunar nodes: `_mean_lilith_lon_deg()` (Meeus mean-perigee polynomial + 180°) and `_true_lilith_tropical_deg()` (osculating apogee from the Moon's geocentric position/velocity vectors, via the eccentricity/Laplace-Runge-Lenz vector rather than the angular-momentum vector nodes use) — both in `module/services.py`, next to the equivalent node functions.
 
-These are **not** in `de440s.bsp` despite the 343-asteroid integration — those asteroids improve planetary accuracy as perturbers but are not output as SPK segments.
-
-### Workaround for computed points
+### Other computed points
 
 - **Part of Fortune** — pure formula: `ASC + Moon - Sun` (day chart) or `ASC + Sun - Moon` (night chart); no BSP needed
-- **Black Moon Lilith** — mean lunar apogee; derivable from Moon orbital elements
 - **South Node** — North Node + 180°; already computed from the Mean Node formula
 
 ---
