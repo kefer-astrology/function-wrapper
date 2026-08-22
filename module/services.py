@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import math
 import sys
 import logging
+import numpy as np
 
 # Modern logging setup
 try:
@@ -309,11 +310,12 @@ def _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_of
         return None
 
 
-def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_offset: float, 
-                                      include_physical: bool = False, 
-                                      include_topocentric: bool = False) -> Optional[Dict[str, float]]:
+def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_offset: float,
+                                      include_physical: bool = False,
+                                      include_topocentric: bool = False,
+                                      sun_astrometric=None) -> Optional[Dict[str, float]]:
     """Compute extended position data for a planet using Skyfield.
-    
+
     Args:
         body: Skyfield body object
         eph: Skyfield ephemeris
@@ -322,7 +324,12 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
         vernal_equinox_offset: Offset to adjust for vernal equinox
         include_physical: If True, include magnitude/phase/elongation
         include_topocentric: If True, include altitude/azimuth
-        
+        sun_astrometric: Optional pre-computed apparent position of the Sun for this same
+            `t` (from `(eph["earth"] + observer).at(t).observe(eph["sun"]).apparent()`).
+            When a caller is looping over several bodies for the same timestamp, passing
+            this in avoids recomputing the Sun's position (light-time + deflection) once
+            per body. Falls back to computing it internally when omitted.
+
     Returns:
         Dictionary with position data, or None on error. Keys:
         - longitude: float (degrees, always present)
@@ -385,12 +392,10 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
         # Topocentric coordinates (altitude/azimuth)
         if include_topocentric:
             try:
-                # Compute topocentric position (observer's view from Earth's surface)
-                # Use the same pattern as astrometric: (eph["earth"] + observer).at(t).observe(body)
-                # This gives us the position from the observer's location on Earth's surface
-                topocentric = (eph["earth"] + observer).at(t).observe(body).apparent()
-                # Now compute altaz from the observer's perspective
-                alt, az, distance_altaz = topocentric.altaz()
+                # `astrometric` above was already observed from (earth + observer), i.e. from
+                # the observer's location on Earth's surface - altaz() just needs that same
+                # apparent position, no second observe()/apparent() call needed.
+                alt, az, distance_altaz = astrometric.altaz()
                 result['altitude'] = float(alt.degrees)
                 result['azimuth'] = float(az.degrees)
             except (AttributeError, KeyError, TypeError, ValueError) as e:
@@ -409,11 +414,12 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
                 # Phase angle: angle between Sun, planet, and Earth
                 # Elongation: angular distance from Sun
                 try:
-                    sun = eph["sun"]
-                    sun_astrometric = (eph["earth"] + observer).at(t).observe(sun).apparent()
+                    sun_pos = sun_astrometric
+                    if sun_pos is None:
+                        sun_pos = (eph["earth"] + observer).at(t).observe(eph["sun"]).apparent()
                     # Compute elongation (simplified - full calculation would use spherical trigonometry)
                     # For now, approximate using ecliptic longitude difference
-                    sun_ra, sun_dec, _ = sun_astrometric.radec()
+                    sun_ra, sun_dec, _ = sun_pos.radec()
                     sun_ra_deg = sun_ra.hours * 15.0
                     # Elongation approximation (full calculation would be more complex)
                     elongation_approx = abs(ra_deg - sun_ra_deg)
@@ -437,10 +443,108 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
         # For now, set defaults - full implementation would compute speed from two positions
         result['speed'] = 0.0  # Placeholder - would need to compute from two time points
         result['retrograde'] = False  # Placeholder - would need to compute from speed
-        
+
         return result
     except (KeyError, ValueError, AttributeError) as e:
         logger.warning("Could not compute extended planet position: %s", e)
+        return None
+
+
+def _compute_planet_extended_positions_vectorized(body, eph, observer, t_array, vernal_equinox_offsets,
+                                                    include_physical: bool = False,
+                                                    include_topocentric: bool = False,
+                                                    sun_astrometric=None) -> Optional[Dict[str, Any]]:
+    """Batched equivalent of `_compute_planet_extended_position`: computes the same fields for
+    an entire array of timestamps in one Skyfield call instead of one call per timestamp.
+
+    Skyfield's `.at(t).observe(body).apparent()` (and `.radec()`/`.altaz()`) natively accept an
+    array-valued `Time` (`t_array`, e.g. from `ts.from_datetimes([...])`) and return numpy arrays
+    of the same length - the underlying JPL/jplephem SPK interpolation and relativistic
+    corrections (light-time, deflection) are vectorized over that array. Looping per-timestamp
+    instead pays the same fixed per-call Python/Skyfield overhead thousands of times over, which
+    dominates the cost of long time series (e.g. a multi-day, minute-interval transit series).
+
+    Args:
+        body: Skyfield body object
+        eph: Skyfield ephemeris
+        observer: Skyfield Topos observer
+        t_array: Array-valued Skyfield Time (length N)
+        vernal_equinox_offsets: numpy array of length N (one offset per timestamp; a series may
+            span more than one year, so this is not necessarily a single scalar)
+        include_physical: If True, include light_time/elongation/phase_angle
+        include_topocentric: If True, include altitude/azimuth
+        sun_astrometric: Optional pre-computed apparent position of the Sun for this same
+            `t_array`, shared across every body in the series to avoid recomputing it once
+            per body. Falls back to computing it internally when omitted.
+
+    Returns:
+        Dict of numpy arrays (length N), mirroring `_compute_planet_extended_position`'s keys,
+        or None on error. 'retrograde' is a bool array; a field can be a bare `None` (not an
+        array) if that field's computation failed for the whole series.
+    """
+    try:
+        astrometric = (eph["earth"] + observer).at(t_array).observe(body).apparent()
+        ra, dec, distance = astrometric.radec()
+
+        ra_deg = ra.hours * 15.0
+        dec_deg = dec.degrees
+        distance_au = distance.au
+
+        ra_rad = np.radians(ra_deg)
+        dec_rad = np.radians(dec_deg)
+        obliquity_j2000 = math.radians(OBLIQUITY_J2000_DEGREES)
+        sin_ra, cos_ra = np.sin(ra_rad), np.cos(ra_rad)
+        tan_dec = np.tan(dec_rad)
+        sin_obl, cos_obl = math.sin(obliquity_j2000), math.cos(obliquity_j2000)
+
+        ecl_lon_rad = np.arctan2(sin_ra * cos_obl + tan_dec * sin_obl, cos_ra)
+        lon_deg = np.degrees(ecl_lon_rad) % DEGREES_IN_CIRCLE
+        lon_deg_tropical = (lon_deg - vernal_equinox_offsets) % DEGREES_IN_CIRCLE
+
+        result: Dict[str, Any] = {
+            'longitude': lon_deg_tropical,
+            'distance': distance_au,
+            'declination': dec_deg,
+            'right_ascension': ra_deg,
+            'latitude': np.zeros_like(lon_deg_tropical),
+        }
+
+        if include_topocentric:
+            try:
+                alt, az, _distance_altaz = astrometric.altaz()
+                result['altitude'] = alt.degrees
+                result['azimuth'] = az.degrees
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
+                logger.warning("Could not compute topocentric coordinates for %s: %s", body, e)
+                result['altitude'] = None
+                result['azimuth'] = None
+
+        if include_physical:
+            try:
+                result['light_time'] = astrometric.light_time * 86400.0  # days -> seconds
+                try:
+                    sun_pos = sun_astrometric
+                    if sun_pos is None:
+                        sun_pos = (eph["earth"] + observer).at(t_array).observe(eph["sun"]).apparent()
+                    sun_ra, _sun_dec, _ = sun_pos.radec()
+                    sun_ra_deg = sun_ra.hours * 15.0
+                    elongation_approx = np.abs(ra_deg - sun_ra_deg)
+                    elongation_approx = np.where(
+                        elongation_approx > 180.0, DEGREES_IN_CIRCLE - elongation_approx, elongation_approx
+                    )
+                    result['elongation'] = elongation_approx
+                    result['phase_angle'] = elongation_approx.copy()
+                except (AttributeError, KeyError, TypeError, ValueError):
+                    pass
+            except (AttributeError, KeyError, TypeError, ValueError):
+                pass
+
+        result['speed'] = np.zeros_like(lon_deg_tropical)
+        result['retrograde'] = np.zeros_like(lon_deg_tropical, dtype=bool)
+
+        return result
+    except (KeyError, ValueError, AttributeError) as e:
+        logger.warning("Could not compute vectorized extended planet positions: %s", e)
         return None
 
 
@@ -535,7 +639,15 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
             planets = jpl_supported
         
         positions = {}
-        
+
+        # Shared across every body computed below when physical properties are requested,
+        # so the Sun's position (light-time + deflection) is computed once per timestamp
+        # instead of once per body. Only used by the extended-mode path below.
+        sun_astrometric = (
+            (eph["earth"] + observer).at(t).observe(eph["sun"]).apparent()
+            if extended and include_physical else None
+        )
+
         # For tropical astrology, we need to adjust for the vernal equinox of date
         year = dt_aware.year
         vernal_equinox_offset = compute_vernal_equinox_offset(year, eph, observer, ts)
@@ -564,7 +676,8 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                     extended_pos = _compute_planet_extended_position(
                         body, eph, observer, t, vernal_equinox_offset,
                         include_physical=include_physical,
-                        include_topocentric=include_topocentric
+                        include_topocentric=include_topocentric,
+                        sun_astrometric=sun_astrometric,
                     )
                     if extended_pos is not None:
                         positions[planet] = extended_pos
@@ -592,6 +705,7 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                         body, eph, observer, t, vernal_equinox_offset,
                         include_physical=include_physical,
                         include_topocentric=include_topocentric,
+                        sun_astrometric=sun_astrometric,
                     )
                     if minor_pos is not None:
                         positions[body_id] = minor_pos

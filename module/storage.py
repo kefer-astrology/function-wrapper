@@ -91,7 +91,7 @@ class DuckDBStorage:
                 longitude REAL NOT NULL,
                 latitude REAL,
                 
-                -- Equatorial coordinates (JPL - always computed, Kerykeion = NULL)
+                -- Equatorial coordinates (extended/dict positions only; NULL for simple float positions)
                 -- Declination and distance for 3D view
                 declination REAL,
                 right_ascension REAL,
@@ -270,7 +270,7 @@ class DuckDBStorage:
         end_datetime: datetime,
         time_step: timedelta,
         location: 'Location',
-        engine: str = 'swisseph',  # Default to Kerykeion (swisseph)
+        engine: str = 'jpl',
         ephemeris_file: Optional[str] = None,
         requested_objects: Optional[List[str]] = None,
         include_physical: bool = False,
@@ -278,235 +278,202 @@ class DuckDBStorage:
         batch_size: int = 1000,
         radix_chart_id: Optional[str] = None
     ) -> int:
-        """Optimized: Compute and store time series with pre-initialized engines.
-        
-        Supports both JPL (Skyfield) and Kerykeion (Swisseph) engines.
+        """Optimized: Compute and store time series with pre-initialized JPL/Skyfield engine.
+
+        `engine` is accepted for backward compatibility with old callers that
+        still pass 'swisseph'/'kerykeion'; only the JPL/Skyfield engine is
+        computed now, regardless of its value.
+
         This is MUCH faster than cmd_compute_transit_series because it:
         - Pre-initializes engine components ONCE (not per timestamp)
         - Uses direct position computation (no ChartInstance overhead)
         - Batches storage operations
         - Skips aspect computation (not stored anyway)
-        
-        Performance: 
-        - JPL: ~100-500 timestamps/second
-        - Kerykeion: ~200-1000 timestamps/second (faster, simpler)
-        
+
+        Performance: computes each body's whole series in one vectorized Skyfield call
+        (via an array-valued Time) instead of one call per timestamp - see
+        `services._compute_planet_extended_positions_vectorized`.
+
         Args:
             chart_id: Chart identifier
             start_datetime: Start datetime
             end_datetime: End datetime
             time_step: Time step (e.g., timedelta(minutes=1))
             location: Location object
-            engine: Engine type ('jpl' or 'swisseph'/'kerykeion')
-            ephemeris_file: Path to ephemeris file (for JPL, ignored for Kerykeion)
+            engine: Accepted for backward compatibility; ignored (JPL/Skyfield always runs)
+            ephemeris_file: Path to ephemeris file
             requested_objects: List of object IDs to compute (defaults to all planets)
-            include_physical: Include physical properties (JPL only)
-            include_topocentric: Include topocentric properties (JPL only)
+            include_physical: Include physical properties
+            include_topocentric: Include topocentric properties
             batch_size: Number of timestamps to batch before storing
             radix_chart_id: If this is a transit, reference to base/radix chart.
                           If None, this is a radix/base chart position.
-        
+
         Returns:
             Number of timestamps computed
         """
-        
+
         # Import here to avoid circular dependencies
-        from module.utils import default_ephemeris_path, ensure_aware
-        from module.services import compute_positions, compute_subject, _extract_kerykeion_observable_objects
-        from module.models import EngineType
+        from module.utils import default_ephemeris_path, ensure_aware, compute_vernal_equinox_offset
         from pathlib import Path
-        
-        # Normalize engine name
-        if engine in ('jpl', 'JPL'):
-            engine_type = EngineType.JPL
-            engine_str = 'jpl'
+        import numpy as np
+
+        if engine not in ('jpl', 'JPL'):
+            logger.info("engine=%s requested but only the JPL/Skyfield engine is available; using JPL", engine)
+        engine_str = 'jpl'
+
+        try:
+            from skyfield.api import load, Topos, load_file
+        except ImportError:
+            raise ImportError("skyfield is required")
+
+        # Use default ephemeris if not provided
+        if not ephemeris_file:
+            ephemeris_file = default_ephemeris_path()
+
+        # Pre-initialize Skyfield components
+        ts = load.timescale()
+        eph = load_file(ephemeris_file)
+        observer = Topos(latitude_degrees=location.latitude, longitude_degrees=location.longitude)
+        is_de421 = "de421" in Path(ephemeris_file).name.lower()
+
+        # Import position computation helpers
+        from module.services import _compute_planet_extended_positions_vectorized, _load_mpc_orbits, _MPC_MINOR_BODY_IDS
+
+        # Determine which planets/minor bodies to compute
+        jpl_supported = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
+        if requested_objects:
+            planets = [p for p in jpl_supported if p in requested_objects]
+            minor_bodies = [b for b in _MPC_MINOR_BODY_IDS if b in requested_objects]
         else:
-            # Default to Kerykeion/Swisseph
-            engine_type = EngineType.SWISSEPH
-            engine_str = 'swisseph'
-        
-        # Prepare location string (same format for both engines)
-        loc_str = f"{location.latitude},{location.longitude}"
-        
-        # PRE-INITIALIZE engine components ONCE (key optimization!)
-        if engine_type == EngineType.JPL:
-            try:
-                from skyfield.api import load, Topos, load_file
-            except ImportError:
-                raise ImportError("skyfield is required for JPL engine")
-            
-            # Use default ephemeris if not provided
-            if not ephemeris_file:
-                ephemeris_file = default_ephemeris_path()
-            
-            # Pre-initialize Skyfield components
-            ts = load.timescale()
-            eph = load_file(ephemeris_file)
-            observer = Topos(latitude_degrees=location.latitude, longitude_degrees=location.longitude)
-            is_de421 = "de421" in Path(ephemeris_file).name.lower()
-            
-            # Import position computation helpers
-            from module.services import _compute_planet_extended_position, compute_vernal_equinox_offset
-            
-            # Determine which planets to compute
-            jpl_supported = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
-            if requested_objects:
-                planets = [p for p in jpl_supported if p in requested_objects]
-            else:
-                planets = jpl_supported
-        else:
-            # Kerykeion: Pre-compute subject template (location doesn't change)
-            # Note: Kerykeion computes per-timestamp, but we avoid ChartInstance overhead
-            planets = requested_objects or ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
-        
+            planets = jpl_supported
+            minor_bodies = list(_MPC_MINOR_BODY_IDS)
+
+        # MPC orbits don't change per-timestamp; load/cache once (mirrors ts/eph/observer above).
+        mpc_orbits = _load_mpc_orbits(ts) if minor_bodies else {}
+        sun_body = eph["sun"] if minor_bodies else None
+
         # Generate time points
         time_points = []
         current = start_datetime
         while current <= end_datetime:
             time_points.append(current)
             current += time_step
-        
+
         total_timestamps = len(time_points)
         logger.info(
-            "Computing %s timestamps with %s engine (pre-initialized)...",
+            "Computing %s timestamps with %s engine (vectorized per body)...",
             f"{total_timestamps:,}",
             engine_str.upper(),
         )
-        
-        # Batch storage
-        positions_batch = []
-        stored_count = 0
-        
-        for i, tp in enumerate(time_points):
-            # Ensure timezone-aware
-            dt_aware = ensure_aware(tp, location.timezone)
-            dt_str = dt_aware.isoformat()
-            
-            # Compute positions based on engine
-            if engine_type == EngineType.JPL:
-                # JPL: Use pre-initialized Skyfield components
-                t = ts.from_datetime(dt_aware)
-                
-                # Compute vernal equinox offset (for tropical zodiac)
-                year = dt_aware.year
-                vernal_equinox_offset = compute_vernal_equinox_offset(year, eph, observer, ts)
-                
-                # Compute positions directly using pre-initialized components
-                barycenter_planets = ["mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
-                positions = {}
-                for planet in planets:
-                    try:
-                        if is_de421 and planet in barycenter_planets:
-                            body = eph[f"{planet} barycenter"]
-                        else:
-                            try:
-                                body = eph[planet]
-                            except KeyError:
-                                if planet in barycenter_planets:
-                                    body = eph[f"{planet} barycenter"]
-                                else:
-                                    continue
 
-                        pos = _compute_planet_extended_position(
-                            body, eph, observer, t, vernal_equinox_offset,
-                            include_physical=include_physical,
-                            include_topocentric=include_topocentric
-                        )
-                        if pos:
-                            positions[planet] = pos
-                    except (KeyError, ValueError):
-                        continue
-            else:
-                # Kerykeion: Use direct swisseph access for maximum performance
-                # This bypasses AstrologicalSubject overhead (1000x faster!)
+        if total_timestamps == 0:
+            return 0
+
+        dt_aware_list = [ensure_aware(tp, location.timezone) for tp in time_points]
+        barycenter_planets = ["mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
+
+        stored_count = 0
+
+        # Process in chunks of batch_size: each chunk still vectorizes every body's Skyfield
+        # call across the WHOLE chunk at once (one .observe().apparent() call per body, not
+        # one per timestamp), while bounding memory for very large date ranges.
+        for chunk_start in range(0, total_timestamps, batch_size):
+            chunk_end = min(chunk_start + batch_size, total_timestamps)
+            chunk_dts = dt_aware_list[chunk_start:chunk_end]
+            chunk_dt_strs = [dt.isoformat() for dt in chunk_dts]
+            n_chunk = len(chunk_dts)
+
+            t_array = ts.from_datetimes(chunk_dts)
+
+            # Vernal equinox offset per timestamp (cached per year); a chunk spanning a
+            # year boundary needs one offset value per distinct year, not just one scalar.
+            years = [dt.year for dt in chunk_dts]
+            offset_by_year = {y: compute_vernal_equinox_offset(y, eph, observer, ts) for y in set(years)}
+            vernal_offsets = np.array([offset_by_year[y] for y in years])
+
+            sun_astrometric = (
+                (eph["earth"] + observer).at(t_array).observe(eph["sun"]).apparent()
+                if include_physical else None
+            )
+
+            per_body_results: Dict[str, Dict[str, Any]] = {}
+            for planet in planets:
                 try:
-                    import swisseph as swe
-                    
-                    # Convert datetime to Julian Day
-                    jd = swe.julday(
-                        dt_aware.year, dt_aware.month, dt_aware.day,
-                        dt_aware.hour + dt_aware.minute/60.0 + dt_aware.second/3600.0,
-                        swe.GREG_CAL
+                    if is_de421 and planet in barycenter_planets:
+                        body = eph[f"{planet} barycenter"]
+                    else:
+                        try:
+                            body = eph[planet]
+                        except KeyError:
+                            if planet in barycenter_planets:
+                                body = eph[f"{planet} barycenter"]
+                            else:
+                                continue
+
+                    pos = _compute_planet_extended_positions_vectorized(
+                        body, eph, observer, t_array, vernal_offsets,
+                        include_physical=include_physical,
+                        include_topocentric=include_topocentric,
+                        sun_astrometric=sun_astrometric,
                     )
-                    
-                    # Planet mapping
-                    planet_map = {
-                        'sun': swe.SUN,
-                        'moon': swe.MOON,
-                        'mercury': swe.MERCURY,
-                        'venus': swe.VENUS,
-                        'mars': swe.MARS,
-                        'jupiter': swe.JUPITER,
-                        'saturn': swe.SATURN,
-                        'uranus': swe.URANUS,
-                        'neptune': swe.NEPTUNE,
-                        'pluto': swe.PLUTO,
-                    }
-                    
-                    positions = {}
-                    for planet_name in planets:
-                        if planet_name in planet_map:
-                            # Direct swisseph call - very fast!
-                            xx, ret = swe.calc_ut(jd, planet_map[planet_name], swe.FLG_SWIEPH)
-                            if ret >= 0:
-                                longitude = xx[0]  # Ecliptic longitude in degrees
-                                # Normalize to [0, 360)
-                                longitude = longitude % 360.0
-                                if longitude < 0:
-                                    longitude += 360.0
-                                positions[planet_name] = longitude
-                except ImportError:
-                    # Fallback to compute_positions if swisseph not available
-                    positions = compute_positions(
-                        engine=engine_type,
-                        name=chart_id,
-                        dt_str=dt_str,
-                        loc_str=loc_str,
-                        requested_objects=requested_objects
+                    if pos:
+                        per_body_results[planet] = pos
+                except (KeyError, ValueError):
+                    continue
+
+            for body_id in minor_bodies:
+                orbit = mpc_orbits.get(body_id)
+                if orbit is None:
+                    continue
+                try:
+                    pos = _compute_planet_extended_positions_vectorized(
+                        sun_body + orbit, eph, observer, t_array, vernal_offsets,
+                        include_physical=include_physical,
+                        include_topocentric=include_topocentric,
+                        sun_astrometric=sun_astrometric,
                     )
-                except Exception as e:
-                    logger.warning(f"Direct swisseph computation failed for {dt_str}: {e}, falling back to compute_positions")
-                    # Fallback to compute_positions
-                    positions = compute_positions(
-                        engine=engine_type,
-                        name=chart_id,
-                        dt_str=dt_str,
-                        loc_str=loc_str,
-                        requested_objects=requested_objects
-                    )
-            
-            # Add to batch
-            positions_batch.append((dt_str, positions))
-            
-            # Store batch when it reaches batch_size
-            if len(positions_batch) >= batch_size:
-                self._store_batch(chart_id, positions_batch, engine_str, ephemeris_file, radix_chart_id)
-                stored_count += len(positions_batch)
-                positions_batch = []
-                
-                # Progress update
-                if (i + 1) % 1000 == 0:
-                    logger.info(
-                        "Progress: %s/%s (%.1f%%)",
-                        f"{i+1:,}",
-                        f"{total_timestamps:,}",
-                        100 * (i + 1) / total_timestamps,
-                    )
-        
-        # Store remaining batch
-        if positions_batch:
+                    if pos:
+                        per_body_results[body_id] = pos
+                except (KeyError, ValueError):
+                    continue
+
+            # Unpack the vectorized (numpy-array-per-field) results back into the same
+            # per-timestamp dict shape _store_batch expects - cheap (no Skyfield calls left).
+            positions_batch = []
+            for i in range(n_chunk):
+                positions = {}
+                for body_id, fields in per_body_results.items():
+                    pos_data = {}
+                    for key, arr in fields.items():
+                        if arr is None:
+                            pos_data[key] = None
+                        elif key == 'retrograde':
+                            pos_data[key] = bool(arr[i])
+                        else:
+                            pos_data[key] = float(arr[i])
+                    positions[body_id] = pos_data
+                positions_batch.append((chunk_dt_strs[i], positions))
+
             self._store_batch(chart_id, positions_batch, engine_str, ephemeris_file, radix_chart_id)
-            stored_count += len(positions_batch)
-        
+            stored_count += n_chunk
+
+            logger.info(
+                "Progress: %s/%s (%.1f%%)",
+                f"{chunk_end:,}",
+                f"{total_timestamps:,}",
+                100 * chunk_end / total_timestamps,
+            )
+
         return stored_count
     
     def _store_batch(self, chart_id: str, positions_batch: List[tuple], engine: str, ephemeris_file: Optional[str], radix_chart_id: Optional[str] = None):
-        """Store a batch of positions using optimized batch INSERT.
-        
-        This is much faster than calling store_positions() individually because it:
-        - Collects all rows first
-        - Uses executemany() for single batch INSERT
-        - Avoids per-row overhead
+        """Store a batch of positions using a single bulk INSERT.
+
+        Builds one pandas DataFrame for the whole batch and inserts it via
+        `INSERT OR REPLACE INTO ... SELECT ... FROM <registered df>`, which DuckDB runs as
+        one vectorized columnar operation. `executemany()` with per-row parameter binding
+        measured ~300 rows/sec here; this is dramatically faster for large batches.
         """
         rows = []
         for datetime_str, positions in positions_batch:
@@ -542,7 +509,7 @@ class DuckDBStorage:
                         'is_radix': radix_chart_id is None,
                     }
                 else:
-                    # Simple format (Kerykeion)
+                    # Simple format (plain float longitude, no extended fields)
                     row = {
                         'chart_id': chart_id,
                         'datetime': dt,
@@ -570,37 +537,38 @@ class DuckDBStorage:
                     }
                 rows.append(row)
         
-        # Batch INSERT using executemany (much faster than individual INSERTs)
-        if rows:
-            columns = [
-                'chart_id', 'datetime', 'object_id', 'longitude', 'latitude',
-                'declination', 'right_ascension', 'distance',
-                'altitude', 'azimuth',
-                'apparent_magnitude', 'phase_angle', 'elongation', 'light_time',
-                'speed', 'retrograde',
-                'engine', 'ephemeris_file', 'radix_chart_id',
-                'has_equatorial', 'has_topocentric', 'has_physical', 'is_radix'
-            ]
-            
-            values = [
-                tuple(row[col] for col in columns)
-                for row in rows
-            ]
-            
-            self.conn.executemany(
-                """
-                INSERT OR REPLACE INTO computed_positions 
-                (chart_id, datetime, object_id, longitude, latitude,
-                 declination, right_ascension, distance,
-                 altitude, azimuth,
-                 apparent_magnitude, phase_angle, elongation, light_time,
-                 speed, retrograde,
-                 engine, ephemeris_file, radix_chart_id,
-                 has_equatorial, has_topocentric, has_physical, is_radix)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                values
+        if not rows:
+            return
+
+        import pandas as pd
+
+        columns = [
+            'chart_id', 'datetime', 'object_id', 'longitude', 'latitude',
+            'declination', 'right_ascension', 'distance',
+            'altitude', 'azimuth',
+            'apparent_magnitude', 'phase_angle', 'elongation', 'light_time',
+            'speed', 'retrograde',
+            'engine', 'ephemeris_file', 'radix_chart_id',
+            'has_equatorial', 'has_topocentric', 'has_physical', 'is_radix'
+        ]
+
+        df = pd.DataFrame(rows, columns=columns)
+        # 'retrograde' mixes True/False/None - the pandas nullable boolean dtype maps it to a
+        # proper nullable BOOLEAN column; the has_* / is_radix flags are always plain bool.
+        df['retrograde'] = df['retrograde'].astype('boolean')
+        for bool_col in ('has_equatorial', 'has_topocentric', 'has_physical', 'is_radix'):
+            df[bool_col] = df[bool_col].astype(bool)
+
+        view_name = f"_positions_batch_{id(df)}"
+        self.conn.register(view_name, df)
+        try:
+            column_list = ', '.join(columns)
+            self.conn.execute(
+                f"INSERT OR REPLACE INTO computed_positions ({column_list}) "
+                f"SELECT {column_list} FROM {view_name}"
             )
+        finally:
+            self.conn.unregister(view_name)
     
     def store_positions_batch(
         self,
