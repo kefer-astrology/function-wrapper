@@ -1,0 +1,27 @@
+docs/site/content/ephemeris.md
+  s_9947e33d59ecbf::t_3b20d333d175ee 120
+  s_9947e33d59ecbf::t_102a75642c070c 29,36
+  s_9947e33d59ecbf::t_51e9cdd538240a 126,128,130,132-135,137,139,141
+  s_9947e33d59ecbf::t_e9c1412c1da661 37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "51a77d863f9a38fd5575adb388cb828bc53cbc69",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_9947e33d59ecbf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "153437b8-87dc-4acc-87be-dc35f35bbe1d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    }
+  }
+}
