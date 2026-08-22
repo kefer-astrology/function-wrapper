@@ -173,7 +173,7 @@ class TestStorageStress(unittest.TestCase):
             if cfg and cfg.engine:
                 engine = cfg.engine.value if hasattr(cfg.engine, 'value') else str(cfg.engine)
             else:
-                engine = 'swisseph'  # Default to Kerykeion
+                engine = 'jpl'
             eph = cfg.override_ephemeris if cfg else None
             
             # Handle both datetime and string event_time

@@ -1,0 +1,23 @@
+owner: Stress Test
+active_model: default
+aspects: []
+default:
+  ephemeris_engine: jpl
+  ephemeris_backend: de421
+  location_name: Prague
+  location_latitude: 50.0875
+  location_longitude: 14.4214
+  timezone: Europe/Prague
+  language: cs
+  theme: default
+  default_house_system: null
+  default_bodies: null
+  default_aspects: null
+  default_aspect_orbs: null
+  time_system: null
+chart_presets: []
+subjects: []
+charts:
+- charts/stress-test-base.yml
+layouts: []
+annotations: []

@@ -129,46 +129,45 @@ class TestCLI(unittest.TestCase):
         aspects = result["aspects"]
         self.assertIsInstance(aspects, list)
     
-    def test_compute_chart_kerykeion(self):
-        """Test compute_chart command with Kerykeion engine."""
-        # Create a chart with Kerykeion engine
+    def test_compute_chart_legacy_swisseph_engine_falls_back_to_jpl(self):
+        """A chart saved with the legacy 'swisseph' engine value still computes via JPL/skyfield."""
         tz = pytz.timezone("Europe/Prague")
         dt = tz.localize(datetime(2024, 1, 1, 12, 0))
         loc = _make_sample_location()
         chart = prepare_horoscope(
-            name="Kerykeion Test",
+            name="Legacy Engine Test",
             dt=dt,
             loc=loc,
-            engine=EngineType.SWISSEPH,  # Use Kerykeion
+            engine=EngineType.SWISSEPH,  # legacy value; only JPL/skyfield is computed now
             ephemeris_path=None,
             zodiac=ZodiacType.TROPICAL,
             house=HouseSystem.PLACIDUS,
         )
-        
+
         # Add to workspace
         ws = load_workspace(self.workspace_path)
         add_chart(ws, chart, base_dir=self.base)
         # Save workspace to update manifest
         save_workspace_modular(ws, self.base)
-        
+
         args = {
             "workspace_path": self.workspace_path,
-            "chart_id": "Kerykeion Test",
+            "chart_id": "Legacy Engine Test",
             "include_physical": False,
             "include_topocentric": False,
         }
-        
+
         result = self._run_cli("compute_chart", args)
-        
+
         self.assertNotIn("error", result, f"Error in result: {result}")
         self.assertIn("positions", result)
-        
-        # For Kerykeion, positions should be simple format (float)
+
+        # All positions come from the JPL/skyfield engine now, in extended-dict format.
         positions = result["positions"]
         if positions:
             first_pos = next(iter(positions.values()))
-            # Kerykeion returns simple float longitude
-            self.assertIsInstance(first_pos, (int, float))
+            self.assertIsInstance(first_pos, dict)
+            self.assertIn("longitude", first_pos)
     
     def test_compute_chart_not_found(self):
         """Test compute_chart with non-existent chart."""

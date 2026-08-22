@@ -1,7 +1,7 @@
 """
 Comprehensive test suite covering all functionality:
 - Date, place, location parsing
-- Engine functionality (Skyfield/JPL, Kerykeion)
+- Engine functionality (Skyfield/JPL)
 - Workspace flow (including StarFisher import)
 - CLI accessibility
 - Chart computation with timestamps
@@ -188,21 +188,22 @@ class TestComprehensive(unittest.TestCase):
             self.assertGreaterEqual(lon, 0.0)
             self.assertLess(lon, 360.0)
     
-    def test_04_kerykeion_engine_functionality(self):
-        """Test Kerykeion engine functionality."""
-        chart = _make_sample_chart("Kerykeion Test", self.base_time, self.loc, EngineType.SWISSEPH)
-        
+    def test_04_legacy_swisseph_engine_falls_back_to_jpl(self):
+        """A chart with the legacy 'swisseph' engine value still computes via JPL/skyfield."""
+        chart = _make_sample_chart("Legacy Engine Test", self.base_time, self.loc, EngineType.SWISSEPH)
+
         # Compute positions
         positions = compute_positions_for_chart(chart, ws=self.ws)
-        
+
         self.assertIsInstance(positions, dict)
         self.assertGreater(len(positions), 0)
-        
-        # Kerykeion returns simple float format
+
+        # All positions come from the JPL/skyfield engine now, in extended-dict format.
         first_pos = next(iter(positions.values()))
-        self.assertIsInstance(first_pos, (int, float))
-        self.assertGreaterEqual(first_pos, 0.0)
-        self.assertLess(first_pos, 360.0)
+        self.assertIsInstance(first_pos, dict)
+        lon = first_pos["longitude"]
+        self.assertGreaterEqual(lon, 0.0)
+        self.assertLess(lon, 360.0)
     
     def test_05_workspace_chart_creation(self):
         """Test creating and saving charts in workspace."""
@@ -376,35 +377,35 @@ class TestComprehensive(unittest.TestCase):
         self.assertEqual(len(self.ws.charts), 2, f"Workspace should have exactly 2 charts, found {len(self.ws.charts)}")
     
     def test_11_engine_comparison(self):
-        """Test that both engines produce reasonable results."""
+        """A chart's engine value (JPL or the legacy 'swisseph' value) doesn't change results."""
         chart_jpl = _make_sample_chart("JPL", self.base_time, self.loc, EngineType.JPL)
-        chart_kery = _make_sample_chart("Kerykeion", self.base_time, self.loc, EngineType.SWISSEPH)
-        
+        chart_legacy = _make_sample_chart("Legacy", self.base_time, self.loc, EngineType.SWISSEPH)
+
         pos_jpl = compute_positions_for_chart(chart_jpl, ws=self.ws)
-        pos_kery = compute_positions_for_chart(chart_kery, ws=self.ws)
-        
+        pos_legacy = compute_positions_for_chart(chart_legacy, ws=self.ws)
+
         # Both should have positions
         self.assertGreater(len(pos_jpl), 0)
-        self.assertGreater(len(pos_kery), 0)
-        
+        self.assertGreater(len(pos_legacy), 0)
+
         # Compare common planets
         common_planets = ["sun", "moon", "mercury", "venus", "mars"]
         for planet in common_planets:
-            if planet in pos_jpl and planet in pos_kery:
+            if planet in pos_jpl and planet in pos_legacy:
                 jpl_lon = pos_jpl[planet]
-                kery_lon = pos_kery[planet]
-                
+                legacy_lon = pos_legacy[planet]
+
                 # Extract longitude
                 if isinstance(jpl_lon, dict):
                     jpl_lon = jpl_lon.get("longitude", 0)
-                if isinstance(kery_lon, dict):
-                    kery_lon = kery_lon.get("longitude", 0)
-                
-                # Should be within 5 degrees (different algorithms)
-                diff = abs(jpl_lon - kery_lon)
+                if isinstance(legacy_lon, dict):
+                    legacy_lon = legacy_lon.get("longitude", 0)
+
+                # Same engine underneath now, so results should match exactly (up to fp noise).
+                diff = abs(jpl_lon - legacy_lon)
                 if diff > 180:
                     diff = 360 - diff
-                self.assertLess(diff, 5.0, f"{planet} positions should be close")
+                self.assertLess(diff, 0.001, f"{planet} positions should be identical")
     
     @unittest.skipUnless(STORAGE_AVAILABLE, "duckdb not available")
     def test_12_storage_and_parquet_export(self):
