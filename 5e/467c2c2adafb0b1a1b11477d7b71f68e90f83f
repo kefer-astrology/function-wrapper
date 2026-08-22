@@ -1,0 +1,40 @@
+module/streamlit_ui/streamlit_compute.py
+  s_9947e33d59ecbf::t_4319aeac555f21 1-159
+module/streamlit_ui/streamlit_pages.py
+  s_9947e33d59ecbf::t_4319aeac555f21 1-1125
+module/streamlit_ui/streamlit_menus.py
+  s_9947e33d59ecbf::t_4319aeac555f21 1-561
+module/streamlit_ui/streamlit_workspace.py
+  s_9947e33d59ecbf::t_4319aeac555f21 1-482
+module/streamlit_ui/streamlit_common.py
+  s_9947e33d59ecbf::t_4319aeac555f21 1-154
+module/ui_streamlit.py
+  s_9947e33d59ecbf::t_30fc93ec2a45c5 169-185
+  s_9947e33d59ecbf::t_1535a377c7e249 129
+  s_9947e33d59ecbf::t_67164ded6d6e61 5,7,10,12,26-29,33-36,41-46,48,50-55,139,141,143,145,149,157,161,165
+  s_9947e33d59ecbf::t_5bfa3534cc5572 85
+  s_9947e33d59ecbf::t_4319aeac555f21 15,17,20,22,25,32,40,49
+  s_9947e33d59ecbf::t_fd1e0bd2eade55 123-124
+  s_9947e33d59ecbf::t_e42b45407fed61 68,74,87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "5e467c2c2adafb0b1a1b11477d7b71f68e90f83f",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_9947e33d59ecbf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "153437b8-87dc-4acc-87be-dc35f35bbe1d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    }
+  }
+}
