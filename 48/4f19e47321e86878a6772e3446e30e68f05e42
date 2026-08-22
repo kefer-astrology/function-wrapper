@@ -1,0 +1,40 @@
+module/z_visual.py
+  s_9947e33d59ecbf::t_829d433980ded8 481-492
+  s_9947e33d59ecbf::t_095a81284728b2 13-15,35-70,72-143
+  s_9947e33d59ecbf::t_75865db9e12197 146,204-205,207,212-214,216,219,245,423,425,434,439-440,442,444-447,453-462
+  s_9947e33d59ecbf::t_90eb9e4341f519 160
+  s_9947e33d59ecbf::t_a02f5bc9a6d668 246-266,435,438
+  s_9947e33d59ecbf::t_c58a45b80e5e64 147-151,156-157,163-183,185-186,189-202,208-209,227-243
+  s_9947e33d59ecbf::t_31fef274491df5 463-464
+  s_9947e33d59ecbf::t_e2c36dcf1ec95c 452
+  s_9947e33d59ecbf::t_8d3394a20efaee 333-334
+  s_9947e33d59ecbf::t_677c7084856a71 3
+  s_9947e33d59ecbf::t_d0d51e6fd10366 1-2
+  s_9947e33d59ecbf::t_056fdddd353f28 358,372,376
+  s_9947e33d59ecbf::t_b29906c30748df 267-332,335-357,359-371,373-375,377-422,424,426-433,436-437,441,443,448-451
+  s_9947e33d59ecbf::t_c3ba49a3570822 144-145
+  s_9947e33d59ecbf::t_b175c95a3164be 203
+  s_9947e33d59ecbf::t_f6c3922e3018de 244
+  s_9947e33d59ecbf::t_5275e07dcc2904 493
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "484f19e47321e86878a6772e3446e30e68f05e42",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_9947e33d59ecbf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "153437b8-87dc-4acc-87be-dc35f35bbe1d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    }
+  }
+}
