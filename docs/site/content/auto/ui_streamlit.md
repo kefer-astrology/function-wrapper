@@ -19,12 +19,6 @@ weight: 10
 main()
 ```
 
-## `render_toolbar`
-
-```python
-render_toolbar()
-```
-
 ## How the UI is invoked
 
 Entry point: `main()`

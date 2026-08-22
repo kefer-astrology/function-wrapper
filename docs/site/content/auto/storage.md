@@ -70,9 +70,9 @@ avoiding large JSON transfers for batch operations.
   
   Close database connection.
 
-- `compute_and_store_series(self, chart_id: str, start_datetime: datetime.datetime, end_datetime: datetime.datetime, time_step: datetime.timedelta, location: 'Location', engine: str = 'swisseph', ephemeris_file: Optional[str] = None, requested_objects: Optional[List[str]] = None, include_physical: bool = False, include_topocentric: bool = False, batch_size: int = 1000, radix_chart_id: Optional[str] = None) -> int`
+- `compute_and_store_series(self, chart_id: str, start_datetime: datetime.datetime, end_datetime: datetime.datetime, time_step: datetime.timedelta, location: 'Location', engine: str = 'jpl', ephemeris_file: Optional[str] = None, requested_objects: Optional[List[str]] = None, include_physical: bool = False, include_topocentric: bool = False, batch_size: int = 1000, radix_chart_id: Optional[str] = None) -> int`
   
-  Optimized: Compute and store time series with pre-initialized engines.
+  Optimized: Compute and store time series with pre-initialized JPL/Skyfield engine.
 
 - `compute_aspects_from_positions(self, chart_id: str, datetime_str: Optional[str] = None, aspect_definitions: Optional[List[Dict[str, float]]] = None, max_orb: float = 10.0)`
   

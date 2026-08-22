@@ -26,7 +26,7 @@ Build a ChartInstance using workspace defaults when provided.
 ## `build_radix_figure_for_chart`
 
 ```python
-build_radix_figure_for_chart(chart: module.models.ChartInstance, engine_override: Optional[module.models.EngineType] = None, ephemeris_path_override: Optional[str] = None, ws: Optional[ForwardRef('Workspace')] = None) -> Any
+build_radix_figure_for_chart(chart: module.models.ChartInstance, engine_override: Optional[module.models.EngineType] = None, ephemeris_path_override: Optional[str] = None, ws: Optional[ForwardRef('Workspace')] = None, transit_positions: Optional[Dict[str, Any]] = None) -> Any
 ```
 
 Extract positions from a ChartInstance's computed_chart and return a Plotly Figure ready to render.
@@ -41,10 +41,20 @@ Extract positions from a ChartInstance's computed_chart and return a Plotly Figu
 
 - **ws**: Optional workspace for resolving observable objects defaults
 
+- **transit_positions**: Optional transiting-body longitudes; when supplied, the figure gains an additional ring outside the radix's own outer border (a bi-wheel), the same way a transit overlay works in the React reference app.
+
 
 #### Returns
 
 Plotly Figure object ready for rendering
+
+## `build_text_report`
+
+```python
+build_text_report(name: str, place: Optional[str], time: Optional[str], positions: Dict[str, Any]) -> str
+```
+
+Plain-text position summary, grouped by object type (Skyfield-backed, no kerykeion).
 
 ## `compute_aspects`
 
@@ -150,13 +160,11 @@ Compute JPL-backed chart positions through the backend seam.
 compute_positions(engine: Optional[module.models.EngineType], name: str, dt_str: str, loc_str: str, ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None) -> Dict[str, Union[float, Dict[str, float]]]
 ```
 
-Dispatch position computation based on engine.
-- For EngineType.JPL, returns a dict of ecliptic longitudes using Skyfield and a local ephemeris file.
-- For other or None, returns Kerykeion observable object longitudes (degrees) as a dict.
+Compute planetary/point positions via the Skyfield JPL pipeline.
 
 #### Parameters
 
-- **engine**: Computation engine to use
+- **engine**: Requested engine (only JPL is honored; others are logged and ignored)
 
 - **name**: Subject name
 
@@ -234,75 +242,6 @@ compute_positions_for_inputs(engine: Optional[module.models.EngineType], name: s
 
 Thin wrapper over compute_positions to normalize/forward parameters from UI layers.
 
-## `compute_subject`
-
-```python
-compute_subject(name: str, dt_str: str, loc_str: str, zodiac: str = 'Tropical') -> Any
-```
-
-Construct a Kerykeion astrological subject from strings.
-
-#### Parameters
-
-- **name**: Subject name (human-readable identifier)
-
-- **dt_str**: Datetime string (parsed by utils.Actual)
-
-- **loc_str**: Location string (parsed by utils.Actual)
-
-- **zodiac**: Zodiac type, defaults to "Tropical"
-
-
-#### Returns
-
-Astrological subject instance with computed positions
-
-## `compute_swiss_positions_for_chart`
-
-```python
-compute_swiss_positions_for_chart(chart: module.models.ChartInstance, ws: Optional[ForwardRef('Workspace')] = None) -> Dict[str, Union[float, Dict[str, float]]]
-```
-
-Compute Swiss/Kerykeion-backed chart positions through the backend seam.
-
-## `create_relation_svg`
-
-```python
-create_relation_svg(subject1: kerykeion.backword.AstrologicalSubject, subject2: kerykeion.backword.AstrologicalSubject, chart_type: str = 'Synastry') -> kerykeion.backword.KerykeionChartSVG
-```
-
-Create a Kerykeion SVG chart for relation/composite types.
-
-#### Parameters
-
-- **subject1**: First astrological subject
-
-- **subject2**: Second astrological subject
-
-- **chart_type**: Type of relation chart (e.g., "Synastry", "Composite"), defaults to "Synastry"
-
-
-#### Returns
-
-KerykeionChartSVG instance with generated SVG chart
-
-## `extract_kerykeion_points`
-
-```python
-extract_kerykeion_points(obj: Any) -> pandas.DataFrame
-```
-
-Extract KerykeionPointModel attributes from an object into a DataFrame.
-
-#### Parameters
-
-- **obj**: Object containing KerykeionPointModel attributes
-
-
-#### Returns
-
-DataFrame with one row per KerykeionPointModel attribute found
-
 ## `find_chart_by_name_or_id`
 
 ```python
@@ -375,6 +314,14 @@ Return a new AstroModel with selective overrides applied.
 
 New AstroModel instance with overrides applied
 
+## `positions_to_dataframe`
+
+```python
+positions_to_dataframe(positions: Dict[str, Any]) -> pandas.DataFrame
+```
+
+Flatten a positions dict (float longitudes or extended dicts) into a DataFrame.
+
 ## `resolve_effective_defaults`
 
 ```python
@@ -418,11 +365,11 @@ List of ChartInstance objects matching the query
 
 ### class `Subject` 
 
-Lightweight wrapper around Kerykeion's AstrologicalSubject builder.
+Thin wrapper around the skyfield/JPL position pipeline, for the TUI menu.
 
 Usage:
-- Call at_place() then at_time() to prepare `self.computed`.
-- Use data() to extract names, degrees, and labels for plotting.
+- Call at_place() then at_time() to compute `self.positions`.
+- Use data() to extract names/degrees for plotting; report() for a text summary.
 
 #### Methods
 
@@ -432,12 +379,12 @@ Usage:
 
 - `at_time(self, time: str) -> None`
   
-  Set event time from a free-text datetime string and build computed subject.
+  Set event time from a free-text datetime string and compute positions.
 
 - `data(self)`
   
-  Return (object_names, degrees, labels) extracted from computed planets list.
+  Return (object_names, degrees, labels) extracted from computed positions.
 
-- `report(self)`
+- `report(self) -> str`
   
-  Build a Kerykeion textual Report for the computed subject.
+  Build a plain-text position report for the computed subject.

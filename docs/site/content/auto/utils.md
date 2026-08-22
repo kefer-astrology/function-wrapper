@@ -32,29 +32,6 @@ Combine a date and time into a naive datetime (no timezone).
 
 Naive datetime combining date and time
 
-## `compute_vernal_equinox_offset`
-
-```python
-compute_vernal_equinox_offset(year: int, eph, observer, ts) -> float
-```
-
-Compute the vernal equinox offset for tropical astrology adjustment.
-
-#### Parameters
-
-- **year**: The year to compute the vernal equinox for
-
-- **eph**: Skyfield ephemeris object
-
-- **observer**: Skyfield Topos observer object
-
-- **ts**: Skyfield timescale object
-
-
-#### Returns
-
-The ecliptic longitude offset in degrees [0, 360)
-
 ## `default_ephemeris_path`
 
 ```python
@@ -62,6 +39,14 @@ default_ephemeris_path() -> str
 ```
 
 Return the default path to the local JPL ephemeris file.
+
+## `default_mpc_elements_path`
+
+```python
+default_mpc_elements_path() -> str
+```
+
+Return the path to the vendored MPCORB element rows for Chiron/Ceres/Pallas/Juno/Vesta.
 
 ## `ensure_aware`
 
