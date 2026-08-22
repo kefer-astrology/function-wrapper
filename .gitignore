@@ -184,8 +184,10 @@ result/
 source/*
 
 # take there only default source file
+!source/de440s.bsp
 !source/de421.bsp
 !source/starfisher_sample.sfs
+!source/mpc_bodies.dat
 
 # Test sample workspace (for inspection)
 tests/sample/
