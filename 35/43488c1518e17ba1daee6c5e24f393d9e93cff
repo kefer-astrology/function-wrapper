@@ -1,0 +1,27 @@
+.gitignore
+  s_9947e33d59ecbf::t_aa37b22e85eeee 190
+  h_0907ec034f4a17 187
+source/mpc_bodies.dat
+  s_9947e33d59ecbf::t_08ff25f3a2ca32 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "3543488c1518e17ba1daee6c5e24f393d9e93cff",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_9947e33d59ecbf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "153437b8-87dc-4acc-87be-dc35f35bbe1d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    }
+  }
+}
