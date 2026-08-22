@@ -12,7 +12,6 @@ requires-python = ">=3.10,<4"
 dependencies = [
     "duckdb>=1.4.3",
     "geopy>=2.4.1",
-    "kerykeion>=4.26.0",
     "pandas>=2.3.1",
     "pyarrow>=21.0.0",
     "PyYAML>=6.0.2",
@@ -84,7 +83,6 @@ package-mode = false
 python = ">=3.10,<4"
 duckdb = ">=1.4.3"
 geopy = ">=2.4.1"
-kerykeion = ">=4.26.0"
 pandas = ">=2.3.1"
 pyarrow = ">=21.0.0"
 PyYAML = ">=6.0.2"
