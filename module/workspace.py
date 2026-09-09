@@ -8,6 +8,8 @@ try:
         ChartInstance, ViewLayout, Annotation, ChartConfig, Location, HouseSystem, EngineType, WorkspaceDefaults,
         BodyDefinition, ObjectType, AspectDefinition, AstroModel, ModelSettings, Sign, Element,
         ZodiacType, Ayanamsa, AspectContext, ModelOverrides, OverrideEntry, TimeSystem,
+        AstrologySchool, WorkspacePresentation, TransitSetup,
+        ElementColorSettings, RadixPointColorSettings,
         Diagnostic, DiagnosticSeverity, LoadedWorkspace
     )
 except ImportError:
@@ -16,6 +18,8 @@ except ImportError:
         ChartInstance, ViewLayout, Annotation, ChartConfig, Location, HouseSystem, EngineType, WorkspaceDefaults,
         BodyDefinition, ObjectType, AspectDefinition, AstroModel, ModelSettings, Sign, Element,
         ZodiacType, Ayanamsa, AspectContext, ModelOverrides, OverrideEntry, TimeSystem,
+        AstrologySchool, WorkspacePresentation, TransitSetup,
+        ElementColorSettings, RadixPointColorSettings,
         Diagnostic, DiagnosticSeverity, LoadedWorkspace
     )
 try:
@@ -48,10 +52,8 @@ except ImportError:
     )
 
 try:
-    from module.services import get_active_model
     from module.model_catalog import builtin_standard_model
 except ImportError:
-    from services import get_active_model
     from model_catalog import builtin_standard_model
 
 # ─────────────────────
@@ -158,6 +160,7 @@ def load_workspace_aggregate(workspace_path: str) -> LoadedWorkspace:
             config=parse_chart_config(raw.get("config")),
         ),
     )
+    transit_analyses = load_many("transit_analyses", _parse_transit_setup)
     layouts = load_many("layouts", lambda raw: ViewLayout(**raw))
 
     annotations: List[Annotation] = []
@@ -184,7 +187,9 @@ def load_workspace_aggregate(workspace_path: str) -> LoadedWorkspace:
             ))
 
     workspace = Workspace(
+        schema_version=int(manifest.get("schema_version", 1) or 1),
         owner=str(manifest.get("owner") or ""),
+        active_school=manifest.get("active_school"),
         active_model=manifest.get("active_model"),
         chart_presets=chart_presets,
         subjects=subjects,
@@ -192,7 +197,10 @@ def load_workspace_aggregate(workspace_path: str) -> LoadedWorkspace:
         layouts=layouts,
         annotations=annotations,
         models=_parse_models(manifest.get("models")),
+        schools=_parse_schools(manifest.get("schools")),
         model_overrides=_parse_model_overrides(manifest.get("model_overrides")),
+        presentation=_parse_presentation(manifest.get("presentation")),
+        transit_analyses=transit_analyses,
         aspects=list(manifest.get("aspects", []) or []),
         bodies=list(manifest.get("bodies", []) or []),
         default=_parse_workspace_defaults(manifest),
@@ -309,6 +317,7 @@ def _parse_model(raw: dict, fallback_name: str) -> AstroModel:
             avg_speed=float(body.get("avg_speed", 0.0) or 0.0),
             max_orb=float(body.get("max_orb", 0.0) or 0.0),
             i18n=dict(body.get("i18n", {}) or {}),
+            enabled=bool(body.get("enabled", True)),
             object_type=_safe_enum(body.get("object_type"), ObjectType),
             computation_map=dict(body.get("computation_map", {}) or {}),
             requires_location=bool(body.get("requires_location", False)),
@@ -326,6 +335,7 @@ def _parse_model(raw: dict, fallback_name: str) -> AstroModel:
             angle=float(aspect.get("angle", 0.0) or 0.0),
             default_orb=float(aspect.get("default_orb", 0.0) or 0.0),
             i18n=dict(aspect.get("i18n", {}) or {}),
+            enabled=bool(aspect.get("enabled", True)),
             color=aspect.get("color"),
             importance=aspect.get("importance"),
             line_style=aspect.get("line_style"),
@@ -335,6 +345,7 @@ def _parse_model(raw: dict, fallback_name: str) -> AstroModel:
                 [_safe_enum(value, AspectContext) for value in contexts]
                 if contexts is not None else None
             ),
+            interpretation_weight=aspect.get("interpretation_weight"),
         ))
 
     signs = []
@@ -377,6 +388,8 @@ def _parse_model(raw: dict, fallback_name: str) -> AstroModel:
         engine=_safe_engine(raw.get("engine")),
         zodiac_type=_safe_enum(raw.get("zodiac_type"), ZodiacType),
         ayanamsa=_safe_enum(raw.get("ayanamsa"), Ayanamsa),
+        school=raw.get("school"),
+        version=int(raw.get("version", 1) or 1),
     )
 
 
@@ -406,6 +419,65 @@ def _parse_model_overrides(raw: Any) -> Optional[ModelOverrides]:
         aspects=entries("aspects"),
         override_orbs=dict(raw.get("override_orbs", {}) or {}),
     )
+
+
+def _parse_schools(raw: Any) -> Dict[str, AstrologySchool]:
+    if not isinstance(raw, dict):
+        return {}
+    return {
+        str(key): AstrologySchool(
+            id=str(value.get("id") or key),
+            default_model=str(value.get("default_model") or ""),
+            extends=value.get("extends"),
+        )
+        for key, value in raw.items()
+        if isinstance(value, dict)
+    }
+
+
+def _parse_presentation(raw: Any) -> WorkspacePresentation:
+    value = raw if isinstance(raw, dict) else {}
+    element_colors = value.get("element_colors")
+    radix_colors = value.get("radix_point_colors")
+    return WorkspacePresentation(
+        theme=value.get("theme"),
+        language=value.get("language"),
+        glyph_set=value.get("glyph_set"),
+        element_colors=(
+            ElementColorSettings(**element_colors)
+            if isinstance(element_colors, dict) else None
+        ),
+        radix_point_colors=(
+            RadixPointColorSettings(**radix_colors)
+            if isinstance(radix_colors, dict) else None
+        ),
+        aspect_colors=dict(value.get("aspect_colors", {}) or {}) or None,
+        aspect_line_tier_style=(
+            dict(value.get("aspect_line_tier_style", {}) or {}) or None
+        ),
+    )
+
+
+def _parse_transit_setup(raw: dict) -> TransitSetup:
+    value = dict(raw)
+    value["model_overrides"] = _parse_model_overrides(value.get("model_overrides"))
+    return TransitSetup(**value)
+
+
+def _load_transit_analyses(base_dir: str, manifest: dict) -> List[TransitSetup]:
+    analyses: List[TransitSetup] = []
+    for reference in manifest.get("transit_analyses", []) or []:
+        try:
+            raw = (
+                _load_yaml_file(base_dir, reference)
+                if isinstance(reference, str)
+                else reference
+            )
+            if isinstance(raw, dict):
+                analyses.append(_parse_transit_setup(raw))
+        except Exception:
+            continue
+    return analyses
 
 
 def _load_yaml_file(base_dir: str, path: str) -> dict:
@@ -565,12 +637,15 @@ def _parse_workspace_defaults(manifest: dict) -> WorkspaceDefaults:
     
     # Parse location if present
     default_location = None
+    canonical_location = default_block.get("default_location")
+    if isinstance(canonical_location, dict):
+        default_location = Location(**canonical_location)
     loc_name = default_block.get('location_name')
     loc_lat = default_block.get('location_latitude')
     loc_lon = default_block.get('location_longitude')
     loc_tz = default_block.get('timezone')
     
-    if loc_name and loc_lat is not None and loc_lon is not None and loc_tz:
+    if default_location is None and loc_name and loc_lat is not None and loc_lon is not None and loc_tz:
         default_location = Location(
             name=loc_name,
             latitude=loc_lat,
@@ -589,8 +664,14 @@ def _parse_workspace_defaults(manifest: dict) -> WorkspaceDefaults:
         default_aspects=default_block.get('default_aspects'),
         default_aspect_orbs=default_block.get('default_aspect_orbs'),
         default_aspect_colors=default_block.get('default_aspect_colors'),
-        element_colors=default_block.get('element_colors'),
-        radix_point_colors=default_block.get('radix_point_colors'),
+        element_colors=(
+            ElementColorSettings(**default_block["element_colors"])
+            if isinstance(default_block.get("element_colors"), dict) else None
+        ),
+        radix_point_colors=(
+            RadixPointColorSettings(**default_block["radix_point_colors"])
+            if isinstance(default_block.get("radix_point_colors"), dict) else None
+        ),
         time_system=_safe_enum(default_block.get('time_system'), TimeSystem),
     )
 
@@ -623,7 +704,9 @@ def _load_workspace_from_manifest(manifest: dict, base_dir: str) -> Workspace:
     ws_defaults = _parse_workspace_defaults(manifest)
 
     ws = Workspace(
+        schema_version=int(manifest.get("schema_version", 1) or 1),
         owner=manifest.get('owner', ''),
+        active_school=manifest.get("active_school"),
         active_model=active_model,
         chart_presets=chart_presets,
         subjects=subjects,
@@ -631,7 +714,10 @@ def _load_workspace_from_manifest(manifest: dict, base_dir: str) -> Workspace:
         layouts=layouts,
         annotations=annotations,
         models=_parse_models(manifest.get("models")),
+        schools=_parse_schools(manifest.get("schools")),
         model_overrides=_parse_model_overrides(manifest.get("model_overrides")),
+        presentation=_parse_presentation(manifest.get("presentation")),
+        transit_analyses=_load_transit_analyses(base_dir, manifest),
         aspects=aspects or [],
         bodies=list(manifest.get("bodies", []) or []),
         default=ws_defaults,
@@ -858,32 +944,20 @@ def _build_default_block(workspace: Workspace) -> dict:
     """
     d = workspace.default
     
-    # Serialize location if present, otherwise use fallback defaults
-    if d.default_location:
-        location_name = d.default_location.name
-        location_latitude = d.default_location.latitude
-        location_longitude = d.default_location.longitude
-        timezone = d.default_location.timezone
-    else:
-        location_name = DEFAULT_LOCATION.get("name") if isinstance(DEFAULT_LOCATION, dict) else None
-        location_latitude = DEFAULT_LOCATION.get("latitude") if isinstance(DEFAULT_LOCATION, dict) else None
-        location_longitude = DEFAULT_LOCATION.get("longitude") if isinstance(DEFAULT_LOCATION, dict) else None
-        timezone = DEFAULT_LOCATION.get("timezone") if isinstance(DEFAULT_LOCATION, dict) else None
-    
     return {
         "ephemeris_engine": (getattr(d.ephemeris_engine, 'value', d.ephemeris_engine) if d.ephemeris_engine else None),
         "ephemeris_backend": d.ephemeris_backend,
-        "location_name": location_name,
-        "location_latitude": location_latitude,
-        "location_longitude": location_longitude,
-        "timezone": timezone,
-        "language": (d.language if d.language is not None else "cs"),  # Default language (UI-specific)
-        "theme": (d.theme if d.theme is not None else "default"),
+        "element_colors": _to_primitive(d.element_colors),
+        "radix_point_colors": _to_primitive(d.radix_point_colors),
+        "default_location": _to_primitive(d.default_location),
+        "language": d.language,
+        "theme": d.theme,
         "default_house_system": (getattr(d.default_house_system, 'value', d.default_house_system) if d.default_house_system else None),
-        "default_bodies": (d.default_bodies if d.default_bodies else None),
-        "default_aspects": (d.default_aspects if d.default_aspects else None),
-        "default_aspect_orbs": (d.default_aspect_orbs if getattr(d, 'default_aspect_orbs', None) else None),
-        "time_system": (getattr(d.time_system, 'value', d.time_system) if d.time_system else None),
+        "default_bodies": d.default_bodies,
+        "default_aspects": d.default_aspects,
+        "default_aspect_orbs": d.default_aspect_orbs,
+        "default_aspect_colors": d.default_aspect_colors,
+        "time_system": _to_primitive(d.time_system),
     }
 
 
@@ -899,7 +973,7 @@ def save_workspace_modular(workspace: Workspace, base_dir: Union[str, Path]) -> 
     """
     base = Path(base_dir)
     # Ensure all subdirectories exist
-    for subdir in ("subjects", "charts", "layouts", "annotations", "presets"):
+    for subdir in ("subjects", "charts", "layouts", "annotations", "presets", "transits"):
         _ensure_dir(base / subdir)
 
     # Save all workspace components
@@ -912,6 +986,12 @@ def save_workspace_modular(workspace: Workspace, base_dir: Union[str, Path]) -> 
                                         lambda l: getattr(l, 'name', 'layout'))
     annotation_refs = _save_workspace_items(base, workspace.annotations, "annotations",
                                             lambda a: getattr(a, 'title', 'note'))
+    transit_refs = _save_workspace_items(
+        base,
+        workspace.transit_analyses,
+        "transits",
+        lambda analysis: analysis.source_chart_id,
+    )
 
     # Build manifest
     default_block = _build_default_block(workspace)
@@ -920,14 +1000,22 @@ def save_workspace_modular(workspace: Workspace, base_dir: Union[str, Path]) -> 
     active_model = getattr(workspace, 'active_model', None)
     
     manifest = {
+        "schema_version": workspace.schema_version,
         "owner": workspace.owner,
+        "active_school": workspace.active_school,
         "active_model": active_model,
+        "schools": _to_primitive(workspace.schools),
         "aspects": list(getattr(workspace, 'aspects', []) or []),
+        "bodies": list(getattr(workspace, 'bodies', []) or []),
+        "models": _to_primitive(workspace.models),
+        "model_overrides": _to_primitive(workspace.model_overrides),
         "default": default_block,
+        "presentation": _to_primitive(workspace.presentation),
         # modular refs
         "chart_presets": preset_refs,
         "subjects": subj_refs,
         "charts": chart_refs,
+        "transit_analyses": transit_refs,
         "layouts": layout_refs,
         "annotations": annotation_refs,
     }
@@ -1415,6 +1503,10 @@ def validate_workspace(ws: Any) -> List[str]:
     """
     issues: List[str] = []
     
+    try:
+        from module.services import get_active_model
+    except ImportError:
+        from services import get_active_model
     model = get_active_model(ws)
     if model is None:
         issues.append("[error] No active model found (ws.models empty or active_model[_name] not set)")

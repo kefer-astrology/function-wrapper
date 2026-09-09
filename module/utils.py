@@ -5,13 +5,25 @@ from datetime import datetime, date, time, timedelta
 from dateutil.parser import parse
 from enum import Enum
 from functools import lru_cache
-from geopy.geocoders import Nominatim
-from geopy.location import Location as GeoLocation
-from geopy.exc import GeopyError
+try:
+    from geopy.geocoders import Nominatim
+    from geopy.location import Location as GeoLocation
+    from geopy.exc import GeopyError
+except ImportError:  # Workspace YAML tooling does not require geocoding extras.
+    Nominatim = None
+
+    class GeoLocation:  # type: ignore[no-redef]
+        pass
+
+    class GeopyError(Exception):  # type: ignore[no-redef]
+        pass
 import math
 import pytz
 from re import match
-from timezonefinder import TimezoneFinder
+try:
+    from timezonefinder import TimezoneFinder
+except ImportError:  # Raised at the feature boundary when lookup is requested.
+    TimezoneFinder = None
 from typing import Optional, Union, List, Tuple, Dict, Any
 from pathlib import Path
 import yaml
@@ -24,14 +36,16 @@ try:
     from module.models import (
         AspectDefinition, AstroModel, BodyDefinition, DateRange, HouseSystem, ChartConfig, ChartInstance, ChartSubject,
         Location, ModelSettings, Sign, ChartMode, EngineType, ZodiacType, Ayanamsa, TimeSystem,
-        Workspace, EphemerisSource, WorkspaceDefaults
+        Workspace, EphemerisSource, WorkspaceDefaults, ModelOverrides, OverrideEntry,
+        AspectContext
     )
 except ImportError:
     # For running directly (e.g. python3 module/utils.py)
     from models import (
         AspectDefinition, AstroModel, BodyDefinition, DateRange, HouseSystem, ChartConfig, ChartInstance, ChartSubject,
         Location, ModelSettings, Sign, ChartMode, EngineType, ZodiacType, Ayanamsa, TimeSystem,
-        Workspace, EphemerisSource, WorkspaceDefaults
+        Workspace, EphemerisSource, WorkspaceDefaults, ModelOverrides, OverrideEntry,
+        AspectContext
     )
 
 try:
@@ -371,6 +385,8 @@ class Actual:
                 self.tz = self._resolve_timezone()
                 return
         # Otherwise, use Nominatim with short timeout and cache
+        if Nominatim is None:
+            raise RuntimeError("geopy is required for place-name geocoding")
         self.service = Nominatim(user_agent="astro-smrk", timeout=1)
         if place_name:
             # For certain "non-existent" place names, fallback to Brno
@@ -423,6 +439,8 @@ class Actual:
     def _resolve_timezone(self) -> str:
         if not self.value:
             return "UTC"
+        if TimezoneFinder is None:
+            raise RuntimeError("timezonefinder is required for coordinate timezone lookup")
         tf = TimezoneFinder()
         return tf.timezone_at(lat=self.value.latitude, lng=self.value.longitude) or "UTC"
 
@@ -677,6 +695,8 @@ def location_from_coords(lat: float, lon: float, name: str = "") -> Location:
     Returns:
         Location instance with inferred timezone
     """
+    if TimezoneFinder is None:
+        raise RuntimeError("timezonefinder is required for coordinate timezone lookup")
     tf = TimezoneFinder()
     tz = tf.timezone_at(lat=lat, lng=lon) or "UTC"
     return Location(name=name or f"{lat},{lon}", latitude=lat, longitude=lon, timezone=tz)
@@ -912,6 +932,30 @@ def parse_chart_config(data: Optional[dict]) -> ChartConfig:
 
     selected_raw = cfg_d.get("selected_aspects")
     observable_raw = cfg_d.get("observable_objects")
+
+    def _model_overrides(raw: Any) -> Optional[ModelOverrides]:
+        if not isinstance(raw, dict):
+            return None
+
+        def entries(key: str) -> List[OverrideEntry]:
+            parsed: List[OverrideEntry] = []
+            for entry in raw.get(key, []) or []:
+                if not isinstance(entry, dict):
+                    continue
+                value = dict(entry)
+                contexts = value.get("valid_contexts")
+                if contexts is not None:
+                    value["valid_contexts"] = [
+                        _enum_or(context, AspectContext, None) for context in contexts
+                    ]
+                parsed.append(OverrideEntry(**value))
+            return parsed
+
+        return ModelOverrides(
+            points=entries("points"),
+            aspects=entries("aspects"),
+            override_orbs=dict(raw.get("override_orbs", {}) or {}),
+        )
     return ChartConfig(
         mode=_enum_or(cfg_d.get("mode", "NATAL"), ChartMode, ChartMode.NATAL),
         house_system=_enum_or(cfg_d.get("house_system"), HouseSystem, None),
@@ -931,6 +975,7 @@ def parse_chart_config(data: Optional[dict]) -> ChartConfig:
         ayanamsa=_enum_or(cfg_d.get("ayanamsa"), Ayanamsa, None),
         observable_objects=None if observable_raw is None else list(observable_raw),
         time_system=_enum_or(cfg_d.get("time_system"), TimeSystem, None),
+        model_overrides=_model_overrides(cfg_d.get("model_overrides")),
     )
 
 
@@ -967,6 +1012,9 @@ def parse_chart_yaml(data: dict) -> ChartInstance:
             latitude=float(loc_d.get('latitude') or 0.0),
             longitude=float(loc_d.get('longitude') or 0.0),
             timezone=timezone_name,
+            utc_offset=loc_d.get("utc_offset"),
+            location_mode=loc_d.get("location_mode"),
+            timezone_mode=loc_d.get("timezone_mode"),
         )
     else:
         # allow free-text location; geocode to model
@@ -991,7 +1039,14 @@ def parse_chart_yaml(data: dict) -> ChartInstance:
 
     cid = data.get('id') or subject.id or name
     tags = [t for t in (data.get('tags') or []) if t]
-    return ChartInstance(id=cid, subject=subject, config=cfg, tags=tags)
+    return ChartInstance(
+        id=cid,
+        subject=subject,
+        config=cfg,
+        tags=tags,
+        tag_colors=dict(data.get("tag_colors", {}) or {}),
+        roden_rating=data.get("roden_rating"),
+    )
 
 def import_chart_yaml(path: str) -> ChartInstance:
     """Read a chart YAML file from disk and parse into a ChartInstance.

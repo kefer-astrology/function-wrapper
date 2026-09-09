@@ -21,6 +21,9 @@ try:
         TimeSystem,
         Workspace,
         ZodiacType,
+        AspectContext,
+        ModelOverrides,
+        OverrideEntry,
     )
     from module.validation import validate_effective_settings, validate_model
 except ImportError:
@@ -41,6 +44,9 @@ except ImportError:
         TimeSystem,
         Workspace,
         ZodiacType,
+        AspectContext,
+        ModelOverrides,
+        OverrideEntry,
     )
     from validation import validate_effective_settings, validate_model
 
@@ -64,6 +70,9 @@ def settings_layer_from_dict(value: Optional[Dict[str, Any]]) -> Optional[Settin
         zodiac_type=_coerce_enum(pick("zodiacType", "zodiac_type"), ZodiacType),
         ayanamsa=_coerce_enum(pick("ayanamsa"), Ayanamsa),
         time_system=_coerce_enum(pick("timeSystem", "time_system"), TimeSystem),
+        model_overrides=_model_overrides_from_dict(
+            pick("modelOverrides", "model_overrides")
+        ),
     )
 
 
@@ -82,6 +91,7 @@ def settings_layer_from_chart_config(config: ChartConfig) -> SettingsLayer:
         zodiac_type=config.zodiac_type,
         ayanamsa=config.ayanamsa,
         time_system=config.time_system,
+        model_overrides=config.model_overrides,
     )
 
 
@@ -106,6 +116,8 @@ def standalone_model_report(
     diagnostics = validate_model(model)
     diagnostics.extend(validate_effective_settings(model, effective))
     return CurrentModelReport(
+        requested_school=None,
+        resolved_school=model.school,
         requested_model=requested,
         resolved_model=model.name,
         source="builtin_standard_model",
@@ -126,13 +138,52 @@ def current_model_report(
 ) -> CurrentModelReport:
     models = ws.models or {}
     available = sorted(models.keys())
+    requested_school = (
+        models.get(chart_config.model).school
+        if chart_config is not None
+        and chart_config.model in models
+        else ws.active_school
+    )
     requested = (
         str(chart_config.model or "").strip()
         if chart_config is not None and chart_config.model
         else str(ws.active_model or "").strip()
     ) or None
+    if requested is None and requested_school in (ws.schools or {}):
+        requested = str(ws.schools[requested_school].default_model or "").strip() or None
     warnings = []
     diagnostics: list[Diagnostic] = []
+
+    if ws.schema_version != 1:
+        diagnostics.append(Diagnostic(
+            code="unsupported_workspace_schema_version",
+            severity=DiagnosticSeverity.ERROR,
+            message=f"Workspace schema version {ws.schema_version} is not supported (expected 1)",
+            path="workspace.schema_version",
+        ))
+    if ws.active_school and ws.active_school not in (ws.schools or {}):
+        diagnostics.append(Diagnostic(
+            code="active_school_not_in_catalog",
+            severity=DiagnosticSeverity.ERROR,
+            message=f"Active school '{ws.active_school}' is not present in the school catalog",
+            path="workspace.active_school",
+        ))
+    for school_id, school in (ws.schools or {}).items():
+        if school.default_model not in models:
+            diagnostics.append(Diagnostic(
+                code="school_default_model_missing",
+                severity=DiagnosticSeverity.ERROR,
+                message=f"School '{school_id}' references missing default model '{school.default_model}'",
+                path=f"workspace.schools.{school_id}.default_model",
+            ))
+    for model_id, candidate in models.items():
+        if candidate.school and candidate.school not in (ws.schools or {}):
+            diagnostics.append(Diagnostic(
+                code="model_school_missing",
+                severity=DiagnosticSeverity.ERROR,
+                message=f"Model '{model_id}' references missing school '{candidate.school}'",
+                path=f"workspace.models.{model_id}.school",
+            ))
 
     if requested and requested in models:
         model = deepcopy(models[requested])
@@ -165,11 +216,19 @@ def current_model_report(
         warnings.append("using_builtin_standard_model")
 
     model = _merge_model_overrides(model, ws.model_overrides)
+    if preset is not None:
+        model = _merge_model_overrides(model, preset.model_overrides)
+    if chart_config is not None:
+        model = _merge_model_overrides(model, chart_config.model_overrides)
+    if operation is not None:
+        model = _merge_model_overrides(model, operation.model_overrides)
     effective = _effective_settings(ws, model, preset, chart_config, operation)
     warnings.extend(_compatibility_warnings(chart_config))
     diagnostics.extend(validate_model(model))
     diagnostics.extend(validate_effective_settings(model, effective))
     return CurrentModelReport(
+        requested_school=requested_school,
+        resolved_school=model.school,
         requested_model=requested,
         resolved_model=model.name,
         source=source,
@@ -299,6 +358,8 @@ def _merge_model_overrides(model: AstroModel, overrides: Any) -> AstroModel:
     if overrides is None:
         return merged
     for entry in overrides.points or []:
+        if not _override_applies(entry, merged):
+            continue
         body = next((candidate for candidate in merged.body_definitions if candidate.id == entry.id), None)
         if body is None:
             continue
@@ -307,11 +368,18 @@ def _merge_model_overrides(model: AstroModel, overrides: Any) -> AstroModel:
             object.__setattr__(body, "glyph", entry.glyph)
         if entry.i18n is not None:
             object.__setattr__(body, "i18n", dict(entry.i18n))
+        if entry.enabled is not None:
+            object.__setattr__(body, "enabled", bool(entry.enabled))
     for entry in overrides.aspects or []:
+        if not _override_applies(entry, merged):
+            continue
         aspect = next((candidate for candidate in merged.aspect_definitions if candidate.id == entry.id), None)
         if aspect is None:
             continue
-        for name in ("glyph", "angle", "default_orb", "i18n"):
+        for name in (
+            "glyph", "angle", "default_orb", "i18n", "enabled",
+            "valid_contexts", "interpretation_weight",
+        ):
             value = getattr(entry, name)
             if value is not None:
                 object.__setattr__(aspect, name, deepcopy(value))
@@ -323,6 +391,41 @@ def _merge_model_overrides(model: AstroModel, overrides: Any) -> AstroModel:
                 float(overrides.override_orbs[aspect.id]),
             )
     return merged
+
+
+def _override_applies(entry: OverrideEntry, model: AstroModel) -> bool:
+    selectors = entry.only_for
+    if selectors is None:
+        return True
+    candidates = {model.name.casefold()}
+    if model.school:
+        candidates.add(model.school.casefold())
+    return any(str(selector).casefold() in candidates for selector in selectors)
+
+
+def _model_overrides_from_dict(raw: Any) -> Optional[ModelOverrides]:
+    if not isinstance(raw, dict):
+        return None
+
+    def entries(key: str) -> list[OverrideEntry]:
+        output = []
+        for entry in raw.get(key, []) or []:
+            if not isinstance(entry, dict):
+                continue
+            value = dict(entry)
+            if value.get("valid_contexts") is not None:
+                value["valid_contexts"] = [
+                    _coerce_enum(context, AspectContext)
+                    for context in value["valid_contexts"]
+                ]
+            output.append(OverrideEntry(**value))
+        return output
+
+    return ModelOverrides(
+        points=entries("points"),
+        aspects=entries("aspects"),
+        override_orbs=dict(raw.get("override_orbs", {}) or {}),
+    )
 
 
 def _apply_layer(

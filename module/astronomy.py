@@ -133,6 +133,7 @@ def compute_normalized_chart_aspects(
                 float(definition.default_orb),
             )
             for definition in aspect_definitions
+            if _definition_allows(definition, "chart")
         ]
         if aspect_definitions is not None
         else _NORMALIZED_ASPECT_SPECS
@@ -201,6 +202,7 @@ def compute_normalized_cross_aspects(
         [
             (str(item.id), float(item.angle), float(item.default_orb))
             for item in aspect_definitions
+            if _definition_allows(item, "transit")
         ]
         if aspect_definitions is not None
         else _NORMALIZED_ASPECT_SPECS
@@ -240,6 +242,17 @@ def compute_normalized_cross_aspects(
                     )
                     break
     return output
+
+
+def _definition_allows(definition: Any, context: str) -> bool:
+    if not bool(getattr(definition, "enabled", True)):
+        return False
+    contexts = getattr(definition, "valid_contexts", None)
+    if not contexts:
+        return True
+    return context in {
+        str(getattr(value, "value", value)).strip().lower() for value in contexts
+    }
 
 
 def _julian_day_from_unix(unix_secs: float) -> float:

@@ -1199,39 +1199,44 @@ def merge_model_with_overrides(model: AstroModel, overrides: Optional[ModelOverr
     aspect_by_id: Dict[str, AspectDefinition] = {a.id: a for a in m.aspect_definitions}
     body_by_id: Dict[str, BodyDefinition] = {b.id: b for b in m.body_definitions}
 
+    def applies(entry: Any) -> bool:
+        selectors = getattr(entry, "only_for", None)
+        if selectors is None:
+            return True
+        candidates = {m.name.casefold()}
+        if getattr(m, "school", None):
+            candidates.add(m.school.casefold())
+        return any(str(selector).casefold() in candidates for selector in selectors)
+
     # Apply aspect overrides
     for oe in getattr(overrides, 'aspects', []) or []:
+        if not applies(oe):
+            continue
         a = aspect_by_id.get(oe.id)
         if not a:
             continue
-        # Rebuild AspectDefinition with overrides
-        new_angle = oe.angle if oe.angle is not None else a.angle
-        new_orb = oe.default_orb if oe.default_orb is not None else a.default_orb
-        new_glyph = oe.glyph if oe.glyph is not None else a.glyph
-        new_i18n = oe.i18n if oe.i18n is not None else a.i18n
-        aspect_by_id[oe.id] = AspectDefinition(id=a.id, glyph=new_glyph, angle=new_angle, default_orb=new_orb, i18n=new_i18n)
+        for name in (
+            "glyph", "angle", "default_orb", "i18n", "enabled",
+            "valid_contexts", "interpretation_weight",
+        ):
+            value = getattr(oe, name, None)
+            if value is not None:
+                object.__setattr__(a, name, deepcopy(value))
     m.aspect_definitions = list(aspect_by_id.values())
 
     # Apply point overrides (glyph only; computed flag is metadata not present on BodyDefinition)
     for oe in getattr(overrides, 'points', []) or []:
+        if not applies(oe):
+            continue
         b = body_by_id.get(oe.id)
         if not b:
             continue
-        new_glyph = oe.glyph if oe.glyph is not None else b.glyph
-        new_formula = b.formula  # angle/element/avg_speed/max_orb are part of definition; only glyph/i18n commonly overridden
-        new_element = b.element
-        new_avg = b.avg_speed
-        new_max_orb = b.max_orb
-        new_i18n = oe.i18n if oe.i18n is not None else b.i18n
-        body_by_id[oe.id] = BodyDefinition(
-            id=b.id,
-            glyph=new_glyph,
-            formula=new_formula,
-            element=new_element,
-            avg_speed=new_avg,
-            max_orb=new_max_orb,
-            i18n=new_i18n,
-        )
+        if oe.glyph is not None:
+            object.__setattr__(b, "glyph", oe.glyph)
+        if oe.i18n is not None:
+            object.__setattr__(b, "i18n", deepcopy(oe.i18n))
+        if oe.enabled is not None:
+            object.__setattr__(b, "enabled", bool(oe.enabled))
     m.body_definitions = list(body_by_id.values())
 
     # Apply override_orbs map
@@ -1240,7 +1245,8 @@ def merge_model_with_overrides(model: AstroModel, overrides: Optional[ModelOverr
         new_aspects: List[AspectDefinition] = []
         for a in m.aspect_definitions:
             if a.id in orb_map:
-                new_aspects.append(AspectDefinition(id=a.id, glyph=a.glyph, angle=a.angle, default_orb=float(orb_map[a.id]), i18n=a.i18n))
+                object.__setattr__(a, "default_orb", float(orb_map[a.id]))
+                new_aspects.append(a)
             else:
                 new_aspects.append(a)
         m.aspect_definitions = new_aspects

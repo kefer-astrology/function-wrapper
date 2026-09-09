@@ -73,6 +73,7 @@ def _body(
     object_type: ObjectType,
     *,
     jpl: bool = True,
+    swisseph: bool = True,
     requires_location: bool = False,
     requires_house_system: bool = False,
 ) -> BodyDefinition:
@@ -86,7 +87,7 @@ def _body(
         i18n={"en": label},
         object_type=object_type,
         computation_map={
-            "swisseph": body_id,
+            "swisseph": body_id if swisseph else None,
             "jpl": body_id if jpl else None,
         },
         requires_location=requires_location,
@@ -141,6 +142,29 @@ def builtin_standard_model(name: str = "standard") -> AstroModel:
         _body("pallas", "Pallas", "⚴", ObjectType.ASTEROID),
         _body("juno", "Juno", "⚵", ObjectType.ASTEROID),
         _body("vesta", "Vesta", "⚶", ObjectType.ASTEROID),
+        # Resolvable via the bundled/downloadable `codes_300ast_20100725.bsp` kernel
+        # (see CODES_300AST_MAJOR_BODIES in Rust's infrastructure/ephemeris.rs), but
+        # none of these has a dedicated astrological symbol in wide use — the glyph
+        # is the circled digit matching the minor-planet number, a convention several
+        # asteroid-ephemeris references already use for bodies without one. Swiss
+        # Ephemeris support is left unclaimed: it would require asteroid `.se1` files
+        # this project does not bundle.
+        _body("astraea", "Astraea", "⑤", ObjectType.ASTEROID, swisseph=False),
+        _body("hebe", "Hebe", "⑥", ObjectType.ASTEROID, swisseph=False),
+        _body("iris", "Iris", "⑦", ObjectType.ASTEROID, swisseph=False),
+        _body("flora", "Flora", "⑧", ObjectType.ASTEROID, swisseph=False),
+        _body("metis", "Metis", "⑨", ObjectType.ASTEROID, swisseph=False),
+        _body("hygiea", "Hygiea", "⑩", ObjectType.ASTEROID, swisseph=False),
+        _body("parthenope", "Parthenope", "⑪", ObjectType.ASTEROID, swisseph=False),
+        _body("victoria", "Victoria", "⑫", ObjectType.ASTEROID, swisseph=False),
+        _body("egeria", "Egeria", "⑬", ObjectType.ASTEROID, swisseph=False),
+        _body("irene", "Irene", "⑭", ObjectType.ASTEROID, swisseph=False),
+        _body("eunomia", "Eunomia", "⑮", ObjectType.ASTEROID, swisseph=False),
+        _body("psyche", "Psyche", "⑯", ObjectType.ASTEROID, swisseph=False),
+        _body("thetis", "Thetis", "⑰", ObjectType.ASTEROID, swisseph=False),
+        _body("melpomene", "Melpomene", "⑱", ObjectType.ASTEROID, swisseph=False),
+        _body("fortuna", "Fortuna", "⑲", ObjectType.ASTEROID, swisseph=False),
+        _body("massalia", "Massalia", "⑳", ObjectType.ASTEROID, swisseph=False),
     ]
     aspects = [
         _aspect("conjunction", "Conjunction", 0.0, 8.0),

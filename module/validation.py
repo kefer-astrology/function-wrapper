@@ -28,6 +28,12 @@ def _diagnostic(code: str, message: str, path: str, *, warning: bool = False) ->
 
 def validate_model(model: AstroModel, path: str = "model") -> List[Diagnostic]:
     diagnostics: List[Diagnostic] = []
+    if model.version <= 0:
+        diagnostics.append(_diagnostic(
+            "invalid_model_version",
+            "Model version must be greater than zero",
+            f"{path}.version",
+        ))
     body_ids: Set[str] = set()
     aspect_ids: Set[str] = set()
     sign_names: Set[str] = set()

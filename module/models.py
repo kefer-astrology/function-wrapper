@@ -132,6 +132,9 @@ class Location:
     latitude: float
     longitude: float
     timezone: str
+    utc_offset: Optional[str] = None
+    location_mode: Optional[str] = None
+    timezone_mode: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -168,6 +171,7 @@ class ChartConfig:
     observable_objects: Optional[List[str]] = None
     # Time system for input/output (if different from workspace default)
     time_system: Optional[TimeSystem] = None
+    model_overrides: Optional["ModelOverrides"] = None
 
 
 @dataclass
@@ -177,6 +181,8 @@ class ChartInstance:
     config: ChartConfig
     computed_chart: Optional["Horoscope"] = None
     tags: List[str] = field(default_factory=list)
+    tag_colors: Dict[str, str] = field(default_factory=dict)
+    roden_rating: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -260,6 +266,7 @@ class BodyDefinition:
     avg_speed: float
     max_orb: float
     i18n: Dict[str, str]
+    enabled: bool = True
     # Observable object metadata
     object_type: Optional[ObjectType] = None
     # Mapping of engine type to computation method/attribute name
@@ -279,6 +286,7 @@ class AspectDefinition:
     angle: float
     default_orb: float
     i18n: Dict[str, str]
+    enabled: bool = True
     # Display and importance settings
     color: Optional[str] = None  # Hex color code (e.g., "#FF0000")
     importance: Optional[int] = None  # 1-10 scale, higher = more important
@@ -288,6 +296,7 @@ class AspectDefinition:
     # Context where this aspect is applicable
     # If None or empty, aspect is valid for all contexts
     valid_contexts: Optional[List[AspectContext]] = None
+    interpretation_weight: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -327,6 +336,15 @@ class AstroModel:
     engine: Optional[EngineType] = None
     zodiac_type: Optional[ZodiacType] = None
     ayanamsa: Optional[Ayanamsa] = None
+    school: Optional[str] = None
+    version: int = 1
+
+
+@dataclass
+class AstrologySchool:
+    id: str
+    default_model: str
+    extends: Optional[str] = None
 
 
 # ─── OVERRIDES ───
@@ -340,6 +358,9 @@ class OverrideEntry:
     only_for: Optional[List[str]] = None
     i18n: Optional[Dict[str, str]] = None
     computed: Optional[bool] = None
+    enabled: Optional[bool] = None
+    valid_contexts: Optional[List[AspectContext]] = None
+    interpretation_weight: Optional[float] = None
 
 
 @dataclass
@@ -471,6 +492,43 @@ class WorkspaceDefaults:
     theme: Optional[str] = None
     time_system: Optional[TimeSystem] = None
 
+
+@dataclass
+class WorkspacePresentation:
+    theme: Optional[str] = None
+    language: Optional[str] = None
+    glyph_set: Optional[str] = None
+    element_colors: Optional[ElementColorSettings] = None
+    radix_point_colors: Optional[RadixPointColorSettings] = None
+    aspect_colors: Optional[Dict[str, str]] = None
+    aspect_line_tier_style: Optional[Dict[str, float]] = None
+
+
+@dataclass
+class TransitSetup:
+    version: int
+    source_chart_id: str
+    transit_type: str
+    period_mode: str
+    from_date: str
+    from_time: str
+    to_date: str
+    to_time: str
+    time_step_seconds: int
+    transiting_bodies: List[str]
+    transited_bodies: List[str]
+    aspect_types: List[str]
+    house_transitions: bool
+    sign_transitions: bool
+    transit_limits: bool
+    precession_correction: bool
+    aspect_orbs: Dict[str, float] = field(default_factory=dict)
+    school: Optional[str] = None
+    model: Optional[str] = None
+    model_overrides: Optional[ModelOverrides] = None
+    exact_hits: bool = False
+    station_events: bool = False
+
 @dataclass
 class Workspace:
     """Complete workspace container for astrological chart analysis.
@@ -539,6 +597,11 @@ class Workspace:
     # Loaded model catalogs available in this workspace, keyed by name
     models: Dict[str, AstroModel] = field(default_factory=dict)
     model_overrides: Optional[ModelOverrides] = None
+    schema_version: int = 1
+    active_school: Optional[str] = None
+    schools: Dict[str, AstrologySchool] = field(default_factory=dict)
+    presentation: WorkspacePresentation = field(default_factory=WorkspacePresentation)
+    transit_analyses: List[TransitSetup] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -546,6 +609,7 @@ class WorkspaceEntityCounts:
     subjects: int
     charts: int
     chart_presets: int
+    transit_analyses: int
     layouts: int
     annotations: int
 
@@ -570,6 +634,7 @@ class LoadedWorkspace:
             subjects=len(self.workspace.subjects),
             charts=len(self.workspace.charts),
             chart_presets=len(self.workspace.chart_presets),
+            transit_analyses=len(self.workspace.transit_analyses),
             layouts=len(self.workspace.layouts),
             annotations=len(self.workspace.annotations),
         )
@@ -603,6 +668,7 @@ class SettingsLayer:
     zodiac_type: Optional[ZodiacType] = None
     ayanamsa: Optional[Ayanamsa] = None
     time_system: Optional[TimeSystem] = None
+    model_overrides: Optional[ModelOverrides] = None
 
 
 @dataclass
@@ -642,6 +708,8 @@ class EffectiveModelSettings:
 
 @dataclass
 class CurrentModelReport:
+    requested_school: Optional[str]
+    resolved_school: Optional[str]
     requested_model: Optional[str]
     resolved_model: str
     source: str
