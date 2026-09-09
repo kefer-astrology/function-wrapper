@@ -244,7 +244,7 @@ class PythonContractParityTests(unittest.TestCase):
 
     def test_builtin_catalog_matches_canonical_shape(self):
         model = builtin_standard_model()
-        self.assertEqual(len(model.body_definitions), 25)
+        self.assertEqual(len(model.body_definitions), 41)
         self.assertEqual(len(model.aspect_definitions), 17)
         self.assertEqual(len(model.signs), 12)
         self.assertEqual(model.settings.degrees_in_circle, 360.0)
