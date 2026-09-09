@@ -1,0 +1,30 @@
+module/ui_kivy.py
+  s_9947e33d59ecbf::t_c68b933d23d36a 1296
+  s_9947e33d59ecbf::t_6eb9ecf86229a3 365
+  s_9947e33d59ecbf::t_4117f3a66129d6 303
+  s_9947e33d59ecbf::t_8092afadd8c125 1193,1197
+  s_9947e33d59ecbf::t_0366b9e476d52b 436
+  s_9947e33d59ecbf::t_533663f1b55ced 101
+  s_9947e33d59ecbf::t_237de8c3878ed1 298
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "f7aba7c8b5b0116a63d5978bb3c65bcf23b5b02d",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_9947e33d59ecbf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "153437b8-87dc-4acc-87be-dc35f35bbe1d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    }
+  }
+}
