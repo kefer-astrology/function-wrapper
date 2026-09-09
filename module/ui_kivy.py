@@ -98,7 +98,7 @@ class MyApp(MDApp):
     current_person_index = NumericProperty(0)
     current_person_name = StringProperty("")
     # engine settings (optional)
-    engine_mode = StringProperty("default")  # values: "default" (swisseph) or "jpl"; prefer swisseph by default
+    engine_mode = StringProperty("jpl")  # JPL/Skyfield is the only engine
     ephemeris_file = StringProperty("")
     workspace_dir = StringProperty("")
     # center content mode: overview | chart_settings | chart | general | chart_create | open_view
@@ -295,20 +295,12 @@ class MyApp(MDApp):
 
     # ---------- engine helper ----------
     def _effective_engine(self):
-        try:
-            ws = getattr(self, 'workspace', None)
-            d = getattr(ws, 'default', None) if ws is not None else None
-            eng = getattr(d, 'ephemeris_engine', None) if d is not None else None
-            if eng:
-                return eng
-        except UI_RECOVERABLE_EXC:
-            pass
+        """JPL/Skyfield is the only engine; any stored workspace value is coerced to it."""
         return EngineType.JPL
 
     def build_chart(self, name: str, dt, loc_text: str, mode: ChartMode = ChartMode.NATAL, tags: list | None = None):
         """Build a ChartInstance using services.build_chart_instance and store it in self.chart."""
-        engine = self._effective_engine()
-        eph = self.ephemeris_file if engine == EngineType.JPL else None
+        eph = self.ephemeris_file
         chart = build_chart_instance(name=name, dt_str=str(dt), loc_text=loc_text, mode=mode, ws=getattr(self, 'workspace', None), ephemeris_path=eph)
         try:
             if tags:
@@ -370,7 +362,7 @@ class MyApp(MDApp):
         # Ensure chart exists (stores engine + eph settings)
         self.build_chart(name, dt_str, loc_text)
         engine = self._effective_engine()
-        eph = self.ephemeris_file if engine == EngineType.JPL else None
+        eph = self.ephemeris_file
 
         # Compute and build figure via services
         try:
@@ -441,7 +433,7 @@ class MyApp(MDApp):
                         base_dir=base,
                         owner="User",
                         active_model="default",
-                        default_ephemeris={"name": None, "backend": "swisseph"},
+                        default_ephemeris={"name": None, "backend": "jpl"},
                     )
                 except UI_RECOVERABLE_EXC as e:
                     self.show_message(f"Failed to init workspace: {e}")
@@ -1198,11 +1190,11 @@ class MyApp(MDApp):
 
         # Dropdown selectors (MD) for House, Theme, Engine
         house_options = [h for h in getattr(HouseSystem, '__members__', {}).keys()] or ['PLACIDUS']
-        engine_options = [e for e in getattr(EngineType,'__members__',{}).keys()] or ['JPL']
+        engine_options = ['JPL']  # JPL/Skyfield is the only engine
         theme_options = ['default','dark','light']
 
         house_val = str(getattr(ws,'default_house_system','PLACIDUS') or 'PLACIDUS')
-        engine_val = str(getattr(getattr(ws,'default',None),'ephemeris_engine','SWISSEPH') or 'SWISSEPH')
+        engine_val = 'JPL'
         theme_val = str(getattr(ws,'color_theme','default') or 'default')
 
         house_btn = self._md_button(house_val, style='tonal', height=36)
@@ -1301,8 +1293,7 @@ class MyApp(MDApp):
                 ws.default_aspects = [a.strip() for a in (aspects_inp.text or '').split(',') if a.strip()]
                 ws.color_theme = theme_val or 'default'
                 try:
-                    eng_key = (engine_val or 'SWISSEPH').upper()
-                    ws.default.ephemeris_engine = getattr(EngineType, eng_key, EngineType.SWISSEPH)
+                    ws.default.ephemeris_engine = EngineType.JPL
                 except UI_RECOVERABLE_EXC:
                     pass
                 save_workspace_modular(ws, self.workspace_dir)
