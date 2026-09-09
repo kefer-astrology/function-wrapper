@@ -24,12 +24,14 @@ class AspectDefinition {
   float angle
   float default_orb
   Dict~str,str~ i18n
+  bool enabled
   str color
   int importance
   str line_style
   float line_width
   bool show_label
   List~AspectContext(Enum)~ valid_contexts
+  float interpretation_weight
 }
 
 
@@ -54,6 +56,15 @@ class AstroModel {
   EngineType(Enum) engine
   ZodiacType(Enum) zodiac_type
   Ayanamsa(Enum) ayanamsa
+  str school
+  int version
+}
+
+
+class AstrologySchool {
+  str id
+  str default_model
+  str extends
 }
 
 
@@ -72,6 +83,7 @@ class BodyDefinition {
   float avg_speed
   float max_orb
   Dict~str,str~ i18n
+  bool enabled
   ObjectType(Enum) object_type
   Dict~str,str~ computation_map
   bool requires_location
@@ -127,6 +139,7 @@ class ChartConfig {
   Ayanamsa(Enum) ayanamsa
   List~str~ observable_objects
   TimeSystem(Enum) time_system
+  ModelOverrides model_overrides
 }
 
 
@@ -136,6 +149,8 @@ class ChartInstance {
   ChartConfig config
   Horoscope computed_chart
   List~str~ tags
+  Dict~str,str~ tag_colors
+  str roden_rating
 }
 
 
@@ -175,6 +190,8 @@ class ComputedAspect {
 
 
 class CurrentModelReport {
+  str requested_school
+  str resolved_school
   str requested_model
   str resolved_model
   str source
@@ -278,6 +295,9 @@ class Location {
   float latitude
   float longitude
   str timezone
+  str utc_offset
+  str location_mode
+  str timezone_mode
 }
 
 
@@ -311,6 +331,9 @@ class OverrideEntry {
   List~str~ only_for
   Dict~str,str~ i18n
   bool computed
+  bool enabled
+  List~AspectContext(Enum)~ valid_contexts
+  float interpretation_weight
 }
 
 
@@ -328,6 +351,7 @@ class SettingsLayer {
   ZodiacType(Enum) zodiac_type
   Ayanamsa(Enum) ayanamsa
   TimeSystem(Enum) time_system
+  ModelOverrides model_overrides
 }
 
 
@@ -359,6 +383,32 @@ class TransitSeriesStep {
 }
 
 
+class TransitSetup {
+  int version
+  str source_chart_id
+  str transit_type
+  str period_mode
+  str from_date
+  str from_time
+  str to_date
+  str to_time
+  int time_step_seconds
+  List~str~ transiting_bodies
+  List~str~ transited_bodies
+  List~str~ aspect_types
+  bool house_transitions
+  bool sign_transitions
+  bool transit_limits
+  bool precession_correction
+  Dict~str,float~ aspect_orbs
+  str school
+  str model
+  ModelOverrides model_overrides
+  bool exact_hits
+  bool station_events
+}
+
+
 class ViewLayout {
   str name
   LayoutStyle(Enum) layout_style
@@ -387,6 +437,11 @@ class Workspace {
   List~str~ bodies
   Dict~str,AstroModel~ models
   ModelOverrides model_overrides
+  int schema_version
+  str active_school
+  Dict~str,AstrologySchool~ schools
+  WorkspacePresentation presentation
+  List~TransitSetup~ transit_analyses
 }
 
 
@@ -411,8 +466,20 @@ class WorkspaceEntityCounts {
   int subjects
   int charts
   int chart_presets
+  int transit_analyses
   int layouts
   int annotations
+}
+
+
+class WorkspacePresentation {
+  str theme
+  str language
+  str glyph_set
+  ElementColorSettings element_colors
+  RadixPointColorSettings radix_point_colors
+  Dict~str,str~ aspect_colors
+  Dict~str,float~ aspect_line_tier_style
 }
 
 
@@ -428,6 +495,7 @@ AstroModel --> AspectDefinition
 AstroModel --> BodyDefinition
 AstroModel --> ModelSettings
 AstroModel --> Sign
+ChartConfig --> ModelOverrides
 ChartInstance --> ChartConfig
 ChartInstance --> ChartSubject
 ChartInstance --> Horoscope
@@ -446,19 +514,26 @@ Horoscope --> Location
 LoadedWorkspace --> Diagnostic
 LoadedWorkspace --> Workspace
 ModelOverrides --> OverrideEntry
+SettingsLayer --> ModelOverrides
 TransitSeriesCalculation --> TransitSeriesStep
+TransitSetup --> ModelOverrides
 ViewLayout --> ChartRelation
 ViewLayout --> ViewModule
 Workspace --> Annotation
 Workspace --> AstroModel
+Workspace --> AstrologySchool
 Workspace --> ChartInstance
 Workspace --> ChartPreset
 Workspace --> ChartSubject
 Workspace --> ModelOverrides
+Workspace --> TransitSetup
 Workspace --> ViewLayout
 Workspace --> WorkspaceDefaults
+Workspace --> WorkspacePresentation
 WorkspaceDefaults --> ElementColorSettings
 WorkspaceDefaults --> Location
 WorkspaceDefaults --> RadixPointColorSettings
+WorkspacePresentation --> ElementColorSettings
+WorkspacePresentation --> RadixPointColorSettings
 WorkspaceValidationReport --> Diagnostic
 WorkspaceValidationReport --> WorkspaceEntityCounts

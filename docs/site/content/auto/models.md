@@ -42,7 +42,7 @@ Contexts where an aspect can be used.
 
 ### class `AspectDefinition` 
 
-AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], color: Optional[str] = None, importance: Optional[int] = None, line_style: Optional[str] = None, line_width: Optional[float] = None, show_label: Optional[bool] = None, valid_contexts: Optional[List[module.models.AspectContext]] = None)
+AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Dict[str, str], enabled: bool = True, color: Optional[str] = None, importance: Optional[int] = None, line_style: Optional[str] = None, line_width: Optional[float] = None, show_label: Optional[bool] = None, valid_contexts: Optional[List[module.models.AspectContext]] = None, interpretation_weight: Optional[float] = None)
 
 #### Dataclass fields
 
@@ -51,12 +51,14 @@ AspectDefinition(id: str, glyph: str, angle: float, default_orb: float, i18n: Di
 - `angle: float`
 - `default_orb: float`
 - `i18n: Dict`
+- `enabled: bool`
 - `color: Optional`
 - `importance: Optional`
 - `line_style: Optional`
 - `line_width: Optional`
 - `show_label: Optional`
 - `valid_contexts: Optional`
+- `interpretation_weight: Optional`
 
 ### class `AspectSettings` 
 
@@ -75,7 +77,7 @@ Settings for a single aspect definition, including display properties.
 
 ### class `AstroModel` 
 
-AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspect_definitions: List[module.models.AspectDefinition], signs: List[module.models.Sign], settings: Optional[module.models.ModelSettings], engine: Optional[module.models.EngineType] = None, zodiac_type: Optional[module.models.ZodiacType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None)
+AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspect_definitions: List[module.models.AspectDefinition], signs: List[module.models.Sign], settings: Optional[module.models.ModelSettings], engine: Optional[module.models.EngineType] = None, zodiac_type: Optional[module.models.ZodiacType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, school: Optional[str] = None, version: int = 1)
 
 #### Dataclass fields
 
@@ -87,6 +89,18 @@ AstroModel(name: str, body_definitions: List[module.models.BodyDefinition], aspe
 - `engine: Optional`
 - `zodiac_type: Optional`
 - `ayanamsa: Optional`
+- `school: Optional`
+- `version: int`
+
+### class `AstrologySchool` 
+
+AstrologySchool(id: str, default_model: str, extends: Optional[str] = None)
+
+#### Dataclass fields
+
+- `id: str`
+- `default_model: str`
+- `extends: Optional`
 
 ### class `Attachment` 
 
@@ -102,7 +116,7 @@ Attachment(filename: str, url: str, type: str)
 
 ### class `BodyDefinition` 
 
-BodyDefinition(id: str, glyph: str, formula: str, element: Optional[module.models.Element], avg_speed: float, max_orb: float, i18n: Dict[str, str], object_type: Optional[module.models.ObjectType] = None, computation_map: Dict[str, Optional[str]] = &lt;factory&gt;, requires_location: bool = False, requires_house_system: bool = False)
+BodyDefinition(id: str, glyph: str, formula: str, element: Optional[module.models.Element], avg_speed: float, max_orb: float, i18n: Dict[str, str], enabled: bool = True, object_type: Optional[module.models.ObjectType] = None, computation_map: Dict[str, Optional[str]] = &lt;factory&gt;, requires_location: bool = False, requires_house_system: bool = False)
 
 #### Dataclass fields
 
@@ -113,6 +127,7 @@ BodyDefinition(id: str, glyph: str, formula: str, element: Optional[module.model
 - `avg_speed: float`
 - `max_orb: float`
 - `i18n: Dict`
+- `enabled: bool`
 - `object_type: Optional`
 - `computation_map: Dict`
 - `requires_location: bool`
@@ -162,7 +177,7 @@ ChartCalculation(positions: Dict[str, Any], motion: Dict[str, Any], aspects: Lis
 
 ### class `ChartConfig` 
 
-ChartConfig(mode: module.models.ChartMode, house_system: Optional[module.models.HouseSystem], zodiac_type: module.models.ZodiacType, included_points: List[str], aspect_orbs: Dict[str, float], display_style: str, color_theme: str, selected_aspects: Optional[List[str]] = None, override_ephemeris: Optional[str] = None, model: Optional[str] = None, engine: Optional[module.models.EngineType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, observable_objects: Optional[List[str]] = None, time_system: Optional[module.models.TimeSystem] = None)
+ChartConfig(mode: module.models.ChartMode, house_system: Optional[module.models.HouseSystem], zodiac_type: module.models.ZodiacType, included_points: List[str], aspect_orbs: Dict[str, float], display_style: str, color_theme: str, selected_aspects: Optional[List[str]] = None, override_ephemeris: Optional[str] = None, model: Optional[str] = None, engine: Optional[module.models.EngineType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, observable_objects: Optional[List[str]] = None, time_system: Optional[module.models.TimeSystem] = None, model_overrides: Optional[ForwardRef('ModelOverrides')] = None)
 
 #### Dataclass fields
 
@@ -180,10 +195,11 @@ ChartConfig(mode: module.models.ChartMode, house_system: Optional[module.models.
 - `ayanamsa: Optional`
 - `observable_objects: Optional`
 - `time_system: Optional`
+- `model_overrides: Optional`
 
 ### class `ChartInstance` 
 
-ChartInstance(id: str, subject: module.models.ChartSubject, config: module.models.ChartConfig, computed_chart: Optional[ForwardRef('Horoscope')] = None, tags: List[str] = &lt;factory&gt;)
+ChartInstance(id: str, subject: module.models.ChartSubject, config: module.models.ChartConfig, computed_chart: Optional[ForwardRef('Horoscope')] = None, tags: List[str] = &lt;factory&gt;, tag_colors: Dict[str, str] = &lt;factory&gt;, roden_rating: Optional[str] = None)
 
 #### Dataclass fields
 
@@ -192,6 +208,8 @@ ChartInstance(id: str, subject: module.models.ChartSubject, config: module.model
 - `config: ChartConfig`
 - `computed_chart: Optional`
 - `tags: List`
+- `tag_colors: Dict`
+- `roden_rating: Optional`
 
 ### class `ChartMode` (str, Enum)
 
@@ -244,10 +262,12 @@ ComputedAspect(from_id: str, to_id: str, type: str, angle: float, orb: float, ex
 
 ### class `CurrentModelReport` 
 
-CurrentModelReport(requested_model: Optional[str], resolved_model: str, source: str, available_models: List[str], model: module.models.AstroModel, effective_settings: module.models.EffectiveModelSettings, model_overrides: Optional[module.models.ModelOverrides], warnings: List[str], diagnostics: List[module.models.Diagnostic])
+CurrentModelReport(requested_school: Optional[str], resolved_school: Optional[str], requested_model: Optional[str], resolved_model: str, source: str, available_models: List[str], model: module.models.AstroModel, effective_settings: module.models.EffectiveModelSettings, model_overrides: Optional[module.models.ModelOverrides], warnings: List[str], diagnostics: List[module.models.Diagnostic])
 
 #### Dataclass fields
 
+- `requested_school: Optional`
+- `resolved_school: Optional`
 - `requested_model: Optional`
 - `resolved_model: str`
 - `source: str`
@@ -389,7 +409,7 @@ LoadedWorkspace(manifest: Dict[str, Any], workspace: module.models.Workspace, di
 
 ### class `Location` 
 
-Location(name: str, latitude: float, longitude: float, timezone: str)
+Location(name: str, latitude: float, longitude: float, timezone: str, utc_offset: Optional[str] = None, location_mode: Optional[str] = None, timezone_mode: Optional[str] = None)
 
 #### Dataclass fields
 
@@ -397,6 +417,9 @@ Location(name: str, latitude: float, longitude: float, timezone: str)
 - `latitude: float`
 - `longitude: float`
 - `timezone: str`
+- `utc_offset: Optional`
+- `location_mode: Optional`
+- `timezone_mode: Optional`
 
 ### class `ModelOverrides` 
 
@@ -432,7 +455,7 @@ Type of observable object in the chart.
 
 ### class `OverrideEntry` 
 
-OverrideEntry(id: str, glyph: Optional[str] = None, angle: Optional[float] = None, default_orb: Optional[float] = None, only_for: Optional[List[str]] = None, i18n: Optional[Dict[str, str]] = None, computed: Optional[bool] = None)
+OverrideEntry(id: str, glyph: Optional[str] = None, angle: Optional[float] = None, default_orb: Optional[float] = None, only_for: Optional[List[str]] = None, i18n: Optional[Dict[str, str]] = None, computed: Optional[bool] = None, enabled: Optional[bool] = None, valid_contexts: Optional[List[module.models.AspectContext]] = None, interpretation_weight: Optional[float] = None)
 
 #### Dataclass fields
 
@@ -443,6 +466,9 @@ OverrideEntry(id: str, glyph: Optional[str] = None, angle: Optional[float] = Non
 - `only_for: Optional`
 - `i18n: Optional`
 - `computed: Optional`
+- `enabled: Optional`
+- `valid_contexts: Optional`
+- `interpretation_weight: Optional`
 
 ### class `RadixPointColorSettings` 
 
@@ -464,7 +490,7 @@ Maps object IDs to color hex codes. Common objects:
 
 ### class `SettingsLayer` 
 
-SettingsLayer(house_system: Optional[module.models.HouseSystem] = None, bodies: Optional[List[str]] = None, aspects: Optional[List[str]] = None, aspect_orbs: Dict[str, float] = &lt;factory&gt;, engine: Optional[module.models.EngineType] = None, zodiac_type: Optional[module.models.ZodiacType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, time_system: Optional[module.models.TimeSystem] = None)
+SettingsLayer(house_system: Optional[module.models.HouseSystem] = None, bodies: Optional[List[str]] = None, aspects: Optional[List[str]] = None, aspect_orbs: Dict[str, float] = &lt;factory&gt;, engine: Optional[module.models.EngineType] = None, zodiac_type: Optional[module.models.ZodiacType] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, time_system: Optional[module.models.TimeSystem] = None, model_overrides: Optional[module.models.ModelOverrides] = None)
 
 #### Dataclass fields
 
@@ -476,6 +502,7 @@ SettingsLayer(house_system: Optional[module.models.HouseSystem] = None, bodies: 
 - `zodiac_type: Optional`
 - `ayanamsa: Optional`
 - `time_system: Optional`
+- `model_overrides: Optional`
 
 ### class `Sign` 
 
@@ -517,6 +544,35 @@ TransitSeriesStep(datetime: str, transit_positions: Dict[str, Any], aspects: Lis
 - `datetime: str`
 - `transit_positions: Dict`
 - `aspects: List`
+
+### class `TransitSetup` 
+
+TransitSetup(version: int, source_chart_id: str, transit_type: str, period_mode: str, from_date: str, from_time: str, to_date: str, to_time: str, time_step_seconds: int, transiting_bodies: List[str], transited_bodies: List[str], aspect_types: List[str], house_transitions: bool, sign_transitions: bool, transit_limits: bool, precession_correction: bool, aspect_orbs: Dict[str, float] = &lt;factory&gt;, school: Optional[str] = None, model: Optional[str] = None, model_overrides: Optional[module.models.ModelOverrides] = None, exact_hits: bool = False, station_events: bool = False)
+
+#### Dataclass fields
+
+- `version: int`
+- `source_chart_id: str`
+- `transit_type: str`
+- `period_mode: str`
+- `from_date: str`
+- `from_time: str`
+- `to_date: str`
+- `to_time: str`
+- `time_step_seconds: int`
+- `transiting_bodies: List`
+- `transited_bodies: List`
+- `aspect_types: List`
+- `house_transitions: bool`
+- `sign_transitions: bool`
+- `transit_limits: bool`
+- `precession_correction: bool`
+- `aspect_orbs: Dict`
+- `school: Optional`
+- `model: Optional`
+- `model_overrides: Optional`
+- `exact_hits: bool`
+- `station_events: bool`
 
 ### class `ViewLayout` 
 
@@ -606,6 +662,11 @@ Example:
 - `bodies: List`
 - `models: Dict`
 - `model_overrides: Optional`
+- `schema_version: int`
+- `active_school: Optional`
+- `schools: Dict`
+- `presentation: WorkspacePresentation`
+- `transit_analyses: List`
 
 ### class `WorkspaceDefaults` 
 
@@ -632,15 +693,30 @@ Provides workspace-wide defaults that can be overridden at the workspace level.
 
 ### class `WorkspaceEntityCounts` 
 
-WorkspaceEntityCounts(subjects: int, charts: int, chart_presets: int, layouts: int, annotations: int)
+WorkspaceEntityCounts(subjects: int, charts: int, chart_presets: int, transit_analyses: int, layouts: int, annotations: int)
 
 #### Dataclass fields
 
 - `subjects: int`
 - `charts: int`
 - `chart_presets: int`
+- `transit_analyses: int`
 - `layouts: int`
 - `annotations: int`
+
+### class `WorkspacePresentation` 
+
+WorkspacePresentation(theme: Optional[str] = None, language: Optional[str] = None, glyph_set: Optional[str] = None, element_colors: Optional[module.models.ElementColorSettings] = None, radix_point_colors: Optional[module.models.RadixPointColorSettings] = None, aspect_colors: Optional[Dict[str, str]] = None, aspect_line_tier_style: Optional[Dict[str, float]] = None)
+
+#### Dataclass fields
+
+- `theme: Optional`
+- `language: Optional`
+- `glyph_set: Optional`
+- `element_colors: Optional`
+- `radix_point_colors: Optional`
+- `aspect_colors: Optional`
+- `aspect_line_tier_style: Optional`
 
 ### class `WorkspaceValidationReport` 
 
