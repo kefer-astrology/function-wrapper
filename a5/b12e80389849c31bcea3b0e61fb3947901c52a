@@ -1,0 +1,53 @@
+module/astronomy.py
+  s_16bc0dab641562::t_6328afd4b11926 136,205,247-255
+  s_16bc0dab641562::t_8d8d2df96eb5e4 256-257
+module/model_catalog.py
+  s_5241e6c69a41a3::t_546ab739b8a4da 76,90
+  s_5241e6c69a41a3::t_a660cd5ffeb7ad 145-167
+module/utils.py
+  s_16bc0dab641562::t_66889e64518fd7 8-19,23-26,39-40,47-48,935-958,978,1015-1017,1042-1049
+  s_16bc0dab641562::t_ef7b89175d1d8b 388-389,442-443,698-699
+module/workspace.py
+  s_16bc0dab641562::t_3b51f4d933cf37 424-482,640-642,648,667-674,707,709,717,719-720
+  s_16bc0dab641562::t_824c65375f5dca 11-12,21-22,163,190,192,200,202-203,320,338,348,391-392
+  s_16bc0dab641562::t_392b1ee1366bb7 950-954,956-960,976,989-994,1003,1005,1007,1009-1011,1013,1018,1506-1509
+module/models.py
+  s_16bc0dab641562::t_664e17c08067c7 135-137,174,184-185,269,289,299,339-347,361-363,495-531,600-604,612,637,671,711-712
+module/services.py
+  s_16bc0dab641562::t_850e79a2b5a52a 1202-1210,1213-1214,1218-1224,1229-1230,1234-1239,1248-1249
+module/validation.py
+  s_16bc0dab641562::t_6328afd4b11926 31-36
+module/resolution.py
+  s_16bc0dab641562::t_cc382f6d3db4da 361-362,371-372,374-375,379-382,396-428
+  s_16bc0dab641562::t_04da71e7f1d445 24-26,47-49,73-75,94,119-120,141-146,152-153,157-187,219-224,230-231
+  s_16bc0dab641562::t_3cd9367b196580 429-430
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "a5b12e80389849c31bcea3b0e61fb3947901c52a",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_16bc0dab641562": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a063ba-03a3-74a3-a76d-8307a5b6ba0c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    },
+    "s_5241e6c69a41a3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "147e2ecd-6b4f-489d-ac4f-f3d2633178c5",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    }
+  }
+}
