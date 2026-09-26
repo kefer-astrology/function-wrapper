@@ -2,20 +2,19 @@ id: Stress Test Base
 subject:
   id: Stress Test Base
   name: Stress Test Base
-  event_time: '2024-01-01T00:00:00+01:00'
+  event_time: '2023-12-31T23:00:00+00:00'
   location:
     name: 50.0875,14.4214
     latitude: 50.0875
     longitude: 14.4214
     timezone: Europe/Prague
 config:
-  mode: NATAL
+  definition:
+    kind: base
+    purpose: natal
   house_system: Placidus
   zodiac_type: Tropical
-  included_points: []
   aspect_orbs: {}
-  display_style: ''
-  color_theme: ''
   selected_aspects: null
   override_ephemeris: null
   model: null
