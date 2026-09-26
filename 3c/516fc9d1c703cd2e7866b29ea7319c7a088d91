@@ -1,0 +1,33 @@
+tests/sample_stress/charts/stress-test-base.yml
+  s_9947e33d59ecbf::t_e7dfdc6309ca7f 5
+  s_4e5dd19f61efdd::t_cb411779b4df73 12-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3c516fc9d1c703cd2e7866b29ea7319c7a088d91",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_4e5dd19f61efdd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d4c9-86e3-7542-8061-dc2a7430715e",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    },
+    "s_9947e33d59ecbf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "153437b8-87dc-4acc-87be-dc35f35bbe1d",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    }
+  }
+}
