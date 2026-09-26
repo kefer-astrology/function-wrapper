@@ -1,0 +1,64 @@
+module/workspace.py
+  s_4e5dd19f61efdd::t_55714b98ae2bf4 154-157
+  s_4e5dd19f61efdd::t_c675dd6500b2ba 572-621
+  s_4e5dd19f61efdd::t_1df0d33f181882 239-333
+  s_4e5dd19f61efdd::t_c1229ce9d534a7 1125,1134-1135,1169
+  s_4e5dd19f61efdd::t_66af52976c2811 10-11,21-22
+  s_4e5dd19f61efdd::t_d91159c3e2161a 472-474,801,1097
+  s_4e5dd19f61efdd::t_350a6847484c5c 1035,1054
+  s_4e5dd19f61efdd::t_ac20b93a0168e0 1195,1211,1648,1707-1708
+  s_4e5dd19f61efdd::t_41b43d975d58eb 161,203,836,859
+module/model_catalog.py
+  s_4e5dd19f61efdd::t_66af52976c2811 13,27,36
+module/services.py
+  s_4e5dd19f61efdd::t_506c54f6284eca 562-563,584,592,599,610-611,659,693,699,722,727,1433
+  s_4e5dd19f61efdd::t_8d05286de4e39a 1357-1361,1594,1614,1648
+  s_4e5dd19f61efdd::t_32905b61cd1c4b 1581,1632
+  s_4e5dd19f61efdd::t_cb848eb2d5187c 21-22,27-28,265-273,287,324-325,359,428,465-466,496,538
+module/cli.py
+  s_4e5dd19f61efdd::t_16235c537684dd 805
+module/streamlit_ui/streamlit_common.py
+  s_4e5dd19f61efdd::t_ecc65562d3b522 7,9,37
+module/resolution.py
+  s_4e5dd19f61efdd::t_66af52976c2811 19,43
+  s_4e5dd19f61efdd::t_10aec3b07c16dc 72,90,252,279-282,309-310,319,343,357
+  s_4e5dd19f61efdd::t_923f2ef690431e 453
+  s_4e5dd19f61efdd::t_911080ed24f7f8 83
+module/storage.py
+  s_4e5dd19f61efdd::t_8243bf209ba3b5 278,342-344,399,422,439
+module/utils.py
+  s_4e5dd19f61efdd::t_d91159c3e2161a 615
+  s_4e5dd19f61efdd::t_66af52976c2811 38,46
+  s_4e5dd19f61efdd::t_eb6e07f4951ae3 490,957-978,980,992
+module/models.py
+  s_4e5dd19f61efdd::t_d52057c8e11df0 11-35,97-100
+  s_4e5dd19f61efdd::t_9bdfc9a7b17b8a 62-66
+  s_4e5dd19f61efdd::t_ca54ab5d3575de 172-180,183,191,200-222
+  s_4e5dd19f61efdd::t_dcd79fec81cd09 362,435,521,634,653,679,712,727,746
+  s_4e5dd19f61efdd::t_d1373044ee1fd7 223-224
+module/streamlit_ui/streamlit_pages.py
+  s_4e5dd19f61efdd::t_ecc65562d3b522 9,11,618,737,823
+module/ui_kivy.py
+  s_4e5dd19f61efdd::t_407ec5fd8226e5 67,69,301,304,937-938
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2fa1de1f56814af142b49f6b53f6ce8d73707ab4",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_4e5dd19f61efdd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d4c9-86e3-7542-8061-dc2a7430715e",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    }
+  }
+}
