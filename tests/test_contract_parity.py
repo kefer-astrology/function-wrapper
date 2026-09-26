@@ -18,7 +18,8 @@ from module.model_catalog import builtin_standard_model
 from module.models import (
     AspectDefinition,
     ChartConfig,
-    ChartMode,
+    ChartDefinition,
+    BaseChartPurpose,
     ChartPreset,
     EngineType,
     HouseSystem,
@@ -38,13 +39,10 @@ from module.workspace import load_workspace_aggregate
 
 def chart_config(**changes):
     values = {
-        "mode": ChartMode.NATAL,
+        "definition": ChartDefinition(kind="base", purpose=BaseChartPurpose.NATAL),
         "house_system": None,
         "zodiac_type": ZodiacType.TROPICAL,
-        "included_points": [],
         "aspect_orbs": {},
-        "display_style": "default",
-        "color_theme": "default",
     }
     values.update(changes)
     return ChartConfig(**values)
@@ -167,7 +165,10 @@ class PythonContractParityTests(unittest.TestCase):
                                 "timezone": "Europe/Prague",
                             },
                         },
-                        "config": {},
+                        "config": {
+                            "definition": {"kind": "base", "purpose": "natal"},
+                            "zodiac_type": "Tropical",
+                        },
                     }],
                     "subjects": [],
                     "chart_presets": [],
@@ -183,6 +184,64 @@ class PythonContractParityTests(unittest.TestCase):
             "subject_event_time_missing",
             {diagnostic.code for diagnostic in report.diagnostics},
         )
+
+    def test_strict_workspace_loader_validates_chart_analysis_graph(self):
+        subject = {
+            "id": "subject",
+            "name": "Subject",
+            "event_time": "2000-01-01T12:00:00Z",
+            "location": {
+                "name": "Prague",
+                "latitude": 50.08,
+                "longitude": 14.42,
+                "timezone": "Europe/Prague",
+            },
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            manifest = Path(directory) / "workspace.yaml"
+            manifest.write_text(
+                json.dumps({
+                    "owner": "Tester",
+                    "active_model": "standard",
+                    "default": {},
+                    "charts": [{
+                        "id": "derived",
+                        "subject": subject,
+                        "config": {
+                            "definition": {
+                                "kind": "derived",
+                                "method": "progression",
+                                "inputs": ["missing-base"],
+                            },
+                            "zodiac_type": "Tropical",
+                        },
+                    }],
+                    "analyses": [{
+                        "id": "comparison",
+                        "name": "Comparison",
+                        "method": "synastry",
+                        "inputs": [
+                            {"chart_id": "missing-chart"},
+                            {"chart_id": "derived", "inline_subject": subject},
+                        ],
+                    }],
+                    "layouts": [{
+                        "name": "Missing references",
+                        "layout_style": "biwheel",
+                        "chart_instances": ["missing-chart"],
+                        "analyses": ["missing-analysis"],
+                    }],
+                }),
+                encoding="utf-8",
+            )
+            report = load_workspace_aggregate(str(manifest)).validation_report()
+
+        codes = {diagnostic.code for diagnostic in report.diagnostics}
+        self.assertIn("derived_chart_input_missing", codes)
+        self.assertIn("analysis_chart_missing", codes)
+        self.assertIn("invalid_analysis_input", codes)
+        self.assertIn("unknown_layout_chart", codes)
+        self.assertIn("unknown_layout_analysis", codes)
 
     def test_shared_resolution_fixture_matches_rust_contract(self):
         fixture_path = (
@@ -206,6 +265,7 @@ class PythonContractParityTests(unittest.TestCase):
                 default_aspects=workspace_layer.aspects,
                 default_aspect_orbs=workspace_layer.aspect_orbs,
                 ephemeris_engine=workspace_layer.engine,
+                position_mode=workspace_layer.position_mode,
                 time_system=workspace_layer.time_system,
             )
         )
@@ -222,6 +282,7 @@ class PythonContractParityTests(unittest.TestCase):
         self.assertEqual(settings.default_bodies, expected["bodies"])
         self.assertEqual(settings.default_aspects, expected["aspects"])
         self.assertEqual(settings.engine.value, expected["engine"])
+        self.assertEqual(settings.position_mode.value, expected["positionMode"])
         self.assertEqual(settings.zodiac_type.value, expected["zodiacType"])
         self.assertEqual(settings.ayanamsa.value, expected["ayanamsa"])
         self.assertEqual(settings.time_system.value, expected["timeSystem"])
@@ -238,6 +299,10 @@ class PythonContractParityTests(unittest.TestCase):
         self.assertEqual(
             settings.sources.default_aspects.value,
             expected["sources"]["aspects"],
+        )
+        self.assertEqual(
+            settings.sources.position_mode.value,
+            expected["sources"]["positionMode"],
         )
         for aspect_id, source in expected["sources"]["aspectOrbs"].items():
             self.assertEqual(settings.sources.aspect_orbs[aspect_id].value, source)

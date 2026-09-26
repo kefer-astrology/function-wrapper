@@ -25,15 +25,17 @@ from pathlib import Path
 
 try:
     from module.astronomy import JplAstronomyBackend, _extract_longitude
+    from module.services import compute_jpl_positions
     from module.models import (
         ChartInstance, ChartSubject, ChartConfig, Location,
-        ChartMode, HouseSystem, ZodiacType, EngineType,
+        ChartDefinition, BaseChartPurpose, HouseSystem, ZodiacType, EngineType, PositionMode,
     )
 except ImportError:
     from astronomy import JplAstronomyBackend, _extract_longitude
+    from services import compute_jpl_positions
     from models import (
         ChartInstance, ChartSubject, ChartConfig, Location,
-        ChartMode, HouseSystem, ZodiacType, EngineType,
+        ChartDefinition, BaseChartPurpose, HouseSystem, ZodiacType, EngineType, PositionMode,
     )
 
 BSP_PATH = Path(__file__).parent.parent / "source" / "de421.bsp"
@@ -64,13 +66,10 @@ def _make_j2000_chart(bsp_path: str) -> ChartInstance:
             ),
         ),
         config=ChartConfig(
-            mode=ChartMode.NATAL,
+            definition=ChartDefinition(kind="base", purpose=BaseChartPurpose.NATAL),
             house_system=HouseSystem.WHOLE_SIGN,
             zodiac_type=ZodiacType.TROPICAL,
-            included_points=[],
             aspect_orbs={},
-            display_style="",
-            color_theme="",
             override_ephemeris=bsp_path,
             engine=EngineType.JPL,
         ),
@@ -85,6 +84,18 @@ def _angular_diff(a: float, b: float) -> float:
 @unittest.skipUnless(BSP_PATH.exists(), f"de421.bsp not found at {BSP_PATH}")
 class TestJplBackendJ2000(unittest.TestCase):
     """Validate JplAstronomyBackend.compute_chart_data() at J2000.0."""
+
+    def test_apparent_and_geometric_are_distinct_calculations(self):
+        kwargs = {
+            "name": "mode-test",
+            "dt_str": "2024-04-10T10:00:00Z",
+            "loc_str": "50.0875,14.4214",
+            "ephemeris_path": str(BSP_PATH),
+            "requested_objects": ["sun"],
+        }
+        apparent = compute_jpl_positions(**kwargs, position_mode=PositionMode.APPARENT)
+        geometric = compute_jpl_positions(**kwargs, position_mode=PositionMode.GEOMETRIC)
+        self.assertGreater(abs(apparent["sun"] - geometric["sun"]), 1e-4)
 
     @classmethod
     def setUpClass(cls):
