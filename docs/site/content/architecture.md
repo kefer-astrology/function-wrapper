@@ -96,7 +96,7 @@ workspace/
 |------------------|--------------|----------|--------------|
 | 🧱 Key Objects    | <ul><li>`Horoscope`</li><li>`CelestialBody`</li><li>`Aspect`</li><li>`House`</li></ul> | <ul><li>`ChartSubject`</li><li>`ChartInstance`</li><li>`ChartConfig`</li><li>`ChartPreset`</li></ul> | <ul><li>`Workspace`</li><li>`EphemerisSource`</li><li>`ModelOverrides`</li><li>`Annotation`</li></ul> |
 | ⚙️ Core Functions | <ul><li>`compute_positions(...)`</li><li>`compute_aspects(...)`</li><li>`compute_positions_for_chart(...)`</li></ul> | <ul><li>`build_chart_instance(...)`</li><li>`prepare_horoscope(...)`</li></ul> | <ul><li>`load_workspace(...)`</li><li>`save_workspace_modular(...)`</li><li>`get_all_aspect_definitions(...)`</li></ul> |
-| ✨ Features       | <ul><li>Immutable snapshot</li><li>Engine-specific (Western, Vedic, etc.)</li><li>Supports derived charts (e.g., progressed)</li><li>Custom points via overrides</li></ul> | <ul><li>Preset-driven config</li><li>Supports ChartMode (NATAL, TRANSIT, etc.)</li><li>Custom display and ephemeris override</li></ul> | <ul><li>Modular YAML structure</li><li>Per-user model customization</li><li>Annotations, media, layouts</li></ul> |
+| ✨ Features       | <ul><li>Immutable snapshot</li><li>Engine-specific (Western, Vedic, etc.)</li><li>Supports derived charts (e.g., progressed)</li><li>Custom points via overrides</li></ul> | <ul><li>Preset-driven config</li><li>Explicit base purpose or derived method and inputs</li><li>Calculation-specific ephemeris override</li></ul> | <ul><li>Modular YAML structure</li><li>Per-user model customization</li><li>Analyses, annotations, and views</li></ul> |
 
 ## Key entry points
 

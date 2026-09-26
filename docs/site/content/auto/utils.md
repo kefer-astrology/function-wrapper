@@ -51,7 +51,7 @@ Return the path to the vendored MPCORB element rows for Chiron/Ceres/Pallas/Juno
 ## `ensure_aware`
 
 ```python
-ensure_aware(dt: datetime.datetime, tz_name: Optional[str] = None) -> datetime.datetime
+ensure_aware(dt: datetime.datetime, tz_name: str | None = None) -> datetime.datetime
 ```
 
 Return a timezone-aware datetime.
@@ -109,7 +109,7 @@ Absolute file path to exported YAML file
 ## `export_workspace_yaml`
 
 ```python
-export_workspace_yaml(ws: module.models.Workspace, dest_path: Union[str, pathlib._local.Path]) -> pathlib._local.Path
+export_workspace_yaml(ws: module.models.Workspace, dest_path: str | pathlib.Path) -> pathlib.Path
 ```
 
 Export a Workspace as YAML to dest_path.
@@ -187,7 +187,7 @@ True if dt is within [start, end] (inclusive), False otherwise
 ## `load_sfs_models_from_dir`
 
 ```python
-load_sfs_models_from_dir(dir_path: Union[str, pathlib._local.Path]) -> Dict[str, module.models.AstroModel]
+load_sfs_models_from_dir(dir_path: str | pathlib.Path) -> Dict[str, module.models.AstroModel]
 ```
 
 Scan a directory for StarFisher .sfs files and build AstroModel catalogs.
@@ -253,7 +253,7 @@ Return current time as a timezone-aware UTC datetime.
 ## `parse_chart_config`
 
 ```python
-parse_chart_config(data: Optional[dict]) -> module.models.ChartConfig
+parse_chart_config(data: dict | None) -> module.models.ChartConfig
 ```
 
 Parse a chart configuration while preserving absent versus empty fields.
@@ -306,7 +306,7 @@ Tuple of (AstroModel, display_config_dict) where display_config_dict
 ## `parse_yaml_content`
 
 ```python
-parse_yaml_content(data: Union[str, bytes]) -> dict
+parse_yaml_content(data: str | bytes) -> dict
 ```
 
 Parse YAML from a string or bytes and return a dict.
@@ -328,7 +328,7 @@ Useful for handling uploaded files or in-memory YAML content uniformly.
 ## `prepare_horoscope`
 
 ```python
-prepare_horoscope(name: str = '', dt: datetime.datetime = None, loc: module.models.Location = None, engine: Optional[module.models.EngineType] = None, ephemeris_path: Optional[str] = None, zodiac: module.models.ZodiacType = <ZodiacType.TROPICAL: 'Tropical'>, house: module.models.HouseSystem = <HouseSystem.PLACIDUS: 'Placidus'>) -> module.models.ChartInstance
+prepare_horoscope(name: str = '', dt: datetime.datetime = None, loc: module.models.Location = None, engine: module.models.EngineType | None = None, ephemeris_path: str | None = None, zodiac: module.models.ZodiacType = <ZodiacType.TROPICAL: 'Tropical'>, house: module.models.HouseSystem = <HouseSystem.PLACIDUS: 'Placidus'>) -> module.models.ChartInstance
 ```
 
 Create a ChartInstance with basic configuration.
@@ -357,7 +357,7 @@ ChartInstance with configured ChartSubject and ChartConfig
 ## `read_yaml_file`
 
 ```python
-read_yaml_file(path: Union[str, pathlib._local.Path]) -> dict
+read_yaml_file(path: str | pathlib.Path) -> dict
 ```
 
 Read a YAML file and return a dict.
@@ -379,7 +379,7 @@ This is a thin wrapper around yaml.safe_load that always returns a dict.
 ## `resolve_under_base`
 
 ```python
-resolve_under_base(base: Union[str, pathlib._local.Path], rel_path: Union[str, pathlib._local.Path]) -> pathlib._local.Path
+resolve_under_base(base: str | pathlib.Path, rel_path: str | pathlib.Path) -> pathlib.Path
 ```
 
 Resolve rel_path against base and ensure the result stays within base.
@@ -403,7 +403,7 @@ Resolved Path that is contained within base
 ## `resolve_user_path`
 
 ```python
-resolve_user_path(path: Union[str, pathlib._local.Path], *, base_dir: Union[str, pathlib._local.Path, NoneType] = None) -> pathlib._local.Path
+resolve_user_path(path: str | pathlib.Path, *, base_dir: str | pathlib.Path | None = None) -> pathlib.Path
 ```
 
 Resolve a user-provided path safely.
@@ -430,7 +430,7 @@ Datetime converted to target timezone
 ## `write_json_file`
 
 ```python
-write_json_file(path: Union[str, pathlib._local.Path], data: dict, *, indent: int = 2) -> None
+write_json_file(path: str | pathlib.Path, data: dict, *, indent: int = 2) -> None
 ```
 
 Write a dict to a JSON file.
@@ -451,7 +451,7 @@ Ensures parent directory exists before writing.
 ## `write_yaml_file`
 
 ```python
-write_yaml_file(path: Union[str, pathlib._local.Path], data: dict, *, sort_keys: bool = False, allow_unicode: bool = True) -> None
+write_yaml_file(path: str | pathlib.Path, data: dict, *, sort_keys: bool = False, allow_unicode: bool = True) -> None
 ```
 
 Write a dict to a YAML file using yaml.safe_dump.
@@ -475,15 +475,15 @@ Ensures parent directory exists. Callers should pass already-serialized
 
 ## Classes
 
-### class `Actual` 
+### class `Actual`
 
 Universal holder for either a place or time object.
 Useful for normalizing user input and controlling shiftable dimensions in astrology.
 
 #### Methods
 
-- `add_time(self, delta: Union[int, datetime.timedelta, str]) -> None`
+- `add_time(self, delta: int | datetime.timedelta | str) -> None`
 
-- `assign_timezone(self, tz: Optional[str] = None) -> None`
+- `assign_timezone(self, tz: str | None = None) -> None`
 
-- `to_model_location(self) -> Optional[module.models.Location]`
+- `to_model_location(self) -> module.models.Location | None`

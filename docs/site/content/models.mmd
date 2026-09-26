@@ -1,6 +1,25 @@
 classDiagram
 
 
+class AnalysisInput {
+  str role
+  str chart_id
+  ChartSubject inline_subject
+  List~DerivedChartStep~ derivations
+}
+
+
+class AnalysisInstance {
+  str id
+  str name
+  AnalysisMethod(Enum) method
+  List~AnalysisInput~ inputs
+  int version
+  Dict~str,any~ parameters
+  List~str~ tags
+}
+
+
 class Annotation {
   str title
   str content
@@ -24,12 +43,14 @@ class AspectDefinition {
   float angle
   float default_orb
   Dict~str,str~ i18n
+  bool enabled
   str color
   int importance
   str line_style
   float line_width
   bool show_label
   List~AspectContext(Enum)~ valid_contexts
+  float interpretation_weight
 }
 
 
@@ -54,6 +75,15 @@ class AstroModel {
   EngineType(Enum) engine
   ZodiacType(Enum) zodiac_type
   Ayanamsa(Enum) ayanamsa
+  str school
+  int version
+}
+
+
+class AstrologySchool {
+  str id
+  str default_model
+  str extends
 }
 
 
@@ -72,6 +102,7 @@ class BodyDefinition {
   float avg_speed
   float max_orb
   Dict~str,str~ i18n
+  bool enabled
   ObjectType(Enum) object_type
   Dict~str,str~ computation_map
   bool requires_location
@@ -113,20 +144,28 @@ class ChartCalculation {
 
 
 class ChartConfig {
-  ChartMode(Enum) mode
+  ChartDefinition definition
   HouseSystem(Enum) house_system
   ZodiacType(Enum) zodiac_type
-  List~str~ included_points
   Dict~str,float~ aspect_orbs
-  str display_style
-  str color_theme
   List~str~ selected_aspects
   str override_ephemeris
   str model
   EngineType(Enum) engine
+  PositionMode(Enum) position_mode
   Ayanamsa(Enum) ayanamsa
   List~str~ observable_objects
   TimeSystem(Enum) time_system
+  ModelOverrides model_overrides
+}
+
+
+class ChartDefinition {
+  str kind
+  BaseChartPurpose(Enum) purpose
+  DerivedChartMethod(Enum) method
+  List~str~ inputs
+  Dict~str,any~ parameters
 }
 
 
@@ -136,21 +175,14 @@ class ChartInstance {
   ChartConfig config
   Horoscope computed_chart
   List~str~ tags
+  Dict~str,str~ tag_colors
+  str roden_rating
 }
 
 
 class ChartPreset {
   str name
   ChartConfig config
-}
-
-
-class ChartRelation {
-  RelationType(Enum) type
-  str source
-  str target
-  str method
-  DateRange time_span
 }
 
 
@@ -175,6 +207,8 @@ class ComputedAspect {
 
 
 class CurrentModelReport {
+  str requested_school
+  str resolved_school
   str requested_model
   str resolved_model
   str source
@@ -190,6 +224,12 @@ class CurrentModelReport {
 class DateRange {
   datetime start
   datetime end
+}
+
+
+class DerivedChartStep {
+  DerivedChartMethod(Enum) method
+  Dict~str,any~ parameters
 }
 
 
@@ -212,6 +252,7 @@ class EffectiveModelSettings {
   Dict~str,float~ aspect_orbs
   float standard_orb
   EngineType(Enum) engine
+  PositionMode(Enum) position_mode
   ZodiacType(Enum) zodiac_type
   Ayanamsa(Enum) ayanamsa
   TimeSystem(Enum) time_system
@@ -229,6 +270,7 @@ class EffectiveSettingsSources {
   Dict~str,SettingSource(Enum)~ aspect_orbs
   SettingSource(Enum) standard_orb
   SettingSource(Enum) engine
+  SettingSource(Enum) position_mode
   SettingSource(Enum) zodiac_type
   SettingSource(Enum) ayanamsa
   SettingSource(Enum) time_system
@@ -278,6 +320,9 @@ class Location {
   float latitude
   float longitude
   str timezone
+  str utc_offset
+  str location_mode
+  str timezone_mode
 }
 
 
@@ -290,6 +335,7 @@ class ModelOverrides {
 
 class ModelSettings {
   HouseSystem(Enum) default_house_system
+  PositionMode(Enum) position_mode
   List~str~ default_aspects
   List~str~ default_bodies
   float standard_orb
@@ -311,6 +357,9 @@ class OverrideEntry {
   List~str~ only_for
   Dict~str,str~ i18n
   bool computed
+  bool enabled
+  List~AspectContext(Enum)~ valid_contexts
+  float interpretation_weight
 }
 
 
@@ -325,9 +374,11 @@ class SettingsLayer {
   List~str~ aspects
   Dict~str,float~ aspect_orbs
   EngineType(Enum) engine
+  PositionMode(Enum) position_mode
   ZodiacType(Enum) zodiac_type
   Ayanamsa(Enum) ayanamsa
   TimeSystem(Enum) time_system
+  ModelOverrides model_overrides
 }
 
 
@@ -359,11 +410,37 @@ class TransitSeriesStep {
 }
 
 
+class TransitSetup {
+  int version
+  str source_chart_id
+  str transit_type
+  str period_mode
+  str from_date
+  str from_time
+  str to_date
+  str to_time
+  int time_step_seconds
+  List~str~ transiting_bodies
+  List~str~ transited_bodies
+  List~str~ aspect_types
+  bool house_transitions
+  bool sign_transitions
+  bool transit_limits
+  bool precession_correction
+  Dict~str,float~ aspect_orbs
+  str school
+  str model
+  ModelOverrides model_overrides
+  bool exact_hits
+  bool station_events
+}
+
+
 class ViewLayout {
   str name
   LayoutStyle(Enum) layout_style
   List~str~ chart_instances
-  List~ChartRelation~ relations
+  List~str~ analyses
   List~ViewModule~ modules
 }
 
@@ -382,11 +459,17 @@ class Workspace {
   List~ViewLayout~ layouts
   List~Annotation~ annotations
   str active_model
+  List~AnalysisInstance~ analyses
   WorkspaceDefaults default
   List~str~ aspects
   List~str~ bodies
   Dict~str,AstroModel~ models
   ModelOverrides model_overrides
+  int schema_version
+  str active_school
+  Dict~str,AstrologySchool~ schools
+  WorkspacePresentation presentation
+  List~TransitSetup~ transit_analyses
 }
 
 
@@ -397,6 +480,7 @@ class WorkspaceDefaults {
   Dict~str,float~ default_aspect_orbs
   Dict~str,str~ default_aspect_colors
   EngineType(Enum) ephemeris_engine
+  PositionMode(Enum) position_mode
   str ephemeris_backend
   ElementColorSettings element_colors
   RadixPointColorSettings radix_point_colors
@@ -410,9 +494,22 @@ class WorkspaceDefaults {
 class WorkspaceEntityCounts {
   int subjects
   int charts
+  int analyses
   int chart_presets
+  int transit_analyses
   int layouts
   int annotations
+}
+
+
+class WorkspacePresentation {
+  str theme
+  str language
+  str glyph_set
+  ElementColorSettings element_colors
+  RadixPointColorSettings radix_point_colors
+  Dict~str,str~ aspect_colors
+  Dict~str,float~ aspect_line_tier_style
 }
 
 
@@ -424,15 +521,19 @@ class WorkspaceValidationReport {
   List~Diagnostic~ diagnostics
 }
 
+AnalysisInput --> ChartSubject
+AnalysisInput --> DerivedChartStep
+AnalysisInstance --> AnalysisInput
 AstroModel --> AspectDefinition
 AstroModel --> BodyDefinition
 AstroModel --> ModelSettings
 AstroModel --> Sign
+ChartConfig --> ChartDefinition
+ChartConfig --> ModelOverrides
 ChartInstance --> ChartConfig
 ChartInstance --> ChartSubject
 ChartInstance --> Horoscope
 ChartPreset --> ChartConfig
-ChartRelation --> DateRange
 ChartSubject --> Location
 CurrentModelReport --> AstroModel
 CurrentModelReport --> Diagnostic
@@ -446,19 +547,26 @@ Horoscope --> Location
 LoadedWorkspace --> Diagnostic
 LoadedWorkspace --> Workspace
 ModelOverrides --> OverrideEntry
+SettingsLayer --> ModelOverrides
 TransitSeriesCalculation --> TransitSeriesStep
-ViewLayout --> ChartRelation
+TransitSetup --> ModelOverrides
 ViewLayout --> ViewModule
+Workspace --> AnalysisInstance
 Workspace --> Annotation
 Workspace --> AstroModel
+Workspace --> AstrologySchool
 Workspace --> ChartInstance
 Workspace --> ChartPreset
 Workspace --> ChartSubject
 Workspace --> ModelOverrides
+Workspace --> TransitSetup
 Workspace --> ViewLayout
 Workspace --> WorkspaceDefaults
+Workspace --> WorkspacePresentation
 WorkspaceDefaults --> ElementColorSettings
 WorkspaceDefaults --> Location
 WorkspaceDefaults --> RadixPointColorSettings
+WorkspacePresentation --> ElementColorSettings
+WorkspacePresentation --> RadixPointColorSettings
 WorkspaceValidationReport --> Diagnostic
 WorkspaceValidationReport --> WorkspaceEntityCounts

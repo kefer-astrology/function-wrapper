@@ -16,7 +16,7 @@ weight: 10
 ## `build_radix_figure`
 
 ```python
-build_radix_figure(positions: dict, house_cusps: Optional[list] = None, axis_longitudes: Optional[dict] = None, aspects: Optional[list] = None, aspect_colors: Optional[dict] = None, transit_positions: Optional[dict] = None) -> plotly.graph_objs._figure.Figure
+build_radix_figure(positions: dict, house_cusps: list | None = None, axis_longitudes: dict | None = None, aspects: list | None = None, aspect_colors: dict | None = None, transit_positions: dict | None = None) -> plotly.graph_objs._figure.Figure
 ```
 
 Build a standardized polar (radix) chart figure from planet positions in degrees [0,360).

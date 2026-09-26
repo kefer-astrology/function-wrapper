@@ -19,7 +19,7 @@ stdin or command-line arguments and output JSON to stdout.
 
 Usage:
     python -m module.cli &lt;command&gt; [args_json]
-    
+
 Commands:
 - compute_chart: Compute positions and aspects for a chart
 - compute_transit_series: Compute transit series for a time range
@@ -28,7 +28,7 @@ Commands:
 - get_chart: Get chart details by ID
 - sync_workspace: Synchronize workspace manifest with files on disk
 - export_parquet: Export stored positions to Parquet files
-    
+
 Storage:
 - DuckDB database: workspace_dir/data/workspace.db
 - Parquet files: workspace_dir/data/parquet/*.parquet
