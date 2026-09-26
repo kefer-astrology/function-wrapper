@@ -1,0 +1,40 @@
+tests/test_jpl_backend_j2000.py
+  s_4e5dd19f61efdd::t_ba1a71da6aa6c1 28,31,35,38,88-98
+  s_4e5dd19f61efdd::t_bb1ecc61761413 69
+  s_4e5dd19f61efdd::t_d01c81f96be9e1 99
+tests/test_contract_parity.py
+  s_4e5dd19f61efdd::t_1df0d33f181882 188-245
+  s_4e5dd19f61efdd::t_34efabe8da21f5 268,285,303-305
+  s_4e5dd19f61efdd::t_da985ac0e270bc 168-171
+  s_4e5dd19f61efdd::t_bb1ecc61761413 21-22,42
+  s_c41103565aeb00::t_04c5cdc5f746fb 306
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b0b5c005eea296f998a057669db8f0b65d80e428",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_4e5dd19f61efdd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d4c9-86e3-7542-8061-dc2a7430715e",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    },
+    "s_c41103565aeb00": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b449ad4e-89e4-471e-b919-04b6e5ee1b79",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    }
+  }
+}
