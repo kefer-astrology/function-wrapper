@@ -16,7 +16,7 @@ weight: 10
 ## `build_chart_instance`
 
 ```python
-build_chart_instance(name: str, dt_str: str, loc_text: str, purpose: module.models.BaseChartPurpose, ws: module.models.Workspace | None = None, ephemeris_path: str | None = None) -> module.models.ChartInstance
+build_chart_instance(name: str, dt_str: str, loc_text: str, purpose: module.models.BaseChartPurpose, ws: Optional[module.models.Workspace] = None, ephemeris_path: Optional[str] = None) -> module.models.ChartInstance
 ```
 
 Build a ChartInstance using workspace defaults when provided.
@@ -26,7 +26,7 @@ Build a ChartInstance using workspace defaults when provided.
 ## `build_radix_figure_for_chart`
 
 ```python
-build_radix_figure_for_chart(chart: module.models.ChartInstance, engine_override: module.models.EngineType | None = None, ephemeris_path_override: str | None = None, ws: ForwardRef('Workspace') | None = None, transit_positions: Dict[str, Any] | None = None) -> Any
+build_radix_figure_for_chart(chart: module.models.ChartInstance, engine_override: Optional[module.models.EngineType] = None, ephemeris_path_override: Optional[str] = None, ws: Optional[ForwardRef('Workspace')] = None, transit_positions: Optional[Dict[str, Any]] = None) -> Any
 ```
 
 Extract positions from a ChartInstance's computed_chart and return a Plotly Figure ready to render.
@@ -51,7 +51,7 @@ Plotly Figure object ready for rendering
 ## `build_text_report`
 
 ```python
-build_text_report(name: str, place: str | None, time: str | None, positions: Dict[str, Any]) -> str
+build_text_report(name: str, place: Optional[str], time: Optional[str], positions: Dict[str, Any]) -> str
 ```
 
 Plain-text position summary, grouped by object type (Skyfield-backed, no kerykeion).
@@ -78,7 +78,7 @@ List of Aspect objects representing detected aspects
 ## `compute_aspects_for_chart`
 
 ```python
-compute_aspects_for_chart(chart: module.models.ChartInstance, aspect_definitions: List[module.models.AspectDefinition] | None = None, ws: ForwardRef('Workspace') | None = None) -> List[Dict[str, Any]]
+compute_aspects_for_chart(chart: module.models.ChartInstance, aspect_definitions: Optional[List[module.models.AspectDefinition]] = None, ws: Optional[ForwardRef('Workspace')] = None) -> List[Dict[str, Any]]
 ```
 
 Compute aspects between celestial bodies in a chart.
@@ -109,7 +109,7 @@ List of aspect dictionaries, each with:
 ## `compute_chart_data_for_chart`
 
 ```python
-compute_chart_data_for_chart(chart: module.models.ChartInstance, ws: ForwardRef('Workspace') | None = None, include_physical: bool = False, include_topocentric: bool = False) -> module.astronomy.ChartData
+compute_chart_data_for_chart(chart: module.models.ChartInstance, ws: Optional[ForwardRef('Workspace')] = None, include_physical: bool = False, include_topocentric: bool = False) -> module.astronomy.ChartData
 ```
 
 Compute structured chart data using the active backend seam.
@@ -117,7 +117,7 @@ Compute structured chart data using the active backend seam.
 ## `compute_jpl_positions`
 
 ```python
-compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: str | None = None, requested_objects: List[str] | None = None, include_physical: bool = False, include_topocentric: bool = False, extended: bool = False, position_mode: module.models.PositionMode = <PositionMode.APPARENT: 'apparent'>) -> Dict[str, float | Dict[str, float]]
+compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None, include_physical: bool = False, include_topocentric: bool = False, extended: bool = False, position_mode: module.models.PositionMode = <PositionMode.APPARENT: 'apparent'>) -> Dict[str, Union[float, Dict[str, float]]]
 ```
 
 Compute planetary positions using Skyfield JPL ephemerides.
@@ -149,7 +149,7 @@ Compute planetary positions using Skyfield JPL ephemerides.
 ## `compute_jpl_positions_for_chart`
 
 ```python
-compute_jpl_positions_for_chart(chart: module.models.ChartInstance, ws: ForwardRef('Workspace') | None = None, include_physical: bool = False, include_topocentric: bool = False, ephemeris_path: str | None = None) -> Dict[str, float | Dict[str, float]]
+compute_jpl_positions_for_chart(chart: module.models.ChartInstance, ws: Optional[ForwardRef('Workspace')] = None, include_physical: bool = False, include_topocentric: bool = False, ephemeris_path: Optional[str] = None) -> Dict[str, Union[float, Dict[str, float]]]
 ```
 
 Compute JPL-backed chart positions through the backend seam.
@@ -157,7 +157,7 @@ Compute JPL-backed chart positions through the backend seam.
 ## `compute_positions`
 
 ```python
-compute_positions(engine: module.models.EngineType | None, name: str, dt_str: str, loc_str: str, ephemeris_path: str | None = None, requested_objects: List[str] | None = None) -> Dict[str, float | Dict[str, float]]
+compute_positions(engine: Optional[module.models.EngineType], name: str, dt_str: str, loc_str: str, ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None) -> Dict[str, Union[float, Dict[str, float]]]
 ```
 
 Compute planetary/point positions via the Skyfield JPL pipeline.
@@ -191,7 +191,7 @@ Dict mapping object_id -&gt; ecliptic_longitude (degrees) or extended dict.
 ## `compute_positions_for_chart`
 
 ```python
-compute_positions_for_chart(chart: module.models.ChartInstance, ws: ForwardRef('Workspace') | None = None, include_physical: bool = False, include_topocentric: bool = False) -> Dict[str, float | Dict[str, float]]
+compute_positions_for_chart(chart: module.models.ChartInstance, ws: Optional[ForwardRef('Workspace')] = None, include_physical: bool = False, include_topocentric: bool = False) -> Dict[str, Union[float, Dict[str, float]]]
 ```
 
 Compute positions using a ChartInstance's engine and ephemeris settings.
@@ -237,7 +237,7 @@ Dict mapping object_id -&gt; position data.
 ## `compute_positions_for_inputs`
 
 ```python
-compute_positions_for_inputs(engine: module.models.EngineType | None, name: str, dt_str: str, loc_text: str, ephemeris_path: str | None = None, requested_objects: List[str] | None = None) -> Dict[str, float]
+compute_positions_for_inputs(engine: Optional[module.models.EngineType], name: str, dt_str: str, loc_text: str, ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None) -> Dict[str, float]
 ```
 
 Thin wrapper over compute_positions to normalize/forward parameters from UI layers.
@@ -245,7 +245,7 @@ Thin wrapper over compute_positions to normalize/forward parameters from UI laye
 ## `find_chart_by_name_or_id`
 
 ```python
-find_chart_by_name_or_id(ws: module.models.Workspace | None, name_or_id: str) -> module.models.ChartInstance | None
+find_chart_by_name_or_id(ws: Optional[module.models.Workspace], name_or_id: str) -> Optional[module.models.ChartInstance]
 ```
 
 Find a chart in the workspace by subject name or chart ID.
@@ -264,7 +264,7 @@ ChartInstance if found, None otherwise
 ## `get_active_model`
 
 ```python
-get_active_model(ws: ForwardRef('Workspace') | None) -> module.models.AstroModel | None
+get_active_model(ws: Optional[ForwardRef('Workspace')]) -> Optional[module.models.AstroModel]
 ```
 
 Resolve the currently active AstroModel instance from a Workspace, if available.
@@ -281,7 +281,7 @@ Active AstroModel instance, or None if no models available
 ## `list_open_view_rows`
 
 ```python
-list_open_view_rows(ws: module.models.Workspace | None) -> List[Dict[str, str]]
+list_open_view_rows(ws: Optional[module.models.Workspace]) -> List[Dict[str, str]]
 ```
 
 Produce table rows for Open view display.
@@ -298,7 +298,7 @@ List of dictionaries with keys: name, event_time, location, tags, search_text
 ## `merge_model_with_overrides`
 
 ```python
-merge_model_with_overrides(model: module.models.AstroModel, overrides: module.models.ModelOverrides | None) -> module.models.AstroModel
+merge_model_with_overrides(model: module.models.AstroModel, overrides: Optional[module.models.ModelOverrides]) -> module.models.AstroModel
 ```
 
 Return a new AstroModel with selective overrides applied.
@@ -317,7 +317,7 @@ New AstroModel instance with overrides applied
 ## `positions_to_dataframe`
 
 ```python
-positions_to_dataframe(positions: Dict[str, Any]) -> pandas.core.frame.DataFrame
+positions_to_dataframe(positions: Dict[str, Any]) -> pandas.DataFrame
 ```
 
 Flatten a positions dict (float longitudes or extended dicts) into a DataFrame.
@@ -325,7 +325,7 @@ Flatten a positions dict (float longitudes or extended dicts) into a DataFrame.
 ## `resolve_effective_defaults`
 
 ```python
-resolve_effective_defaults(ws: 'Workspace', model: module.models.AstroModel | None) -> Dict[str, object]
+resolve_effective_defaults(ws: 'Workspace', model: Optional[module.models.AstroModel]) -> Dict[str, object]
 ```
 
 Resolve effective defaults merging workspace overrides on top of AstroModel settings.
@@ -345,7 +345,7 @@ Dictionary with keys: house_system, bodies, aspects, standard_orb, engine,
 ## `search_charts`
 
 ```python
-search_charts(ws: module.models.Workspace | None, query: str) -> List[module.models.ChartInstance]
+search_charts(ws: Optional[module.models.Workspace], query: str) -> List[module.models.ChartInstance]
 ```
 
 Search charts in workspace using case-insensitive text matching.
@@ -363,7 +363,7 @@ List of ChartInstance objects matching the query
 
 ## Classes
 
-### class `Subject`
+### class `Subject` 
 
 Thin wrapper around the skyfield/JPL position pipeline, for the TUI menu.
 
@@ -374,17 +374,17 @@ Usage:
 #### Methods
 
 - `at_place(self, location: object) -> None`
-
+  
   Set place from a free-text location or coordinates string.
 
 - `at_time(self, time: str) -> None`
-
+  
   Set event time from a free-text datetime string and compute positions.
 
 - `data(self)`
-
+  
   Return (object_names, degrees, labels) extracted from computed positions.
 
 - `report(self) -> str`
-
+  
   Build a plain-text position report for the computed subject.
