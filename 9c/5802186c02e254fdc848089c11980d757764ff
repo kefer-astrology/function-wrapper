@@ -1,0 +1,44 @@
+docs/site/content/architecture.md
+  s_4e5dd19f61efdd::t_93b202cf31319d 99
+docs/site/content/_index.md
+  s_4e5dd19f61efdd::t_93b202cf31319d 17-18,22,33-35
+docs/site/content/auto/cli.md
+  s_4e5dd19f61efdd::t_1bf2f0a8f816d6 22,31
+docs/site/content/auto/models.md
+  s_4e5dd19f61efdd::t_66cdf5ade0a340 16,18-45,51,54,70,72,81-88,90,98-103,105,107,115-120,122-132,144,146-148,155,159-160,165,178,189,191,200,204,207,209,213-214,217-225,227,229-241,248,250-251,253,262,264,270,273,288,290,294-296,302,306,315-317,319-328,335,339,341,345,348-351,354-358,364,366,370,375-379,386,399,408,420,434,448,450,458-460,462,472,474,479,483-486,495,497,502-512,514,530,532,536-538,540-545,547,563,565,575,578,588-615,617-619,626,629,640,654,658,663,668,675,699-700,705-710,712,721-734,736,738,744,746,750-764,766,771
+docs/site/content/auto/services.md
+  s_4e5dd19f61efdd::t_bffcef84710f9b 19,29,54,81,112,120,152,160,194,240,248,267,284,301,320,328,348,366,377,381,385,389
+docs/site/content/auto/storage.md
+  s_4e5dd19f61efdd::t_84db6337492e92 22,25,44,60,70,73-74,77-78,81-82,85-86,89-90,93-94,97-98,101-102
+docs/site/content/auto/utils.md
+  s_4e5dd19f61efdd::t_e32ad05c8429a3 54,112,190,256,309,331,360,382,406,433,454,478,485,487,489
+docs/site/content/auto/workspace.md
+  s_4e5dd19f61efdd::t_569aaa38ccc393 19,46,54,80,110,135,155,191,251,273,298,343,372,384,398,416,484
+docs/site/content/auto/z_visual.md
+  s_4e5dd19f61efdd::t_808f982fa7efae 19
+docs/site/content/enums.md
+  s_4e5dd19f61efdd::t_546ed8e7bc83ce 6,9-10,15,17
+docs/site/content/models.mmd
+  s_4e5dd19f61efdd::t_fe4a918a17704c 4-22,46,53,78-86,105,147,155,159-168,178-179,210-211,230-235,255,273,323-325,338,360-362,377,381,413-438,443,462,468-472,483,497,499,505-515,524-526,531-532,550,552,554,557,562,565,569-570
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9c5802186c02e254fdc848089c11980d757764ff",
+  "prompts": {},
+  "humans": {
+    "h_0907ec034f4a17": {
+      "author": "kubow <kube.kubow@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_4e5dd19f61efdd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d4c9-86e3-7542-8061-dc2a7430715e",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "kubow <kube.kubow@gmail.com>"
+    }
+  }
+}
