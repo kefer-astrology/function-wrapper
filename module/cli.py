@@ -802,7 +802,7 @@ def cmd_get_chart(args: Dict[str, Any]) -> Dict[str, Any]:
                 } if loc else None,
             } if subj else None,
             "config": {
-                "mode": _enum_value(cfg.mode) if cfg and cfg.mode else None,
+                "definition": _to_primitive(cfg.definition) if cfg and cfg.definition else None,
                 "house_system": _enum_value(cfg.house_system) if cfg and cfg.house_system else None,
                 "zodiac_type": _enum_value(cfg.zodiac_type) if cfg and cfg.zodiac_type else None,
                 "engine": _enum_value(cfg.engine) if cfg and cfg.engine else None,

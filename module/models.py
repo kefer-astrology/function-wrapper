@@ -8,14 +8,31 @@ from enum import Enum
 
 # ─── ENUMS ───
 
-class ChartMode(str, Enum):
-    NATAL = "NATAL"
-    EVENT = "EVENT"
-    HORARY = "HORARY"
-    COMPOSITE = "COMPOSITE"
-    #PROGRESSED = "PROGRESSED"
-    #SYNASTRY = "SYNASTRY"
-    #TRANSIT = "TRANSIT"
+class BaseChartPurpose(str, Enum):
+    NATAL = "natal"
+    EVENT = "event"
+    HORARY = "horary"
+    ELECTIONAL = "electional"
+    MOMENT = "moment"
+
+
+class DerivedChartMethod(str, Enum):
+    RETURN = "return"
+    PROGRESSION = "progression"
+    DIRECTION = "direction"
+    RELOCATION = "relocation"
+    HARMONIC = "harmonic"
+    PERSONA = "persona"
+    COMPOSITE = "composite"
+    DAVISON = "davison"
+    DRACONIC = "draconic"
+    COALESCENT = "coalescent"
+
+
+class AnalysisMethod(str, Enum):
+    SYNASTRY = "synastry"
+    TRANSIT_COMPARISON = "transit_comparison"
+    CHART_COMPARISON = "chart_comparison"
 
 
 class HouseSystem(str, Enum):
@@ -40,6 +57,11 @@ class EngineType(str, Enum):
     JYOTISH = "jyotish"
     JPL = "jpl"
     CUSTOM = "custom"
+
+
+class PositionMode(str, Enum):
+    APPARENT = "apparent"
+    GEOMETRIC = "geometric"
 
 
 class Ayanamsa(str, Enum):
@@ -70,18 +92,12 @@ class ViewModuleType(str, Enum):
     TEXT = "InterpretationText"
 
 
-class RelationType(str, Enum):
-    TRANSIT = "transit"
-    SYNASTRY = "synastry"
-    PROGRESSION = "progression"
-    COMPOSITE = "composite"
-
-
 class LayoutStyle(str, Enum):
     SINGLE = "single"
-    TIMELINE_OVERLAY = "timeline-overlay"
-    DUAL_WHEEL = "dual-wheel"
-    COMPARISON = "comparison"
+    BIWHEEL = "biwheel"
+    TRIWHEEL = "triwheel"
+    GRID = "grid"
+    TIMELINE = "timeline"
 
 
 class AspectContext(str, Enum):
@@ -154,24 +170,56 @@ class ChartSubject:
 
 
 @dataclass
+class ChartDefinition:
+    kind: str
+    purpose: Optional[BaseChartPurpose] = None
+    method: Optional[DerivedChartMethod] = None
+    inputs: List[str] = field(default_factory=list)
+    parameters: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class ChartConfig:
-    mode: ChartMode
+    definition: ChartDefinition
     house_system: Optional[HouseSystem]
     zodiac_type: ZodiacType
-    included_points: List[str]
     aspect_orbs: Dict[str, float]
-    display_style: str
-    color_theme: str
     selected_aspects: Optional[List[str]] = None
     override_ephemeris: Optional[str] = None
     model: Optional[str] = None
     engine: Optional[EngineType] = None
+    position_mode: Optional[PositionMode] = None
     ayanamsa: Optional[Ayanamsa] = None
     # Override observable objects for this chart (extends/overrides workspace defaults)
     observable_objects: Optional[List[str]] = None
     # Time system for input/output (if different from workspace default)
     time_system: Optional[TimeSystem] = None
     model_overrides: Optional["ModelOverrides"] = None
+
+
+@dataclass
+class DerivedChartStep:
+    method: DerivedChartMethod
+    parameters: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class AnalysisInput:
+    role: Optional[str] = None
+    chart_id: Optional[str] = None
+    inline_subject: Optional[ChartSubject] = None
+    derivations: List[DerivedChartStep] = field(default_factory=list)
+
+
+@dataclass
+class AnalysisInstance:
+    id: str
+    name: str
+    method: AnalysisMethod
+    inputs: List[AnalysisInput]
+    version: int = 1
+    parameters: Dict[str, Any] = field(default_factory=dict)
+    tags: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -311,6 +359,7 @@ class Sign:
 @dataclass
 class ModelSettings:
     default_house_system: HouseSystem
+    position_mode: PositionMode
     default_aspects: List[str]  # Default aspects for charts/radix
     default_bodies: List[str]
     standard_orb: float
@@ -373,15 +422,6 @@ class ModelOverrides:
 # ─── VIEW & LAYOUT ───
 
 @dataclass
-class ChartRelation:
-    type: RelationType
-    source: str
-    target: str
-    method: str
-    time_span: Optional[DateRange] = None
-
-
-@dataclass
 class ViewModule:
     type: ViewModuleType
     config: Dict
@@ -392,7 +432,7 @@ class ViewLayout:
     name: str
     layout_style: LayoutStyle
     chart_instances: List[str]
-    relations: List[ChartRelation] = field(default_factory=list)
+    analyses: List[str] = field(default_factory=list)
     modules: List[ViewModule] = field(default_factory=list)
 
 
@@ -478,6 +518,7 @@ class WorkspaceDefaults:
 
     # Ephemeris settings
     ephemeris_engine: Optional[EngineType] = None
+    position_mode: Optional[PositionMode] = None
     ephemeris_backend: Optional[str] = None
 
     # Color settings
@@ -590,6 +631,7 @@ class Workspace:
     
     # Optional fields (with defaults)
     active_model: Optional[str] = None
+    analyses: List[AnalysisInstance] = field(default_factory=list)
     default: WorkspaceDefaults = field(default_factory=WorkspaceDefaults)
     # Workspace-level overrides (override default.* settings)
     aspects: List[str] = field(default_factory=list)  # Overrides default.default_aspects
@@ -608,6 +650,7 @@ class Workspace:
 class WorkspaceEntityCounts:
     subjects: int
     charts: int
+    analyses: int
     chart_presets: int
     transit_analyses: int
     layouts: int
@@ -633,6 +676,7 @@ class LoadedWorkspace:
         counts = WorkspaceEntityCounts(
             subjects=len(self.workspace.subjects),
             charts=len(self.workspace.charts),
+            analyses=len(self.workspace.analyses),
             chart_presets=len(self.workspace.chart_presets),
             transit_analyses=len(self.workspace.transit_analyses),
             layouts=len(self.workspace.layouts),
@@ -665,6 +709,7 @@ class SettingsLayer:
     aspects: Optional[List[str]] = None
     aspect_orbs: Dict[str, float] = field(default_factory=dict)
     engine: Optional[EngineType] = None
+    position_mode: Optional[PositionMode] = None
     zodiac_type: Optional[ZodiacType] = None
     ayanamsa: Optional[Ayanamsa] = None
     time_system: Optional[TimeSystem] = None
@@ -679,6 +724,7 @@ class EffectiveSettingsSources:
     aspect_orbs: Dict[str, SettingSource]
     standard_orb: SettingSource
     engine: Optional[SettingSource]
+    position_mode: SettingSource
     zodiac_type: Optional[SettingSource]
     ayanamsa: Optional[SettingSource]
     time_system: Optional[SettingSource]
@@ -697,6 +743,7 @@ class EffectiveModelSettings:
     aspect_orbs: Dict[str, float]
     standard_orb: float
     engine: Optional[EngineType]
+    position_mode: PositionMode
     zodiac_type: Optional[ZodiacType]
     ayanamsa: Optional[Ayanamsa]
     time_system: Optional[TimeSystem]

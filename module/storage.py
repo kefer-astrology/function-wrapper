@@ -275,6 +275,7 @@ class DuckDBStorage:
         requested_objects: Optional[List[str]] = None,
         include_physical: bool = False,
         include_topocentric: bool = False,
+        position_mode: str = 'apparent',
         batch_size: int = 1000,
         radix_chart_id: Optional[str] = None
     ) -> int:
@@ -338,7 +339,9 @@ class DuckDBStorage:
         is_de421 = "de421" in Path(ephemeris_file).name.lower()
 
         # Import position computation helpers
-        from module.services import _compute_planet_extended_positions_vectorized, _load_mpc_orbits, _MPC_MINOR_BODY_IDS
+        from module.models import PositionMode
+        from module.services import _compute_planet_extended_positions_vectorized, _load_mpc_orbits, _MPC_MINOR_BODY_IDS, _position_for_mode
+        resolved_position_mode = PositionMode(position_mode)
 
         # Determine which planets/minor bodies to compute
         jpl_supported = ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
@@ -393,7 +396,7 @@ class DuckDBStorage:
             vernal_offsets = np.array([offset_by_year[y] for y in years])
 
             sun_astrometric = (
-                (eph["earth"] + observer).at(t_array).observe(eph["sun"]).apparent()
+                _position_for_mode(eph["sun"], eph, observer, t_array, resolved_position_mode)
                 if include_physical else None
             )
 
@@ -416,6 +419,7 @@ class DuckDBStorage:
                         include_physical=include_physical,
                         include_topocentric=include_topocentric,
                         sun_astrometric=sun_astrometric,
+                        position_mode=resolved_position_mode,
                     )
                     if pos:
                         per_body_results[planet] = pos
@@ -432,6 +436,7 @@ class DuckDBStorage:
                         include_physical=include_physical,
                         include_topocentric=include_topocentric,
                         sun_astrometric=sun_astrometric,
+                        position_mode=resolved_position_mode,
                     )
                     if pos:
                         per_body_results[body_id] = pos

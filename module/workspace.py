@@ -7,7 +7,8 @@ try:
         Workspace, ChartPreset, ChartSubject,
         ChartInstance, ViewLayout, Annotation, ChartConfig, Location, HouseSystem, EngineType, WorkspaceDefaults,
         BodyDefinition, ObjectType, AspectDefinition, AstroModel, ModelSettings, Sign, Element,
-        ZodiacType, Ayanamsa, AspectContext, ModelOverrides, OverrideEntry, TimeSystem,
+        ZodiacType, Ayanamsa, AspectContext, ModelOverrides, OverrideEntry, TimeSystem, PositionMode,
+        AnalysisInstance, AnalysisInput, AnalysisMethod, DerivedChartStep, DerivedChartMethod,
         AstrologySchool, WorkspacePresentation, TransitSetup,
         ElementColorSettings, RadixPointColorSettings,
         Diagnostic, DiagnosticSeverity, LoadedWorkspace
@@ -17,7 +18,8 @@ except ImportError:
         Workspace, ChartPreset, ChartSubject,
         ChartInstance, ViewLayout, Annotation, ChartConfig, Location, HouseSystem, EngineType, WorkspaceDefaults,
         BodyDefinition, ObjectType, AspectDefinition, AstroModel, ModelSettings, Sign, Element,
-        ZodiacType, Ayanamsa, AspectContext, ModelOverrides, OverrideEntry, TimeSystem,
+        ZodiacType, Ayanamsa, AspectContext, ModelOverrides, OverrideEntry, TimeSystem, PositionMode,
+        AnalysisInstance, AnalysisInput, AnalysisMethod, DerivedChartStep, DerivedChartMethod,
         AstrologySchool, WorkspacePresentation, TransitSetup,
         ElementColorSettings, RadixPointColorSettings,
         Diagnostic, DiagnosticSeverity, LoadedWorkspace
@@ -149,10 +151,14 @@ def load_workspace_aggregate(workspace_path: str) -> LoadedWorkspace:
         lambda raw: parse_chart_yaml({
             "id": raw.get("id") or raw.get("name") or "subject",
             "subject": raw,
-            "config": {},
+            "config": {
+                "definition": {"kind": "base", "purpose": "event"},
+                "zodiac_type": "Tropical",
+            },
         }).subject,
     )
     charts = load_many("charts", parse_chart_yaml)
+    analyses = load_many("analyses", _parse_analysis)
     chart_presets = load_many(
         "chart_presets",
         lambda raw: ChartPreset(
@@ -194,6 +200,7 @@ def load_workspace_aggregate(workspace_path: str) -> LoadedWorkspace:
         chart_presets=chart_presets,
         subjects=subjects,
         charts=charts,
+        analyses=analyses,
         layouts=layouts,
         annotations=annotations,
         models=_parse_models(manifest.get("models")),
@@ -228,6 +235,101 @@ def load_workspace_aggregate(workspace_path: str) -> LoadedWorkspace:
                 message=f"Subject '{chart.subject.id}' has no valid event_time",
                 path=f"workspace.charts.{chart.id}.subject.event_time",
             ))
+
+    chart_ids = {
+        chart.id.strip().lower()
+        for chart in charts
+        if isinstance(chart.id, str) and chart.id.strip()
+    }
+    for chart in charts:
+        definition = chart.config.definition
+        if definition.kind == "derived":
+            for input_id in definition.inputs:
+                if str(input_id).strip().lower() not in chart_ids:
+                    diagnostics.append(Diagnostic(
+                        code="derived_chart_input_missing",
+                        severity=DiagnosticSeverity.ERROR,
+                        message=(
+                            f"Derived chart '{chart.id}' references missing chart "
+                            f"'{input_id}'"
+                        ),
+                        path=f"workspace.charts.{chart.id}.config.definition.inputs",
+                    ))
+
+    analysis_ids = {
+        analysis.id.strip().lower()
+        for analysis in analyses
+        if isinstance(analysis.id, str) and analysis.id.strip()
+    }
+    for analysis in analyses:
+        analysis_path = f"workspace.analyses.{analysis.id}"
+        if analysis.version != 1:
+            diagnostics.append(Diagnostic(
+                code="unsupported_analysis_schema_version",
+                severity=DiagnosticSeverity.ERROR,
+                message=f"Analysis schema version {analysis.version} is not supported",
+                path=f"{analysis_path}.version",
+            ))
+        if not analysis.name.strip():
+            diagnostics.append(Diagnostic(
+                code="analysis_name_missing",
+                severity=DiagnosticSeverity.ERROR,
+                message="Analysis name must not be empty",
+                path=f"{analysis_path}.name",
+            ))
+        if len(analysis.inputs) < 2:
+            diagnostics.append(Diagnostic(
+                code="analysis_inputs_missing",
+                severity=DiagnosticSeverity.ERROR,
+                message="An analysis requires at least two chart inputs",
+                path=f"{analysis_path}.inputs",
+            ))
+        for index, input_value in enumerate(analysis.inputs):
+            input_path = f"{analysis_path}.inputs.{index}"
+            has_chart = bool(input_value.chart_id and input_value.chart_id.strip())
+            has_inline = input_value.inline_subject is not None
+            if has_chart == has_inline:
+                diagnostics.append(Diagnostic(
+                    code="invalid_analysis_input",
+                    severity=DiagnosticSeverity.ERROR,
+                    message=(
+                        "Analysis input must contain exactly one of chart_id "
+                        "or inline_subject"
+                    ),
+                    path=input_path,
+                ))
+            elif has_chart and input_value.chart_id.strip().lower() not in chart_ids:
+                diagnostics.append(Diagnostic(
+                    code="analysis_chart_missing",
+                    severity=DiagnosticSeverity.ERROR,
+                    message=(
+                        f"Analysis references missing chart '{input_value.chart_id}'"
+                    ),
+                    path=f"{input_path}.chart_id",
+                ))
+
+    for layout in layouts:
+        for chart_id in layout.chart_instances:
+            if str(chart_id).strip().lower() not in chart_ids:
+                diagnostics.append(Diagnostic(
+                    code="unknown_layout_chart",
+                    severity=DiagnosticSeverity.ERROR,
+                    message=(
+                        f"Layout '{layout.name}' references unknown chart '{chart_id}'"
+                    ),
+                    path=f"workspace.layouts.{layout.name}.chart_instances",
+                ))
+        for analysis_id in layout.analyses:
+            if str(analysis_id).strip().lower() not in analysis_ids:
+                diagnostics.append(Diagnostic(
+                    code="unknown_layout_analysis",
+                    severity=DiagnosticSeverity.ERROR,
+                    message=(
+                        f"Layout '{layout.name}' references unknown analysis "
+                        f"'{analysis_id}'"
+                    ),
+                    path=f"workspace.layouts.{layout.name}.analyses",
+                ))
 
     unique: Dict[Tuple[str, str, Optional[str]], Diagnostic] = {}
     for diagnostic in diagnostics:
@@ -367,6 +469,9 @@ def _parse_model(raw: dict, fallback_name: str) -> AstroModel:
             default_house_system=_safe_enum(
                 settings_raw.get("default_house_system"), HouseSystem
             ),
+            position_mode=_safe_enum(
+                settings_raw.get("position_mode", "apparent"), PositionMode, PositionMode.APPARENT
+            ),
             default_aspects=list(settings_raw.get("default_aspects", []) or []),
             default_bodies=list(settings_raw.get("default_bodies", []) or []),
             standard_orb=float(settings_raw.get("standard_orb", 0.0) or 0.0),
@@ -462,6 +567,56 @@ def _parse_transit_setup(raw: dict) -> TransitSetup:
     value = dict(raw)
     value["model_overrides"] = _parse_model_overrides(value.get("model_overrides"))
     return TransitSetup(**value)
+
+
+def _parse_analysis(raw: dict) -> AnalysisInstance:
+    inputs: List[AnalysisInput] = []
+    for item in raw.get("inputs", []) or []:
+        if not isinstance(item, dict):
+            raise ValueError("analysis input must be a mapping")
+        inline_subject = None
+        if isinstance(item.get("inline_subject"), dict):
+            subject_raw = item["inline_subject"]
+            inline_subject = parse_chart_yaml({
+                "id": subject_raw.get("id") or "inline-subject",
+                "subject": subject_raw,
+                "config": {
+                    "definition": {"kind": "base", "purpose": "event"},
+                    "zodiac_type": "Tropical",
+                },
+            }).subject
+        derivations = [
+            DerivedChartStep(
+                method=_safe_enum(step.get("method"), DerivedChartMethod),
+                parameters=dict(step.get("parameters", {}) or {}),
+            )
+            for step in item.get("derivations", []) or []
+            if isinstance(step, dict)
+        ]
+        inputs.append(AnalysisInput(
+            role=item.get("role"),
+            chart_id=item.get("chart_id"),
+            inline_subject=inline_subject,
+            derivations=derivations,
+        ))
+    return AnalysisInstance(
+        version=int(raw.get("version", 1) or 1),
+        id=str(raw.get("id") or ""),
+        name=str(raw.get("name") or ""),
+        method=_safe_enum(raw.get("method"), AnalysisMethod),
+        inputs=inputs,
+        parameters=dict(raw.get("parameters", {}) or {}),
+        tags=list(raw.get("tags", []) or []),
+    )
+
+
+def _load_analyses(base_dir: str, manifest: dict) -> List[AnalysisInstance]:
+    analyses: List[AnalysisInstance] = []
+    for reference in manifest.get("analyses", []) or []:
+        raw = _load_yaml_file(base_dir, reference) if isinstance(reference, str) else reference
+        if isinstance(raw, dict):
+            analyses.append(_parse_analysis(raw))
+    return analyses
 
 
 def _load_transit_analyses(base_dir: str, manifest: dict) -> List[TransitSetup]:
@@ -620,20 +775,8 @@ def _parse_workspace_defaults(manifest: dict) -> WorkspaceDefaults:
     raw_default = manifest.get('default')
     default_block = raw_default if isinstance(raw_default, dict) else {}
     
-    # Handle legacy top-level default_ephemeris for backward compatibility
     ephemeris_engine = default_block.get('ephemeris_engine')
     ephemeris_backend = default_block.get('ephemeris_backend')
-    
-    if not ephemeris_engine or not ephemeris_backend:
-        # Try to get from legacy default_ephemeris field
-        de = manifest.get("default_ephemeris")
-        if isinstance(de, dict):
-            if not ephemeris_backend:
-                ephemeris_backend = de.get("name", "")
-            if not ephemeris_engine:
-                ephemeris_engine = de.get("backend", "")
-        elif isinstance(de, str) and not ephemeris_engine:
-            ephemeris_engine = de
     
     # Parse location if present
     default_location = None
@@ -655,6 +798,7 @@ def _parse_workspace_defaults(manifest: dict) -> WorkspaceDefaults:
     
     return WorkspaceDefaults(
         ephemeris_engine=_safe_engine(ephemeris_engine),
+        position_mode=_safe_enum(default_block.get("position_mode"), PositionMode),
         ephemeris_backend=ephemeris_backend,
         default_location=default_location,
         language=default_block.get('language'),
@@ -689,6 +833,7 @@ def _load_workspace_from_manifest(manifest: dict, base_dir: str) -> Workspace:
     chart_presets = _load_chart_presets(base_dir, manifest)
     subjects = _load_many_items(base_dir, manifest.get("subjects", []), ChartSubject)
     charts = _load_charts(base_dir, manifest)
+    analyses = _load_analyses(base_dir, manifest)
     layouts = _load_many_items(base_dir, manifest.get("layouts", []), ViewLayout)
     annotations = _load_annotations(base_dir, manifest)
 
@@ -711,6 +856,7 @@ def _load_workspace_from_manifest(manifest: dict, base_dir: str) -> Workspace:
         chart_presets=chart_presets,
         subjects=subjects,
         charts=charts,
+        analyses=analyses,
         layouts=layouts,
         annotations=annotations,
         models=_parse_models(manifest.get("models")),
@@ -886,6 +1032,7 @@ def init_workspace(base_dir: Union[str, Path], owner: str, active_model: str, de
         "default": {
             # Ephemeris settings
             "ephemeris_engine": (default_ephemeris.get("backend") or "jpl"),
+            "position_mode": "apparent",
             "ephemeris_backend": default_ephemeris.get("name"),
             # Location settings
             "location_name": (DEFAULT_LOCATION.get("name") if isinstance(DEFAULT_LOCATION, dict) else None),
@@ -904,6 +1051,7 @@ def init_workspace(base_dir: Union[str, Path], owner: str, active_model: str, de
         "chart_presets": [],
         "subjects": [],
         "charts": [],
+        "analyses": [],
         "layouts": [],
         "annotations": [],
     }
@@ -946,6 +1094,7 @@ def _build_default_block(workspace: Workspace) -> dict:
     
     return {
         "ephemeris_engine": (getattr(d.ephemeris_engine, 'value', d.ephemeris_engine) if d.ephemeris_engine else None),
+        "position_mode": _to_primitive(d.position_mode),
         "ephemeris_backend": d.ephemeris_backend,
         "element_colors": _to_primitive(d.element_colors),
         "radix_point_colors": _to_primitive(d.radix_point_colors),
@@ -973,7 +1122,7 @@ def save_workspace_modular(workspace: Workspace, base_dir: Union[str, Path]) -> 
     """
     base = Path(base_dir)
     # Ensure all subdirectories exist
-    for subdir in ("subjects", "charts", "layouts", "annotations", "presets", "transits"):
+    for subdir in ("subjects", "charts", "analyses", "layouts", "annotations", "presets", "transits"):
         _ensure_dir(base / subdir)
 
     # Save all workspace components
@@ -982,6 +1131,8 @@ def save_workspace_modular(workspace: Workspace, base_dir: Union[str, Path]) -> 
                                       lambda s: getattr(s, 'id', getattr(s, 'name', 'subject')))
     chart_refs = _save_workspace_items(base, workspace.charts, "charts",
                                        lambda c: getattr(c, 'id', getattr(getattr(c, 'subject', None), 'name', 'chart')))
+    analysis_refs = _save_workspace_items(base, workspace.analyses, "analyses",
+                                          lambda a: getattr(a, 'id', 'analysis'))
     layout_refs = _save_workspace_items(base, workspace.layouts, "layouts",
                                         lambda l: getattr(l, 'name', 'layout'))
     annotation_refs = _save_workspace_items(base, workspace.annotations, "annotations",
@@ -1015,6 +1166,7 @@ def save_workspace_modular(workspace: Workspace, base_dir: Union[str, Path]) -> 
         "chart_presets": preset_refs,
         "subjects": subj_refs,
         "charts": chart_refs,
+        "analyses": analysis_refs,
         "transit_analyses": transit_refs,
         "layouts": layout_refs,
         "annotations": annotation_refs,
@@ -1040,7 +1192,7 @@ def _prune_chart_yaml_payload(data: dict) -> dict:
         
     Note:
         Drops 'computed_chart', and in 'config' drops any keys with None/empty values
-        (e.g., 'model', 'engine', 'ayanamsa', 'color_theme'). Note that 'override_ephemeris'
+        (e.g., 'model', 'engine', 'ayanamsa'). Note that 'override_ephemeris'
         is a valid field and will be persisted if set. Also drops top-level keys explicitly
         listed as undesired when empty.
     """
@@ -1056,13 +1208,9 @@ def _prune_chart_yaml_payload(data: dict) -> dict:
             v = cfg.get(k)
             if v is None or v == '' or (isinstance(v, (list, dict)) and not v):
                 # keep only if it's a required key; otherwise drop
-                if k in {'model', 'engine', 'ayanamsa', 'color_theme'}:
+                if k in {'model', 'engine', 'ayanamsa'}:
                     cfg.pop(k, None)
         data['config'] = cfg
-    # Also clean any top-level optional strings if empty
-    for k in ['color_theme']:
-        if data.get(k) in (None, ''):
-            data.pop(k, None)
     return data
 
 def add_subject(ws: Workspace, subject: ChartSubject, base_dir: Union[str, Path]) -> str:
@@ -1497,7 +1645,7 @@ def validate_workspace(ws: Any) -> List[str]:
         - Active model presence and resolution
         - WorkspaceDefaults default_bodies/default_aspects exist in the active model
         - Top-level ws.aspects exist in the active model
-        - Each ChartInstance.config included_points exist in the active model bodies
+        - Each ChartInstance.config observable_objects exist in the active model bodies
         - Each ChartInstance.config aspect_orbs keys exist in the active model aspects
         - Layout chart references resolve to existing chart IDs
     """
@@ -1556,8 +1704,8 @@ def validate_workspace(ws: Any) -> List[str]:
             if cfg is None:
                 issues.append(f"[error] Chart has no config: id={getattr(ch, 'id', '(no id)')}")
                 continue
-            # included_points against model body ids
-            for pt in getattr(cfg, 'included_points', []) or []:
+            # observable_objects against model body ids
+            for pt in getattr(cfg, 'observable_objects', []) or []:
                 if pt not in body_ids:
                     issues.append(f"[warn] Chart {getattr(ch, 'id', '(no id)')} includes unknown body id: {pt}")
             # aspect_orbs keys against model aspect ids

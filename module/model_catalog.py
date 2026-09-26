@@ -10,6 +10,7 @@ try:
         HouseSystem,
         ModelSettings,
         ObjectType,
+        PositionMode,
         Sign,
         ZodiacType,
     )
@@ -23,6 +24,7 @@ except ImportError:
         HouseSystem,
         ModelSettings,
         ObjectType,
+        PositionMode,
         Sign,
         ZodiacType,
     )
@@ -31,6 +33,7 @@ except ImportError:
 def builtin_model_settings() -> ModelSettings:
     return ModelSettings(
         default_house_system=HouseSystem.PLACIDUS,
+        position_mode=PositionMode.APPARENT,
         default_aspects=[
             "conjunction",
             "sextile",

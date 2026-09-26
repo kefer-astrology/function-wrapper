@@ -16,6 +16,7 @@ try:
         EffectiveSettingsSources,
         EngineType,
         HouseSystem,
+        PositionMode,
         SettingSource,
         SettingsLayer,
         TimeSystem,
@@ -39,6 +40,7 @@ except ImportError:
         EffectiveSettingsSources,
         EngineType,
         HouseSystem,
+        PositionMode,
         SettingSource,
         SettingsLayer,
         TimeSystem,
@@ -67,6 +69,7 @@ def settings_layer_from_dict(value: Optional[Dict[str, Any]]) -> Optional[Settin
         aspects=_optional_list(pick("aspects")),
         aspect_orbs=dict(pick("aspectOrbs", "aspect_orbs") or {}),
         engine=_coerce_enum(pick("engine"), EngineType),
+        position_mode=_coerce_enum(pick("positionMode", "position_mode"), PositionMode),
         zodiac_type=_coerce_enum(pick("zodiacType", "zodiac_type"), ZodiacType),
         ayanamsa=_coerce_enum(pick("ayanamsa"), Ayanamsa),
         time_system=_coerce_enum(pick("timeSystem", "time_system"), TimeSystem),
@@ -77,17 +80,14 @@ def settings_layer_from_dict(value: Optional[Dict[str, Any]]) -> Optional[Settin
 
 
 def settings_layer_from_chart_config(config: ChartConfig) -> SettingsLayer:
-    bodies = (
-        list(config.observable_objects)
-        if config.observable_objects is not None
-        else (list(config.included_points) if config.included_points else None)
-    )
+    bodies = list(config.observable_objects) if config.observable_objects is not None else None
     return SettingsLayer(
         house_system=config.house_system,
         bodies=bodies,
         aspects=list(config.selected_aspects) if config.selected_aspects is not None else None,
         aspect_orbs=dict(config.aspect_orbs or {}),
         engine=config.engine,
+        position_mode=config.position_mode,
         zodiac_type=config.zodiac_type,
         ayanamsa=config.ayanamsa,
         time_system=config.time_system,
@@ -249,6 +249,7 @@ def materialize_effective_settings(chart: Any, settings: EffectiveModelSettings)
     config.selected_aspects = list(settings.default_aspects)
     config.aspect_orbs = dict(settings.aspect_orbs)
     config.engine = settings.engine
+    config.position_mode = settings.position_mode
     if settings.zodiac_type is not None:
         config.zodiac_type = settings.zodiac_type
     config.ayanamsa = settings.ayanamsa
@@ -275,6 +276,10 @@ def _effective_settings(
     aspects_source = settings_source
     engine = model.engine
     engine_source = SettingSource.MODEL if engine is not None else None
+    position_mode = model_settings.position_mode or PositionMode.APPARENT
+    position_mode_source = (
+        settings_source if model_settings.position_mode is not None else SettingSource.APPLICATION
+    )
     zodiac = model.zodiac_type
     zodiac_source = SettingSource.MODEL if zodiac is not None else None
     ayanamsa = model.ayanamsa
@@ -301,6 +306,8 @@ def _effective_settings(
             orb_sources[aspect_id] = SettingSource.WORKSPACE
         if defaults.ephemeris_engine is not None:
             engine, engine_source = defaults.ephemeris_engine, SettingSource.WORKSPACE
+        if defaults.position_mode is not None:
+            position_mode, position_mode_source = defaults.position_mode, SettingSource.WORKSPACE
         if defaults.time_system is not None:
             time_system, time_source = defaults.time_system, SettingSource.WORKSPACE
 
@@ -309,6 +316,7 @@ def _effective_settings(
         "bodies": bodies, "bodies_source": bodies_source,
         "aspects": aspects, "aspects_source": aspects_source,
         "engine": engine, "engine_source": engine_source,
+        "position_mode": position_mode, "position_mode_source": position_mode_source,
         "zodiac": zodiac, "zodiac_source": zodiac_source,
         "ayanamsa": ayanamsa, "ayanamsa_source": ayanamsa_source,
         "time_system": time_system, "time_source": time_source,
@@ -332,6 +340,7 @@ def _effective_settings(
         aspect_orbs=aspect_orbs,
         standard_orb=float(model_settings.standard_orb),
         engine=state["engine"],
+        position_mode=state["position_mode"],
         zodiac_type=state["zodiac"],
         ayanamsa=state["ayanamsa"],
         time_system=state["time_system"],
@@ -345,6 +354,7 @@ def _effective_settings(
             aspect_orbs=orb_sources,
             standard_orb=settings_source,
             engine=state["engine_source"],
+            position_mode=state["position_mode_source"],
             zodiac_type=state["zodiac_source"],
             ayanamsa=state["ayanamsa_source"],
             time_system=state["time_source"],
@@ -440,6 +450,7 @@ def _apply_layer(
         ("bodies", "bodies"),
         ("aspects", "aspects"),
         ("engine", "engine"),
+        ("position_mode", "position_mode"),
         ("zodiac_type", "zodiac"),
         ("ayanamsa", "ayanamsa"),
         ("time_system", "time_system"),
@@ -454,8 +465,6 @@ def _apply_layer(
 
 
 def _compatibility_warnings(chart: Optional[ChartConfig]) -> list[str]:
-    if chart is not None and chart.observable_objects is None and chart.included_points:
-        return ["included_points_deprecated: use observable_objects"]
     return []
 
 

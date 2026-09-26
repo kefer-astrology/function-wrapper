@@ -35,7 +35,7 @@ try:
     # For running as part of the package (e.g. from root or in tests)
     from module.models import (
         AspectDefinition, AstroModel, BodyDefinition, DateRange, HouseSystem, ChartConfig, ChartInstance, ChartSubject,
-        Location, ModelSettings, Sign, ChartMode, EngineType, ZodiacType, Ayanamsa, TimeSystem,
+        Location, ModelSettings, Sign, BaseChartPurpose, DerivedChartMethod, ChartDefinition, EngineType, PositionMode, ZodiacType, Ayanamsa, TimeSystem,
         Workspace, EphemerisSource, WorkspaceDefaults, ModelOverrides, OverrideEntry,
         AspectContext
     )
@@ -43,7 +43,7 @@ except ImportError:
     # For running directly (e.g. python3 module/utils.py)
     from models import (
         AspectDefinition, AstroModel, BodyDefinition, DateRange, HouseSystem, ChartConfig, ChartInstance, ChartSubject,
-        Location, ModelSettings, Sign, ChartMode, EngineType, ZodiacType, Ayanamsa, TimeSystem,
+        Location, ModelSettings, Sign, BaseChartPurpose, DerivedChartMethod, ChartDefinition, EngineType, PositionMode, ZodiacType, Ayanamsa, TimeSystem,
         Workspace, EphemerisSource, WorkspaceDefaults, ModelOverrides, OverrideEntry,
         AspectContext
     )
@@ -487,13 +487,10 @@ def prepare_horoscope(
             id=name, name=name, event_time=dt, location=loc
         ),
         config=ChartConfig(
-            mode=ChartMode.NATAL,
+            definition=ChartDefinition(kind="base", purpose=BaseChartPurpose.NATAL),
             house_system=house,
             zodiac_type=zodiac,
-            included_points=[],
             aspect_orbs={},
-            display_style="",
-            color_theme="",
             selected_aspects=None,
             override_ephemeris=ephemeris_path,
             engine=engine,
@@ -615,6 +612,7 @@ def parse_sfs_content(content: str) -> Tuple[AstroModel, Dict[str, Any]]:
     # Map model_settings to ModelSettings dataclass (partial, extend as needed)
     ms = ModelSettings(
         default_house_system=HouseSystem(model_settings.get('DefaultHouseSystem', 'PLACIDUS')) if 'DefaultHouseSystem' in model_settings else HouseSystem.PLACIDUS,
+        position_mode=PositionMode.APPARENT,
         default_aspects=[],  # Could parse from model_settings if present
         default_bodies=[],   # Could parse from model_settings if present
         standard_orb=float(model_settings.get('StandardComparisonOrbCoef', 1.0)) if 'StandardComparisonOrbCoef' in model_settings else 1.0,
@@ -956,22 +954,42 @@ def parse_chart_config(data: Optional[dict]) -> ChartConfig:
             aspects=entries("aspects"),
             override_orbs=dict(raw.get("override_orbs", {}) or {}),
         )
+    definition_raw = cfg_d.get("definition")
+    if not isinstance(definition_raw, dict):
+        raise ValueError("chart config requires definition")
+    kind = str(definition_raw.get("kind") or "").strip().lower()
+    if kind == "base":
+        purpose = _enum_or(definition_raw.get("purpose"), BaseChartPurpose, None)
+        if purpose is None:
+            raise ValueError("base chart definition requires purpose")
+        definition = ChartDefinition(kind="base", purpose=purpose)
+    elif kind == "derived":
+        method = _enum_or(definition_raw.get("method"), DerivedChartMethod, None)
+        if method is None:
+            raise ValueError("derived chart definition requires method")
+        definition = ChartDefinition(
+            kind="derived",
+            method=method,
+            inputs=list(definition_raw.get("inputs", []) or []),
+            parameters=dict(definition_raw.get("parameters", {}) or {}),
+        )
+    else:
+        raise ValueError("chart definition kind must be base or derived")
+
     return ChartConfig(
-        mode=_enum_or(cfg_d.get("mode", "NATAL"), ChartMode, ChartMode.NATAL),
+        definition=definition,
         house_system=_enum_or(cfg_d.get("house_system"), HouseSystem, None),
         zodiac_type=_enum_or(
             cfg_d.get("zodiac_type", "TROPICAL"),
             ZodiacType,
             ZodiacType.TROPICAL,
         ),
-        included_points=list(cfg_d.get("included_points", []) or []),
         aspect_orbs=dict(cfg_d.get("aspect_orbs", {}) or {}),
-        display_style=str(cfg_d.get("display_style", "") or ""),
-        color_theme=str(cfg_d.get("color_theme", "") or ""),
         selected_aspects=None if selected_raw is None else list(selected_raw),
         override_ephemeris=cfg_d.get("override_ephemeris"),
         model=cfg_d.get("model"),
         engine=_enum_or(cfg_d.get("engine"), EngineType, None),
+        position_mode=_enum_or(cfg_d.get("position_mode"), PositionMode, None),
         ayanamsa=_enum_or(cfg_d.get("ayanamsa"), Ayanamsa, None),
         observable_objects=None if observable_raw is None else list(observable_raw),
         time_system=_enum_or(cfg_d.get("time_system"), TimeSystem, None),

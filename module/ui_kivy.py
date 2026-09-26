@@ -64,9 +64,9 @@ except ImportError:
     from z_visual import build_radix_figure, write_plotly_html
 
 try:
-    from module.models import EngineType, ChartInstance, ChartSubject, ChartConfig, HouseSystem, ChartMode
+    from module.models import EngineType, ChartInstance, ChartSubject, ChartConfig, HouseSystem, BaseChartPurpose
 except ImportError:
-    from models import EngineType, ChartInstance, ChartSubject, ChartConfig, HouseSystem, ChartMode
+    from models import EngineType, ChartInstance, ChartSubject, ChartConfig, HouseSystem, BaseChartPurpose
 try:
     # Kivy Garden WebView for interactive Plotly in-app
     from kivy_garden.webview import WebView  # noqa: F401 (used in KV)
@@ -298,10 +298,10 @@ class MyApp(MDApp):
         """JPL/Skyfield is the only engine; any stored workspace value is coerced to it."""
         return EngineType.JPL
 
-    def build_chart(self, name: str, dt, loc_text: str, mode: ChartMode = ChartMode.NATAL, tags: list | None = None):
+    def build_chart(self, name: str, dt, loc_text: str, purpose: BaseChartPurpose = BaseChartPurpose.NATAL, tags: list | None = None):
         """Build a ChartInstance using services.build_chart_instance and store it in self.chart."""
         eph = self.ephemeris_file
-        chart = build_chart_instance(name=name, dt_str=str(dt), loc_text=loc_text, mode=mode, ws=getattr(self, 'workspace', None), ephemeris_path=eph)
+        chart = build_chart_instance(name=name, dt_str=str(dt), loc_text=loc_text, purpose=purpose, ws=getattr(self, 'workspace', None), ephemeris_path=eph)
         try:
             if tags:
                 chart.tags = [t.strip() for t in tags if t and t.strip()]
@@ -934,8 +934,8 @@ class MyApp(MDApp):
                 self.show_message('Chart already exists — focused existing')
                 return
             dt_str = f"{ds} {ts}" if ds and ts else ds or now_utc().strftime("%Y-%m-%d %H:%M")
-            mode = ChartMode[self.chart_type]
-            self.build_chart(nm, dt_str, pl, mode=mode, tags=tags)
+            purpose = BaseChartPurpose(self.chart_type.lower())
+            self.build_chart(nm, dt_str, pl, purpose=purpose, tags=tags)
             try:
                 add_or_update_chart(self.workspace, self.chart, base_dir=self.workspace_dir)
                 self._save_workspace()

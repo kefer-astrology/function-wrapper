@@ -4,9 +4,9 @@ import datetime
 import streamlit as st
 
 try:
-    from module.models import ChartMode, EngineType
+    from module.models import BaseChartPurpose, EngineType
 except ImportError:
-    from models import ChartMode, EngineType
+    from models import BaseChartPurpose, EngineType
 
 try:
     from module.ui_translations import change_language
@@ -34,7 +34,7 @@ def _ensure_session_defaults():
     if "workspace_manifest" not in st.session_state:
         st.session_state.workspace_manifest = ""
     if "chart_type" not in st.session_state:
-        st.session_state.chart_type = ChartMode.NATAL.value
+        st.session_state.chart_type = BaseChartPurpose.NATAL.value
     if "crt_name" not in st.session_state:
         st.session_state.crt_name = ""
     if "settings_section" not in st.session_state:

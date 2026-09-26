@@ -18,14 +18,14 @@ logger = get_logger(__name__)
 # Standardized imports with fallback for direct execution
 try:
     from module.models import (
-        Aspect, AspectDefinition, AstroModel, Ayanamsa, BodyDefinition, CelestialBody, ChartMode, DateRange,
-        EngineType, ChartConfig, ChartInstance, Location, ModelOverrides, ModelSettings, Sign,
+        Aspect, AspectDefinition, AstroModel, Ayanamsa, BodyDefinition, CelestialBody, BaseChartPurpose, ChartDefinition, DateRange,
+        EngineType, PositionMode, ChartConfig, ChartInstance, Location, ModelOverrides, ModelSettings, Sign,
         ObjectType, Workspace
     )
 except ImportError:
     from models import (
-        Aspect, AspectDefinition, AstroModel, Ayanamsa, BodyDefinition, CelestialBody, ChartMode, DateRange,
-        EngineType, ChartConfig, ChartInstance, Location, ModelOverrides, ModelSettings, Sign,
+        Aspect, AspectDefinition, AstroModel, Ayanamsa, BodyDefinition, CelestialBody, BaseChartPurpose, ChartDefinition, DateRange,
+        EngineType, PositionMode, ChartConfig, ChartInstance, Location, ModelOverrides, ModelSettings, Sign,
         ObjectType, Workspace
     )
 
@@ -262,7 +262,15 @@ def _true_lilith_tropical_deg(
 # 🪐 POSITION CALCULATIONS (Skyfield-based for JPL)
 # ─────────────────────
 
-def _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset: float) -> Optional[float]:
+def _position_for_mode(body, eph, observer, t, position_mode: PositionMode):
+    observer_state = (eph["earth"] + observer).at(t)
+    if position_mode == PositionMode.GEOMETRIC:
+        return body.at(t) - observer_state
+    return observer_state.observe(body).apparent()
+
+
+def _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset: float,
+                                       position_mode: PositionMode = PositionMode.APPARENT) -> Optional[float]:
     """Compute ecliptic longitude for a planet from RA/Dec.
     
     Args:
@@ -276,7 +284,7 @@ def _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_of
         Ecliptic longitude in degrees [0, 360), or None on error
     """
     try:
-        astrometric = (eph["earth"] + observer).at(t).observe(body).apparent()
+        astrometric = _position_for_mode(body, eph, observer, t, position_mode)
         ra, dec, _ = astrometric.radec()
         
         # Compute ecliptic longitude from RA/Dec using J2000.0 obliquity
@@ -313,7 +321,8 @@ def _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_of
 def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_offset: float,
                                       include_physical: bool = False,
                                       include_topocentric: bool = False,
-                                      sun_astrometric=None) -> Optional[Dict[str, float]]:
+                                      sun_astrometric=None,
+                                      position_mode: PositionMode = PositionMode.APPARENT) -> Optional[Dict[str, float]]:
     """Compute extended position data for a planet using Skyfield.
 
     Args:
@@ -347,7 +356,7 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
         - retrograde: bool (if available)
     """
     try:
-        astrometric = (eph["earth"] + observer).at(t).observe(body).apparent()
+        astrometric = _position_for_mode(body, eph, observer, t, position_mode)
         ra, dec, distance = astrometric.radec()
         
         # Always compute basic equatorial coordinates
@@ -416,7 +425,7 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
                 try:
                     sun_pos = sun_astrometric
                     if sun_pos is None:
-                        sun_pos = (eph["earth"] + observer).at(t).observe(eph["sun"]).apparent()
+                        sun_pos = _position_for_mode(eph["sun"], eph, observer, t, position_mode)
                     # Compute elongation (simplified - full calculation would use spherical trigonometry)
                     # For now, approximate using ecliptic longitude difference
                     sun_ra, sun_dec, _ = sun_pos.radec()
@@ -453,7 +462,8 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
 def _compute_planet_extended_positions_vectorized(body, eph, observer, t_array, vernal_equinox_offsets,
                                                     include_physical: bool = False,
                                                     include_topocentric: bool = False,
-                                                    sun_astrometric=None) -> Optional[Dict[str, Any]]:
+                                                    sun_astrometric=None,
+                                                    position_mode: PositionMode = PositionMode.APPARENT) -> Optional[Dict[str, Any]]:
     """Batched equivalent of `_compute_planet_extended_position`: computes the same fields for
     an entire array of timestamps in one Skyfield call instead of one call per timestamp.
 
@@ -483,7 +493,7 @@ def _compute_planet_extended_positions_vectorized(body, eph, observer, t_array, 
         array) if that field's computation failed for the whole series.
     """
     try:
-        astrometric = (eph["earth"] + observer).at(t_array).observe(body).apparent()
+        astrometric = _position_for_mode(body, eph, observer, t_array, position_mode)
         ra, dec, distance = astrometric.radec()
 
         ra_deg = ra.hours * 15.0
@@ -525,7 +535,7 @@ def _compute_planet_extended_positions_vectorized(body, eph, observer, t_array, 
                 try:
                     sun_pos = sun_astrometric
                     if sun_pos is None:
-                        sun_pos = (eph["earth"] + observer).at(t_array).observe(eph["sun"]).apparent()
+                        sun_pos = _position_for_mode(eph["sun"], eph, observer, t_array, position_mode)
                     sun_ra, _sun_dec, _ = sun_pos.radec()
                     sun_ra_deg = sun_ra.hours * 15.0
                     elongation_approx = np.abs(ra_deg - sun_ra_deg)
@@ -549,7 +559,8 @@ def _compute_planet_extended_positions_vectorized(body, eph, observer, t_array, 
 
 
 def _compute_single_planet_position(planet: str, eph, observer, t, is_de421: bool, 
-                                     vernal_equinox_offset: float) -> Optional[float]:
+                                     vernal_equinox_offset: float,
+                                     position_mode: PositionMode = PositionMode.APPARENT) -> Optional[float]:
     """Compute position for a single planet.
     
     Args:
@@ -570,7 +581,7 @@ def _compute_single_planet_position(planet: str, eph, observer, t, is_de421: boo
         body_name = f"{planet} barycenter"
         try:
             body = eph[body_name]
-            return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset)
+            return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode)
         except (KeyError, ValueError, AttributeError) as e:
             logger.warning("Could not compute %s barycenter position: %s", planet, e)
             return None
@@ -578,14 +589,14 @@ def _compute_single_planet_position(planet: str, eph, observer, t, is_de421: boo
     # For non-de421 or inner planets, try direct name first
     try:
         body = eph[planet]
-        return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset)
+        return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode)
     except KeyError:
         # If direct access fails, try barycenter for outer planets (for other ephemeris files)
         if planet in outer_planets:
             try:
                 body_name = f"{planet} barycenter"
                 body = eph[body_name]
-                return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset)
+                return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode)
             except (KeyError, ValueError, AttributeError) as e:
                 logger.warning("Could not compute %s position: %s", planet, e)
                 return None
@@ -596,7 +607,8 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                           requested_objects: Optional[List[str]] = None,
                           include_physical: bool = False,
                           include_topocentric: bool = False,
-                          extended: bool = False) -> Dict[str, Union[float, Dict[str, float]]]:
+                          extended: bool = False,
+                          position_mode: PositionMode = PositionMode.APPARENT) -> Dict[str, Union[float, Dict[str, float]]]:
     """Compute planetary positions using Skyfield JPL ephemerides.
 
     Parameters:
@@ -644,7 +656,7 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
         # so the Sun's position (light-time + deflection) is computed once per timestamp
         # instead of once per body. Only used by the extended-mode path below.
         sun_astrometric = (
-            (eph["earth"] + observer).at(t).observe(eph["sun"]).apparent()
+            _position_for_mode(eph["sun"], eph, observer, t, position_mode)
             if extended and include_physical else None
         )
 
@@ -678,12 +690,13 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                         include_physical=include_physical,
                         include_topocentric=include_topocentric,
                         sun_astrometric=sun_astrometric,
+                        position_mode=position_mode,
                     )
                     if extended_pos is not None:
                         positions[planet] = extended_pos
             else:
                 # Legacy mode: return only longitude
-                lon_deg_tropical = _compute_single_planet_position(planet, eph, observer, t, is_de421, vernal_equinox_offset)
+                lon_deg_tropical = _compute_single_planet_position(planet, eph, observer, t, is_de421, vernal_equinox_offset, position_mode)
                 if lon_deg_tropical is not None:
                     positions[planet] = lon_deg_tropical
 
@@ -706,11 +719,12 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                         include_physical=include_physical,
                         include_topocentric=include_topocentric,
                         sun_astrometric=sun_astrometric,
+                        position_mode=position_mode,
                     )
                     if minor_pos is not None:
                         positions[body_id] = minor_pos
                 else:
-                    lon_deg_tropical = _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset)
+                    lon_deg_tropical = _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode)
                     if lon_deg_tropical is not None:
                         positions[body_id] = lon_deg_tropical
 
@@ -1340,6 +1354,11 @@ def resolve_effective_defaults(ws: 'Workspace', model: Optional[AstroModel]) -> 
 
     # Engine prefs (workspace default can override model engine)
     out['engine'] = (getattr(d, 'ephemeris_engine', None) if d else None) or getattr(model, 'engine', None)
+    out['position_mode'] = (
+        (getattr(d, 'position_mode', None) if d else None)
+        or (getattr(ms, 'position_mode', None) if ms else None)
+        or PositionMode.APPARENT
+    )
     out['zodiac_type'] = getattr(model, 'zodiac_type', None)
     out['ayanamsa'] = getattr(model, 'ayanamsa', None)
 
@@ -1411,6 +1430,7 @@ def compute_jpl_positions_for_chart(
         include_physical=include_physical,
         include_topocentric=include_topocentric,
         extended=True,
+        position_mode=_safe_get_attr(cfg, 'position_mode') or PositionMode.APPARENT,
     )
 
 
@@ -1558,7 +1578,7 @@ def compute_chart_data_for_chart(
 # ─────────────────────
 
 def build_chart_instance(name: str, dt_str: str, loc_text: str,
-                         mode: ChartMode, ws: Optional[Workspace] = None, 
+                         purpose: BaseChartPurpose, ws: Optional[Workspace] = None,
                          ephemeris_path: Optional[str] = None) -> ChartInstance:
     """Build a ChartInstance using workspace defaults when provided.
     - Resolves engine and house system from ws if available.
@@ -1568,10 +1588,10 @@ def build_chart_instance(name: str, dt_str: str, loc_text: str,
     engine = None
     house = None
     zodiac_type = None
-    included_points: List[str] = []
     observable_objects: Optional[List[str]] = None
     aspect_orbs: Dict[str, float] = {}
     ayanamsa = None
+    position_mode = PositionMode.APPARENT
 
     if ws is not None:
         try:
@@ -1588,10 +1608,10 @@ def build_chart_instance(name: str, dt_str: str, loc_text: str,
                 eff = resolve_effective_defaults(ws, eff_model)
                 house = eff.get('house_system') or house
                 zodiac_type = eff.get('zodiac_type') or zodiac_type
-                included_points = list(eff.get('bodies') or [])
                 observable_objects = list(eff.get('observable_objects') or [])
                 aspect_orbs = dict(eff.get('aspect_orbs') or {})
                 ayanamsa = eff.get('ayanamsa') or ayanamsa
+                position_mode = eff.get('position_mode') or position_mode
                 # If workspace default specifies engine, that already took priority above; otherwise use model engine
                 engine = engine or eff.get('engine')
         except (AttributeError, KeyError, TypeError) as e:
@@ -1609,9 +1629,8 @@ def build_chart_instance(name: str, dt_str: str, loc_text: str,
     chart = prepare_horoscope(name=name, dt=t, loc=loc_model, engine=engine,
                               ephemeris_path=ephemeris_path, house=house)
     try:
-        chart.config.mode = mode
+        chart.config.definition = ChartDefinition(kind="base", purpose=purpose)
     except AttributeError:
-        # ChartConfig might not support mode assignment directly
         pass
     
     # Apply additional resolved defaults onto ChartConfig
@@ -1620,14 +1639,13 @@ def build_chart_instance(name: str, dt_str: str, loc_text: str,
             chart.config.house_system = house
         if zodiac_type is not None:
             chart.config.zodiac_type = zodiac_type
-        if included_points:
-            chart.config.included_points = included_points
         if observable_objects:
             chart.config.observable_objects = observable_objects
         if aspect_orbs:
             chart.config.aspect_orbs = aspect_orbs
         if engine is not None:
             chart.config.engine = engine
+        chart.config.position_mode = position_mode
         if ayanamsa is not None:
             chart.config.ayanamsa = ayanamsa
     except AttributeError as e:

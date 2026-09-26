@@ -6,9 +6,9 @@ import streamlit as st
 from pathlib import Path
 
 try:
-    from module.models import Annotation, ChartMode, ChartSubject, EngineType, ZodiacType, Ayanamsa, TimeSystem
+    from module.models import Annotation, BaseChartPurpose, ChartSubject, EngineType, ZodiacType, Ayanamsa, TimeSystem
 except ImportError:
-    from models import Annotation, ChartMode, ChartSubject, EngineType, ZodiacType, Ayanamsa, TimeSystem
+    from models import Annotation, BaseChartPurpose, ChartSubject, EngineType, ZodiacType, Ayanamsa, TimeSystem
 
 try:
     from module.utils import (
@@ -615,7 +615,7 @@ def _render_create_content(engine_choice, eph_path):
 
     chart_type = st.radio(
         "Typ",
-        [ChartMode.NATAL.value, ChartMode.EVENT.value, ChartMode.HORARY.value, ChartMode.COMPOSITE.value],
+        [purpose.value for purpose in BaseChartPurpose],
         key="crt_type",
         horizontal=True,
     )
@@ -734,7 +734,7 @@ def _render_create_content(engine_choice, eph_path):
                     name=horoscope_name,
                     dt_str=dt_str,
                     loc_text=input_location,
-                    mode=chart_type,
+                    purpose=BaseChartPurpose(chart_type),
                     ws=ws,
                     ephemeris_path=eph_path if use_jpl else None
                 )
@@ -820,7 +820,7 @@ def _render_create_content(engine_choice, eph_path):
                     name=horoscope_name,
                     dt_str=dt_str,
                     loc_text=input_location,
-                    mode=chart_type,
+                    purpose=BaseChartPurpose(chart_type),
                     ws=temp_ws,  # Use temp workspace with defaults
                     ephemeris_path=eph_path if use_jpl else None
                 )
