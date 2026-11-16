@@ -53,6 +53,22 @@ except ImportError:
     logger.warning("pyarrow not available. Install with: pip install pyarrow")
 
 
+def _duckdb_timestamp_literal(value: datetime) -> str:
+    """Render a datetime the way DuckDB stores it in a naive TIMESTAMP column.
+
+    DuckDB converts an offset-aware Python datetime bound on INSERT to the
+    session's local wall-clock time, but a string literal compared against a
+    TIMESTAMP silently drops its offset. Interpolating `dt.isoformat()` thus
+    matched only on machines whose local offset equaled the data's offset
+    (the storage tests passed in Europe/Prague and failed in UTC CI).
+    Converting aware values to local naive time keeps reads consistent with
+    existing writes without changing what is stored.
+    """
+    if value.tzinfo is not None:
+        value = value.astimezone().replace(tzinfo=None)
+    return value.isoformat(sep=" ")
+
+
 class DuckDBStorage:
     """DuckDB storage for computed astrological data.
     
@@ -706,16 +722,16 @@ class DuckDBStorage:
         
         if datetime_str:
             dt = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
-            conditions.append(f"t.datetime = '{dt.isoformat()}'")
+            conditions.append(f"t.datetime = '{_duckdb_timestamp_literal(dt)}'")
         elif start_datetime or end_datetime:
             if start_datetime:
                 if isinstance(start_datetime, str):
                     start_datetime = datetime.fromisoformat(start_datetime.replace('Z', '+00:00'))
-                conditions.append(f"t.datetime >= '{start_datetime.isoformat()}'")
+                conditions.append(f"t.datetime >= '{_duckdb_timestamp_literal(start_datetime)}'")
             if end_datetime:
                 if isinstance(end_datetime, str):
                     end_datetime = datetime.fromisoformat(end_datetime.replace('Z', '+00:00'))
-                conditions.append(f"t.datetime <= '{end_datetime.isoformat()}'")
+                conditions.append(f"t.datetime <= '{_duckdb_timestamp_literal(end_datetime)}'")
         
         query = f"""
             SELECT 
@@ -791,7 +807,7 @@ class DuckDBStorage:
         datetime_filter = ""
         if datetime_str:
             dt = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
-            datetime_filter = f"AND p1.datetime = '{dt.isoformat()}'"
+            datetime_filter = f"AND p1.datetime = '{_duckdb_timestamp_literal(dt)}'"
         
         # Build aspect definitions as UNION ALL subqueries
         aspect_unions = []
@@ -916,7 +932,7 @@ class DuckDBStorage:
                 
                 if parquet_file.exists():
                     # Query specific file - much faster than glob pattern
-                    query = f"SELECT * FROM read_parquet('{parquet_file}') WHERE datetime = '{dt.isoformat()}'"
+                    query = f"SELECT * FROM read_parquet('{parquet_file}') WHERE datetime = '{_duckdb_timestamp_literal(dt)}'"
                     if object_id:
                         query += f" AND object_id = '{object_id}'"
                     query += " ORDER BY object_id"
@@ -948,11 +964,11 @@ class DuckDBStorage:
             if start_datetime:
                 if isinstance(start_datetime, str):
                     start_datetime = datetime.fromisoformat(start_datetime.replace('Z', '+00:00'))
-                conditions.append(f"datetime >= '{start_datetime.isoformat()}'")
+                conditions.append(f"datetime >= '{_duckdb_timestamp_literal(start_datetime)}'")
             if end_datetime:
                 if isinstance(end_datetime, str):
                     end_datetime = datetime.fromisoformat(end_datetime.replace('Z', '+00:00'))
-                conditions.append(f"datetime <= '{end_datetime.isoformat()}'")
+                conditions.append(f"datetime <= '{_duckdb_timestamp_literal(end_datetime)}'")
             if object_id:
                 conditions.append(f"object_id = '{object_id}'")
             
@@ -971,11 +987,11 @@ class DuckDBStorage:
             if start_datetime:
                 if isinstance(start_datetime, str):
                     start_datetime = datetime.fromisoformat(start_datetime.replace('Z', '+00:00'))
-                conditions.append(f"datetime >= '{start_datetime.isoformat()}'")
+                conditions.append(f"datetime >= '{_duckdb_timestamp_literal(start_datetime)}'")
             if end_datetime:
                 if isinstance(end_datetime, str):
                     end_datetime = datetime.fromisoformat(end_datetime.replace('Z', '+00:00'))
-                conditions.append(f"datetime <= '{end_datetime.isoformat()}'")
+                conditions.append(f"datetime <= '{_duckdb_timestamp_literal(end_datetime)}'")
             if object_id:
                 conditions.append(f"object_id = '{object_id}'")
             
