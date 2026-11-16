@@ -12,6 +12,16 @@ try:
 except ImportError:
     from models import AstroModel, Diagnostic, DiagnosticSeverity, EffectiveModelSettings
 
+try:
+    from module.model_catalog import ASPECT_ALIASES
+except ImportError:
+    from model_catalog import ASPECT_ALIASES
+
+
+def _with_aspect_aliases(ids: Set[str]) -> Set[str]:
+    """Known aspect ids plus aliases whose canonical target is known (mirrors Rust)."""
+    return ids | {alias for alias, canonical in ASPECT_ALIASES.items() if canonical.lower() in ids}
+
 
 def _normalized(values: Iterable[str]) -> Set[str]:
     return {str(value).strip().lower() for value in values}
@@ -111,7 +121,7 @@ def validate_effective_settings(
     path: str = "effective_settings",
 ) -> List[Diagnostic]:
     body_ids = _normalized(body.id for body in model.body_definitions or [])
-    aspect_ids = _normalized(aspect.id for aspect in model.aspect_definitions or [])
+    aspect_ids = _with_aspect_aliases(_normalized(aspect.id for aspect in model.aspect_definitions or []))
     diagnostics: List[Diagnostic] = []
     _validate_selection(settings.default_bodies, body_ids, "unknown_selected_body", f"{path}.default_bodies", diagnostics)
     _validate_selection(settings.default_aspects, aspect_ids, "unknown_selected_aspect", f"{path}.default_aspects", diagnostics)

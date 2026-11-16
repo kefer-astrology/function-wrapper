@@ -13,14 +13,29 @@ except ImportError:
 PositionResult = Dict[str, Union[float, Dict[str, float]]]
 DEGREES_IN_CIRCLE = 360.0
 
+try:
+    from module.model_catalog import ASPECT_CATALOG, canonical_aspect_id, canonical_aspect_map
+except ImportError:
+    from model_catalog import ASPECT_CATALOG, canonical_aspect_id, canonical_aspect_map
+
+# Fallback when no model definitions are passed: the six default aspects with
+# canonical catalog orbs (previously Python-only 8/6/8/8/3/8).
+_FALLBACK_ASPECT_IDS = ("conjunction", "sextile", "square", "trine", "quincunx", "opposition")
 _NORMALIZED_ASPECT_SPECS: List[tuple[str, float, float]] = [
-    ("conjunction", 0.0, 8.0),
-    ("sextile", 60.0, 6.0),
-    ("square", 90.0, 8.0),
-    ("trine", 120.0, 8.0),
-    ("quincunx", 150.0, 3.0),
-    ("opposition", 180.0, 8.0),
+    (aspect_id, float(angle), float(orb))
+    for aspect_id, _label, angle, orb in ASPECT_CATALOG
+    if aspect_id in _FALLBACK_ASPECT_IDS
 ]
+
+
+def _selected_aspect_set(selected_aspects: Optional[List[str]]) -> Optional[set]:
+    if selected_aspects is None:
+        return None
+    return {str(canonical_aspect_id(item)).strip().lower() for item in selected_aspects}
+
+
+def _is_selected(aspect_id: str, selected: Optional[set]) -> bool:
+    return selected is None or str(canonical_aspect_id(aspect_id)).strip().lower() in selected
 
 
 @dataclass
@@ -119,12 +134,10 @@ def compute_normalized_chart_aspects(
         if lon is not None:
             normalized_positions[key] = lon
 
-    selected = None
-    if selected_aspects is not None:
-        selected = {str(item).strip().lower() for item in selected_aspects}
+    selected = _selected_aspect_set(selected_aspects)
 
     specs: List[tuple[str, float, float]] = []
-    orb_map = aspect_orbs or {}
+    orb_map = canonical_aspect_map(aspect_orbs)
     definitions = (
         [
             (
@@ -139,9 +152,9 @@ def compute_normalized_chart_aspects(
         else _NORMALIZED_ASPECT_SPECS
     )
     for aspect_id, angle, default_orb in definitions:
-        if selected is not None and aspect_id not in selected:
+        if not _is_selected(aspect_id, selected):
             continue
-        orb = orb_map.get(aspect_id, default_orb)
+        orb = orb_map.get(canonical_aspect_id(aspect_id), default_orb)
         try:
             orb_value = max(0.0, float(orb))
         except (TypeError, ValueError):
@@ -193,11 +206,7 @@ def compute_normalized_cross_aspects(
         for key, value in target_positions.items()
         if (longitude := _extract_longitude_for_aspect_detection(value)) is not None
     }
-    selected = (
-        {str(item).strip().lower() for item in selected_aspects}
-        if selected_aspects is not None
-        else None
-    )
+    selected = _selected_aspect_set(selected_aspects)
     definitions = (
         [
             (str(item.id), float(item.angle), float(item.default_orb))
@@ -207,13 +216,13 @@ def compute_normalized_cross_aspects(
         if aspect_definitions is not None
         else _NORMALIZED_ASPECT_SPECS
     )
-    orb_map = aspect_orbs or {}
+    orb_map = canonical_aspect_map(aspect_orbs)
     specs = []
     for aspect_id, exact_angle, default_orb in definitions:
-        if selected is not None and aspect_id not in selected:
+        if not _is_selected(aspect_id, selected):
             continue
         try:
-            allowed_orb = max(0.0, float(orb_map.get(aspect_id, default_orb)))
+            allowed_orb = max(0.0, float(orb_map.get(canonical_aspect_id(aspect_id), default_orb)))
         except (TypeError, ValueError):
             allowed_orb = default_orb
         specs.append((aspect_id, exact_angle, allowed_orb))
@@ -264,13 +273,22 @@ def _j2000_centuries(jd_ut: float) -> float:
 
 
 def _mean_obliquity_deg(jd_ut: float) -> float:
+    """Mean obliquity of the ecliptic, IAU 2006 polynomial (arcseconds -> degrees).
+
+    Mirrors tauri-application `domain/houses.rs::mean_obliquity_deg`. This used
+    the older IAU 1980 constant (84381.448"), which put Python axes/cusps ~0.1"
+    away from Rust; caught by contracts/houses/cusps.json.
+    """
     t = _j2000_centuries(jd_ut)
-    return (
-        23.439291111
-        - 0.013004167 * t
-        - 0.000000164 * t * t
-        + 0.000000504 * t * t * t
+    arcsec = (
+        84381.406
+        - 46.836769 * t
+        - 0.0001831 * t ** 2
+        + 0.00200340 * t ** 3
+        - 0.000000576 * t ** 4
+        - 0.0000000434 * t ** 5
     )
+    return arcsec / 3600.0
 
 
 # Ayanamsa value at J2000.0, degrees. There is no existing numeric ayanamsa
@@ -374,6 +392,63 @@ def _compute_axes(jd_ut: float, geo_lat_deg: float, geo_lon_deg: float) -> Dict[
 def _whole_sign_cusps(asc_lon_deg: float) -> List[float]:
     first_house_start = math.floor(asc_lon_deg / 30.0) * 30.0
     return [_normalize_deg(first_house_start + i * 30.0) for i in range(12)]
+
+
+def _equal_cusps(asc_lon_deg: float) -> List[float]:
+    """Equal houses: 12 x 30 degrees starting at the Ascendant's own degree.
+
+    Ported from tauri-application `domain/houses.rs::equal_cusps` (MIT).
+    """
+    return [_normalize_deg(asc_lon_deg + i * 30.0) for i in range(12)]
+
+
+def _porphyry_cusps(asc_lon_deg: float, mc_lon_deg: float) -> List[float]:
+    """Porphyry houses: angles as cusps 1/4/7/10, each quadrant trisected.
+
+    Ported from tauri-application `domain/houses.rs::porphyry_cusps` (MIT).
+    """
+    desc = _normalize_deg(asc_lon_deg + 180.0)
+    ic = _normalize_deg(mc_lon_deg + 180.0)
+
+    def trisect(start: float, end: float) -> tuple[float, float]:
+        arc = _normalize_deg(end - start)
+        return _normalize_deg(start + arc / 3.0), _normalize_deg(start + arc * 2.0 / 3.0)
+
+    h2, h3 = trisect(asc_lon_deg, ic)
+    h5, h6 = trisect(ic, desc)
+    h8, h9 = trisect(desc, mc_lon_deg)
+    h11, h12 = trisect(mc_lon_deg, asc_lon_deg)
+    return [asc_lon_deg, h2, h3, ic, h5, h6, desc, h8, h9, mc_lon_deg, h11, h12]
+
+
+NATIVE_HOUSE_SYSTEMS = ("Placidus", "Whole Sign", "Campanus", "Equal", "Porphyry")
+
+
+def house_system_substitution_warning(system_value: str) -> str:
+    name = system_value.lower().replace(" ", "_")
+    return f"house_system_{name}_not_yet_supported: whole_sign_used"
+
+
+def _house_cusps_for_system(
+    system_value: Optional[str],
+    jd_ut: float,
+    geo_lat_deg: float,
+    geo_lon_deg: float,
+    asc_lon_deg: float,
+    mc_lon_deg: float,
+) -> tuple[List[float], List[str]]:
+    """Mirror of Rust `house_cusps_for_system`; never substitutes silently."""
+    if system_value in (None, "Whole Sign"):
+        return _whole_sign_cusps(asc_lon_deg), []
+    if system_value == "Placidus":
+        return _placidus_cusps(jd_ut, geo_lat_deg, geo_lon_deg, asc_lon_deg, mc_lon_deg)
+    if system_value == "Campanus":
+        return _campanus_cusps(jd_ut, geo_lat_deg, geo_lon_deg, asc_lon_deg, mc_lon_deg)
+    if system_value == "Equal":
+        return _equal_cusps(asc_lon_deg), []
+    if system_value == "Porphyry":
+        return _porphyry_cusps(asc_lon_deg, mc_lon_deg), []
+    return _whole_sign_cusps(asc_lon_deg), [house_system_substitution_warning(system_value)]
 
 
 def _angular_delta_deg_shortest(from_deg: float, to_deg: float) -> float:
@@ -570,29 +645,14 @@ def _chart_axes_and_house_cusps(chart: ChartInstance) -> tuple[Dict[str, float],
 
     house_system = getattr(getattr(chart, "config", None), "house_system", None)
     house_system_value = getattr(house_system, "value", house_system)
-    if house_system_value == "Placidus":
-        house_cusps, warnings = _placidus_cusps(
-            jd_ut,
-            float(latitude),
-            float(longitude),
-            axes["asc"],
-            axes["mc"],
-        )
-    elif house_system_value == "Campanus":
-        house_cusps, warnings = _campanus_cusps(
-            jd_ut,
-            float(latitude),
-            float(longitude),
-            axes["asc"],
-            axes["mc"],
-        )
-    elif house_system_value in (None, "Whole Sign"):
-        house_cusps = _whole_sign_cusps(axes["asc"])
-        warnings = []
-    else:
-        house_cusps = _whole_sign_cusps(axes["asc"])
-        name = house_system_value.lower()
-        warnings = [f"house_system_{name}_not_yet_supported: whole_sign_used"]
+    house_cusps, warnings = _house_cusps_for_system(
+        house_system_value,
+        jd_ut,
+        float(latitude),
+        float(longitude),
+        axes["asc"],
+        axes["mc"],
+    )
 
     return axes, house_cusps, warnings
 
@@ -676,6 +736,44 @@ class JplAstronomyBackend:
         chart_data.house_cusps = house_cusps
         chart_data.warnings.extend(warnings)
         return chart_data
+
+
+# No engine is ever substituted silently (shared codes:
+# tauri-application/contracts/substitution-warnings.json). Skyfield/JPL is the
+# only backend here, so any other configured engine is reported:
+# - jyotish/custom: no implementation exists in any backend;
+# - swisseph: exists in the Rust app (feature-gated), not in this package.
+_ENGINE_STATUS = {"jpl": True, "swisseph": True, "jyotish": False, "custom": False}
+_BACKEND_ID = "jpl"
+
+
+def engine_substitution_warning(engine: Any, backend_id: str = _BACKEND_ID) -> Optional[str]:
+    """Warning when the configured engine is not what computed the chart."""
+    value = str(getattr(engine, "value", engine) or "").strip().lower()
+    if not value:
+        return None
+    implemented = _ENGINE_STATUS.get(value, False)
+    if implemented and value == backend_id:
+        return None
+    reason = "not_available" if implemented else "not_implemented"
+    return f"engine_{value}_{reason}: {backend_id}_used"
+
+
+def engine_substitution_warnings(chart: ChartInstance) -> List[str]:
+    cfg = getattr(chart, "config", None)
+    warning = engine_substitution_warning(getattr(cfg, "engine", None) if cfg else None)
+    return [warning] if warning else []
+
+
+def ayanamsa_warnings(ayanamsa: Optional[Ayanamsa]) -> List[str]:
+    """Diagnostics for a sidereal shift computed by `apply_ayanamsa_to_chart_data`."""
+    warnings = ["ayanamsa_approximate: linear_precession_model"]
+    if ayanamsa is None:
+        warnings.append("ayanamsa_unspecified: fagan_bradley_used")
+    elif ayanamsa not in _AYANAMSA_J2000_DEG:
+        name = str(getattr(ayanamsa, "value", ayanamsa)).lower()
+        warnings.append(f"ayanamsa_{name}_not_supported: fagan_bradley_used")
+    return warnings
 
 
 def backend_for_chart(chart: ChartInstance) -> AstronomyBackend:

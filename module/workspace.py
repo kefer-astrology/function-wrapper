@@ -54,9 +54,9 @@ except ImportError:
     )
 
 try:
-    from module.model_catalog import builtin_standard_model
+    from module.model_catalog import builtin_standard_model, canonical_aspect_id
 except ImportError:
-    from model_catalog import builtin_standard_model
+    from model_catalog import builtin_standard_model, canonical_aspect_id
 
 # ─────────────────────
 # ⚙️ CONFIGURATION
@@ -432,7 +432,8 @@ def _parse_model(raw: dict, fallback_name: str) -> AstroModel:
             continue
         contexts = aspect.get("valid_contexts")
         aspect_definitions.append(AspectDefinition(
-            id=str(aspect.get("id", "")),
+            # Legacy ids (e.g. `semisquare`) load as canonical (`octile`).
+            id=str(canonical_aspect_id(str(aspect.get("id", "")))),
             glyph=str(aspect.get("glyph", "")),
             angle=float(aspect.get("angle", 0.0) or 0.0),
             default_orb=float(aspect.get("default_orb", 0.0) or 0.0),

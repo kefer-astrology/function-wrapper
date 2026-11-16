@@ -98,6 +98,69 @@ def _body(
     )
 
 
+# Canonical built-in aspects: mirror of tauri-application
+# contracts/catalogs/aspects.json (catalog_version 1.0.0), checked by
+# tests/test_shared_contracts.py. Rust ids and default orbs are canonical
+# (Phase 0 decision D4); this table previously used `semisquare`/
+# `sesquiquadrate` and wider orbs (square/trine 8, sextile 6, ...).
+ASPECT_CATALOG_VERSION = "1.0.0"
+ASPECT_CATALOG: tuple[tuple[str, str, float, float], ...] = (
+    ("conjunction", "Conjunction", 0.0, 8.0),
+    ("semisextile", "Semisextile", 30.0, 1.0),
+    ("undecile", "Undecile", 360.0 / 11.0, 0.5),
+    ("decile", "Decile", 36.0, 1.0),
+    ("novile", "Novile", 40.0, 1.0),
+    ("octile", "Octile", 45.0, 1.5),
+    ("septile", "Septile", 360.0 / 7.0, 1.0),
+    ("sextile", "Sextile", 60.0, 5.0),
+    ("biundecile", "Biundecile", 720.0 / 11.0, 0.5),
+    ("quintile", "Quintile", 72.0, 1.0),
+    ("binovile", "Binovile", 80.0, 1.0),
+    ("triundecile", "Triundecile", 1080.0 / 11.0, 0.5),
+    ("square", "Square", 90.0, 6.0),
+    ("biseptile", "Biseptile", 720.0 / 7.0, 1.0),
+    ("tridecile", "Tridecile", 108.0, 1.0),
+    ("trine", "Trine", 120.0, 6.0),
+    ("quadriundecile", "Quadriundecile", 1440.0 / 11.0, 0.5),
+    ("trioctile", "Trioctile", 135.0, 1.5),
+    ("biquintile", "Biquintile", 144.0, 1.0),
+    ("quincunx", "Quincunx", 150.0, 2.0),
+    ("triseptile", "Triseptile", 1080.0 / 7.0, 1.0),
+    ("quadrinovile", "Quadrinovile", 160.0, 1.0),
+    ("quinundecile", "Quinundecile", 1800.0 / 11.0, 0.5),
+    ("opposition", "Opposition", 180.0, 8.0),
+)
+
+# Legacy ids accepted wherever an aspect id is read; writers emit canonical ids.
+ASPECT_ALIASES = {"semisquare": "octile", "sesquiquadrate": "trioctile"}
+
+
+def canonical_aspect_id(aspect_id: str) -> str:
+    """Canonical id for an aspect id; aliases match case-insensitively and any
+    other id is returned unchanged (custom ids keep their spelling)."""
+    return ASPECT_ALIASES.get(str(aspect_id).strip().lower(), aspect_id)
+
+
+def canonical_aspect_ids(ids):
+    """Canonicalize a list, dropping alias-created duplicates (first wins)."""
+    out = []
+    for aspect_id in ids or []:
+        canonical = canonical_aspect_id(aspect_id)
+        if canonical not in out:
+            out.append(canonical)
+    return out
+
+
+def canonical_aspect_map(values):
+    """Canonicalize map keys; an explicitly canonical key beats its alias."""
+    out = {key: value for key, value in (values or {}).items() if canonical_aspect_id(key) == key}
+    for key, value in (values or {}).items():
+        canonical = canonical_aspect_id(key)
+        if canonical != key:
+            out.setdefault(canonical, value)
+    return out
+
+
 def _aspect(aspect_id: str, label: str, angle: float, orb: float) -> AspectDefinition:
     return AspectDefinition(
         id=aspect_id,
@@ -169,25 +232,7 @@ def builtin_standard_model(name: str = "standard") -> AstroModel:
         _body("fortuna", "Fortuna", "⑲", ObjectType.ASTEROID, swisseph=False),
         _body("massalia", "Massalia", "⑳", ObjectType.ASTEROID, swisseph=False),
     ]
-    aspects = [
-        _aspect("conjunction", "Conjunction", 0.0, 8.0),
-        _aspect("sextile", "Sextile", 60.0, 6.0),
-        _aspect("square", "Square", 90.0, 8.0),
-        _aspect("trine", "Trine", 120.0, 8.0),
-        _aspect("quincunx", "Quincunx", 150.0, 3.0),
-        _aspect("opposition", "Opposition", 180.0, 8.0),
-        _aspect("semisextile", "Semisextile", 30.0, 2.0),
-        _aspect("decile", "Decile", 36.0, 1.0),
-        _aspect("novile", "Novile", 40.0, 1.0),
-        _aspect("semisquare", "Semisquare", 45.0, 2.0),
-        _aspect("septile", "Septile", 360.0 / 7.0, 1.0),
-        _aspect("quintile", "Quintile", 72.0, 2.0),
-        _aspect("binovile", "Binovile", 80.0, 1.0),
-        _aspect("tridecile", "Tridecile", 108.0, 1.0),
-        _aspect("sesquiquadrate", "Sesquiquadrate", 135.0, 2.0),
-        _aspect("biquintile", "Biquintile", 144.0, 2.0),
-        _aspect("quadrinovile", "Quadrinovile", 160.0, 1.0),
-    ]
+    aspects = [_aspect(*row) for row in ASPECT_CATALOG]
     signs = [
         _sign("Aries", "Ar", "Ari", Element.FIRE),
         _sign("Taurus", "Ta", "Tau", Element.EARTH),

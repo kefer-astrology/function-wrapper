@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 
 try:
     from module.model_catalog import builtin_model_settings, builtin_standard_model
+    from module.model_catalog import canonical_aspect_id, canonical_aspect_ids, canonical_aspect_map
     from module.models import (
         Ayanamsa,
         AstroModel,
@@ -29,6 +30,7 @@ try:
     from module.validation import validate_effective_settings, validate_model
 except ImportError:
     from model_catalog import builtin_model_settings, builtin_standard_model
+    from model_catalog import canonical_aspect_id, canonical_aspect_ids, canonical_aspect_map
     from models import (
         Ayanamsa,
         AstroModel,
@@ -186,7 +188,7 @@ def current_model_report(
             ))
 
     if requested and requested in models:
-        model = deepcopy(models[requested])
+        model = canonicalize_model_aspect_ids(deepcopy(models[requested]))
         source = "workspace_model"
     elif available:
         fallback = available[0]
@@ -200,7 +202,7 @@ def current_model_report(
             ))
         else:
             warnings.append(f"active_model_missing_using_first_available: {fallback}")
-        model = deepcopy(models[fallback])
+        model = canonicalize_model_aspect_ids(deepcopy(models[fallback]))
         source = "workspace_model_fallback"
     else:
         model = builtin_standard_model(requested or "standard")
@@ -301,7 +303,7 @@ def _effective_settings(
             aspects, aspects_source = list(defaults.default_aspects), SettingSource.WORKSPACE
         if ws.aspects:
             aspects, aspects_source = list(ws.aspects), SettingSource.WORKSPACE
-        for aspect_id, orb in (defaults.default_aspect_orbs or {}).items():
+        for aspect_id, orb in canonical_aspect_map(defaults.default_aspect_orbs).items():
             aspect_orbs[aspect_id] = float(orb)
             orb_sources[aspect_id] = SettingSource.WORKSPACE
         if defaults.ephemeris_engine is not None:
@@ -329,12 +331,15 @@ def _effective_settings(
     if operation is not None:
         _apply_layer(state, aspect_orbs, orb_sources, operation, SettingSource.OPERATION)
 
+    def _canonical_optional(ids):
+        return None if ids is None else canonical_aspect_ids(ids)
+
     return EffectiveModelSettings(
         default_house_system=state["house"],
         default_bodies=state["bodies"],
-        default_aspects=state["aspects"],
-        default_transit_aspects=deepcopy(model_settings.default_transit_aspects),
-        default_direction_aspects=deepcopy(model_settings.default_direction_aspects),
+        default_aspects=canonical_aspect_ids(state["aspects"]),
+        default_transit_aspects=_canonical_optional(model_settings.default_transit_aspects),
+        default_direction_aspects=_canonical_optional(model_settings.default_direction_aspects),
         default_transit_bodies=deepcopy(model_settings.default_transit_bodies),
         default_direction_bodies=deepcopy(model_settings.default_direction_bodies),
         aspect_orbs=aspect_orbs,
@@ -363,6 +368,29 @@ def _effective_settings(
     )
 
 
+def canonicalize_model_aspect_ids(model: AstroModel) -> AstroModel:
+    """Rename aliased aspect definitions (legacy `semisquare`) to canonical ids.
+
+    If a model defines both an alias and its canonical id, the canonically
+    named definition is kept. Mirrors Rust `canonicalize_model_aspect_ids`.
+    """
+    explicit = {a.id for a in model.aspect_definitions or [] if canonical_aspect_id(a.id) == a.id}
+    kept, seen = [], set()
+    for aspect in model.aspect_definitions or []:
+        canonical = canonical_aspect_id(aspect.id)
+        if canonical != aspect.id and canonical in explicit:
+            continue
+        if canonical in seen:
+            continue
+        if canonical != aspect.id:
+            object.__setattr__(aspect, "id", canonical)
+        seen.add(canonical)
+        kept.append(aspect)
+    if len(kept) != len(model.aspect_definitions or []):
+        object.__setattr__(model, "aspect_definitions", kept)
+    return model
+
+
 def _merge_model_overrides(model: AstroModel, overrides: Any) -> AstroModel:
     merged = deepcopy(model)
     if overrides is None:
@@ -383,7 +411,13 @@ def _merge_model_overrides(model: AstroModel, overrides: Any) -> AstroModel:
     for entry in overrides.aspects or []:
         if not _override_applies(entry, merged):
             continue
-        aspect = next((candidate for candidate in merged.aspect_definitions if candidate.id == entry.id), None)
+        aspect = next(
+            (
+                candidate for candidate in merged.aspect_definitions
+                if canonical_aspect_id(candidate.id) == canonical_aspect_id(entry.id)
+            ),
+            None,
+        )
         if aspect is None:
             continue
         for name in (
@@ -393,13 +427,10 @@ def _merge_model_overrides(model: AstroModel, overrides: Any) -> AstroModel:
             value = getattr(entry, name)
             if value is not None:
                 object.__setattr__(aspect, name, deepcopy(value))
+    override_orbs = canonical_aspect_map(overrides.override_orbs)
     for aspect in merged.aspect_definitions:
-        if aspect.id in (overrides.override_orbs or {}):
-            object.__setattr__(
-                aspect,
-                "default_orb",
-                float(overrides.override_orbs[aspect.id]),
-            )
+        if aspect.id in override_orbs:
+            object.__setattr__(aspect, "default_orb", float(override_orbs[aspect.id]))
     return merged
 
 
@@ -459,7 +490,9 @@ def _apply_layer(
         if value is not None:
             state[state_name] = list(value) if isinstance(value, list) else value
             state[f"{state_name}_source"] = source
-    for aspect_id, orb in layer.aspect_orbs.items():
+    # Canonicalize per layer so a later layer's alias key still overrides an
+    # earlier layer's canonical key (mirrors Rust `apply_orbs`).
+    for aspect_id, orb in canonical_aspect_map(layer.aspect_orbs).items():
         aspect_orbs[aspect_id] = float(orb)
         orb_sources[aspect_id] = source
 

@@ -6,18 +6,15 @@ import unittest
 
 import yaml
 
+from tests.contracts_location import contracts_dir
+
 from module.workspace import load_workspace, save_workspace_modular
 from module.resolution import current_model_report
 
 
 class WorkspaceInteropTests(unittest.TestCase):
     def test_python_loads_and_rewrites_the_shared_rust_contract_fixture(self):
-        fixture = (
-            Path(__file__).resolve().parents[2]
-            / "tauri-application"
-            / "contracts"
-            / "workspace-v1"
-        )
+        fixture = contracts_dir() / "workspace-v1"
         ws = load_workspace(str(fixture / "workspace.yaml"))
 
         self.assertEqual(ws.schema_version, 1)

@@ -31,11 +31,13 @@ except ImportError:
 
 try:
     from module.astronomy import (
-        ChartData, apply_ayanamsa_to_chart_data, backend_for_chart, compute_normalized_chart_aspects,
+        ChartData, apply_ayanamsa_to_chart_data, ayanamsa_warnings, backend_for_chart,
+        compute_normalized_chart_aspects, engine_substitution_warnings,
     )
 except ImportError:
     from astronomy import (
-        ChartData, apply_ayanamsa_to_chart_data, backend_for_chart, compute_normalized_chart_aspects,
+        ChartData, apply_ayanamsa_to_chart_data, ayanamsa_warnings, backend_for_chart,
+        compute_normalized_chart_aspects, engine_substitution_warnings,
     )
 
 try:
@@ -1543,6 +1545,12 @@ def compute_positions_for_chart(
     return result
 
 
+def _extend_unique(target: List[str], additional: List[str]) -> None:
+    for warning in additional:
+        if warning not in target:
+            target.append(warning)
+
+
 def compute_chart_data_for_chart(
     chart: ChartInstance,
     ws: Optional['Workspace'] = None,
@@ -1561,14 +1569,21 @@ def compute_chart_data_for_chart(
     cfg = _safe_get_attr(chart, 'config')
     zodiac_type = _safe_get_attr(cfg, 'zodiac_type') if cfg else None
     zodiac_value = str(getattr(zodiac_type, 'value', zodiac_type) or '').lower()
+    _extend_unique(chart_data.warnings, engine_substitution_warnings(chart))
     if zodiac_value == "sidereal":
         ayanamsa = _safe_get_attr(cfg, 'ayanamsa') if cfg else None
         try:
             _, dt_str, _ = _extract_chart_compute_inputs(chart)
             jd_ut = _jd_ut_from_datetime_utc(ensure_aware(Actual(dt_str, t="date").value))
             chart_data = apply_ayanamsa_to_chart_data(chart_data, ayanamsa, jd_ut)
+            _extend_unique(chart_data.warnings, ayanamsa_warnings(ayanamsa))
         except (ValueError, AttributeError, KeyError) as e:
             logger.warning("Could not apply ayanamsa for sidereal chart: %s", e)
+            # Never return tropical values under a sidereal configuration silently.
+            _extend_unique(
+                chart_data.warnings,
+                ["zodiac_sidereal_not_applied: tropical_positions_returned"],
+            )
 
     return chart_data
 

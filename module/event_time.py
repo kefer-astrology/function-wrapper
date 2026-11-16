@@ -1,6 +1,7 @@
 """Canonical event-time parsing shared by persistence and compute boundaries."""
 
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
+import re
 from typing import Any, Optional
 
 import pytz
@@ -24,12 +25,7 @@ def parse_event_time(
         raw = value.strip()
         if not raw:
             raise _invalid_event_time(raw)
-        try:
-            parsed = datetime.fromisoformat(
-                raw[:-1] + "+00:00" if raw.endswith(("Z", "z")) else raw
-            )
-        except ValueError as exc:
-            raise _invalid_event_time(raw) from exc
+        parsed = _parse_event_time_string(raw)
     else:
         raise _invalid_event_time(str(value))
 
@@ -43,6 +39,43 @@ def parse_event_time(
                 f"ambiguous or nonexistent in timezone '{zone.zone}'"
             ) from exc
     return parsed.astimezone(timezone.utc)
+
+
+# Grammar mirrors `src-tauri/src/event_time.rs` (chrono `parse_from_rfc3339`
+# plus three legacy naive formats and a bare date). `datetime.fromisoformat`
+# is deliberately not used: since Python 3.11 it also accepts forms the
+# shared contract rejects (`2024-01-01T12:30`, `20240101`, `2024-W01-1`,
+# `+0100` offsets, ...), which let the two implementations diverge.
+_RFC3339 = re.compile(
+    r"^(\d{4})-(\d{2})-(\d{2})[Tt ](\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?"
+    r"(?:([Zz])|([+-])(\d{2}):(\d{2}))$"
+)
+_LEGACY_FORMATS = ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d")
+
+
+def _parse_event_time_string(raw: str) -> datetime:
+    match = _RFC3339.match(raw)
+    if match:
+        year, month, day, hour, minute, second, fraction, zulu, sign, off_h, off_m = match.groups()
+        try:
+            if zulu:
+                tz = timezone.utc
+            else:
+                offset = timedelta(hours=int(off_h), minutes=int(off_m))
+                tz = timezone(-offset if sign == "-" else offset)
+            micro = int((fraction or "0")[:6].ljust(6, "0"))
+            return datetime(
+                int(year), int(month), int(day),
+                int(hour), int(minute), int(second), micro, tzinfo=tz,
+            )
+        except ValueError as exc:
+            raise _invalid_event_time(raw) from exc
+    for fmt in _LEGACY_FORMATS:
+        try:
+            return datetime.strptime(raw, fmt)
+        except ValueError:
+            continue
+    raise _invalid_event_time(raw)
 
 
 def validate_timezone_name(value: str):
