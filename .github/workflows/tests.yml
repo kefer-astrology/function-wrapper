@@ -22,6 +22,10 @@ on:
       - 'requirements/**'
       - 'pyproject.toml'
   workflow_dispatch:  # Allow manual triggering
+  schedule:
+    # Shared contracts live in tauri-application; a weekly run catches
+    # contract changes there that no function-wrapper push would trigger.
+    - cron: '17 4 * * 1'
 
 jobs:
   test:
@@ -29,11 +33,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.12', '3.13']
+        # Supported: 3.11 (sidecar build floor, see tauri-application release
+        # workflows) through 3.14. Lockfiles are compiled with the floor
+        # (pip-compile on 3.11) so every listed version can install them.
+        python-version: ['3.11', '3.12', '3.13', '3.14']
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Checkout shared Rust/Python contracts
+        uses: actions/checkout@v4
+        with:
+          repository: kefer-astrology/tauri-application
+          path: _shared/tauri-application
+          sparse-checkout: contracts
       
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -52,9 +66,14 @@ jobs:
           # Install base requirements (must succeed)
           pip install -r requirements/base.txt
       
+      - name: Check third-party notices are current
+        if: matrix.python-version == '3.11'
+        run: python -m devtools.generate_third_party_notices --check
+
       - name: Run test suite
         env:
           PYTHONPATH: ${{ github.workspace }}
+          KEFER_CONTRACTS_DIR: ${{ github.workspace }}/_shared/tauri-application/contracts
         working-directory: ${{ github.workspace }}
         run: |
           python -m unittest discover -s tests -p "test_*.py" -v
