@@ -13,6 +13,9 @@ Expected output:
 - All extended properties (distance, declination, RA, altitude, azimuth, magnitude, etc.)
 - Parquet files partitioned by date
 
+Output goes to a temporary directory. To regenerate the committed sample
+in tests/sample_stress/, set KEFER_STRESS_OUTPUT_DIR=tests/sample_stress.
+
 Run with:
     python -m unittest tests.test_storage_stress.TestStorageStress.test_minute_interval_5_days_max_attributes -v
 
@@ -20,6 +23,9 @@ Or:
     python -m pytest tests/test_storage_stress.py::TestStorageStress::test_minute_interval_5_days_max_attributes -v -s
 """
 
+import os
+import shutil
+import tempfile
 import unittest
 import warnings
 from pathlib import Path
@@ -39,6 +45,19 @@ except ImportError:
     STORAGE_AVAILABLE = False
     DuckDBStorage = None
     get_storage_path = None
+
+
+TRACKED_SAMPLE_DIR = Path(__file__).parent / "sample_stress"
+
+
+def stress_output_dir():
+    """Directory to keep stress output in, or None for a throwaway temp dir.
+
+    Set KEFER_STRESS_OUTPUT_DIR (e.g. to tests/sample_stress) only when
+    deliberately regenerating the committed sample.
+    """
+    value = os.environ.get("KEFER_STRESS_OUTPUT_DIR", "").strip()
+    return Path(value) if value else None
 
 
 def _make_sample_location() -> Location:
@@ -71,13 +90,19 @@ class TestStorageStress(unittest.TestCase):
         """Set up test workspace."""
         warnings.simplefilter("ignore", ResourceWarning)
         
-        self.test_base = Path(__file__).parent / "sample_stress"
-        self.test_base.mkdir(exist_ok=True)
-        
-        # Clean up existing data
+        # Never write into the tracked tests/sample_stress/ sample by default:
+        # running the suite used to delete and regenerate committed files
+        # (workspace.yaml, charts, workspace.db, parquet) and clobber local edits.
+        self._tmpdir = None
+        self.test_base = stress_output_dir()
+        if self.test_base is None:
+            self._tmpdir = tempfile.TemporaryDirectory(prefix="kefer-stress-")
+            self.test_base = Path(self._tmpdir.name)
+        self.test_base.mkdir(parents=True, exist_ok=True)
+
+        # Clean up existing data (only inside the chosen output directory)
         data_dir = self.test_base / "data"
         if data_dir.exists():
-            import shutil
             shutil.rmtree(data_dir)
         
         # Create workspace
@@ -96,8 +121,9 @@ class TestStorageStress(unittest.TestCase):
         self.loc = _make_sample_location()
     
     def tearDown(self):
-        """Keep test data for inspection."""
-        pass
+        """Remove the temporary workspace; an explicit output dir is kept."""
+        if self._tmpdir is not None:
+            self._tmpdir.cleanup()
     
     @unittest.skipUnless(STORAGE_AVAILABLE, "duckdb not available")
     def test_minute_interval_5_days_max_attributes(self):
@@ -388,6 +414,27 @@ class TestStorageStress(unittest.TestCase):
             print(f"\n📂 Workspace Location:")
             print(f"   {self.test_base.absolute()}")
             print("="*70 + "\n")
+
+
+class TestStressOutputLocation(unittest.TestCase):
+    """Regression: the default run must not target the tracked sample."""
+
+    def test_default_output_is_not_the_tracked_sample(self):
+        previous = os.environ.pop("KEFER_STRESS_OUTPUT_DIR", None)
+        try:
+            self.assertIsNone(stress_output_dir())
+            case = TestStorageStress("test_minute_interval_5_days_max_attributes")
+            case.setUp()
+            try:
+                self.assertNotEqual(case.test_base.resolve(), TRACKED_SAMPLE_DIR.resolve())
+                self.assertFalse(
+                    case.test_base.resolve().is_relative_to(Path(__file__).parent.resolve())
+                )
+            finally:
+                case.tearDown()
+        finally:
+            if previous is not None:
+                os.environ["KEFER_STRESS_OUTPUT_DIR"] = previous
 
 
 if __name__ == "__main__":
