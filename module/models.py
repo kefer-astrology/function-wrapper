@@ -195,6 +195,8 @@ class ChartConfig:
     # Time system for input/output (if different from workspace default)
     time_system: Optional[TimeSystem] = None
     model_overrides: Optional["ModelOverrides"] = None
+    # kefer-contracts calculation convention id; None = "kefer-positions/1" (mean equinox)
+    calculation_convention: Optional[str] = None
 
 
 @dataclass

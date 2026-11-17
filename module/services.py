@@ -41,6 +41,11 @@ except ImportError:
     )
 
 try:
+    from module.conventions import for_chart as _resolve_convention
+except ImportError:
+    from conventions import for_chart as _resolve_convention
+
+try:
     from module.utils import Actual, default_ephemeris_path, default_mpc_elements_path, ensure_aware, prepare_horoscope, compute_vernal_equinox_offset, _safe_get_attr, to_timezone
 except ImportError:
     from utils import Actual, default_ephemeris_path, default_mpc_elements_path, ensure_aware, prepare_horoscope, compute_vernal_equinox_offset, _safe_get_attr, to_timezone
@@ -193,6 +198,17 @@ def _nutation_longitude_deg(t):
     return np.degrees(dpsi)
 
 
+def _true_equinox_terms(event_time) -> tuple[float, float, float]:
+    """(nutation in longitude, nutation in obliquity, equation of the equinoxes), degrees.
+
+    Used by kefer-positions/1-true-equinox. The equation of the equinoxes is
+    Skyfield's GAST - GMST (IAU 2006/2000A).
+    """
+    t = load.timescale().from_datetime(ensure_aware(event_time))
+    dpsi, deps = _iau2000a_radians(t)
+    return float(np.degrees(dpsi)), float(np.degrees(deps)), float((t.gast - t.gmst) * 15.0)
+
+
 def _geocentric_position(body, eph, t, position_mode: PositionMode = PositionMode.APPARENT):
     """Geocentric position of `body`: apparent by default, geometric on request."""
     earth = eph["earth"].at(t)
@@ -201,19 +217,25 @@ def _geocentric_position(body, eph, t, position_mode: PositionMode = PositionMod
     return earth.observe(body).apparent()
 
 
-def _mean_ecliptic_of_date(position, t):
-    """(longitude, latitude, longitude_rate_deg_per_day) on the mean equinox of date.
+def _mean_ecliptic_of_date(position, t, equinox: str = "mean"):
+    """(longitude, latitude, longitude_rate_deg_per_day) on the equinox of date.
+
+    `equinox="mean"` (default, kefer-positions/1) subtracts the nutation in
+    longitude; `equinox="true"` (kefer-positions/1-true-equinox) keeps
+    Skyfield's true ecliptic and equinox of date unchanged.
 
     Works for scalar and array-valued `t`. The rate is None when the position
     carries no velocity.
     """
-    dpsi_deg = _nutation_longitude_deg(t)
+    dpsi_deg = _nutation_longitude_deg(t) if equinox != "true" else 0.0
     try:
         lat, lon, _dist, _lat_rate, lon_rate, _range_rate = position.frame_latlon_and_rates(_ECLIPTIC_OF_DATE)
         rate = lon_rate.degrees.per_day
     except (AttributeError, TypeError, ValueError):
         lat, lon, _dist = position.frame_latlon(_ECLIPTIC_OF_DATE)
         rate = None
+    if equinox == "true":
+        dpsi_deg = 0.0
     longitude = (lon.degrees - dpsi_deg) % DEGREES_IN_CIRCLE
     return longitude, lat.degrees, rate
 
@@ -248,7 +270,7 @@ def _ecliptic_lon_deg_from_icrf_vec(x: float, y: float, z: float, obl_deg: float
     return lon
 
 
-def _true_node_tropical_deg(r_icrs_km, v_icrs_km_s, t) -> Optional[float]:
+def _true_node_tropical_deg(r_icrs_km, v_icrs_km_s, t, equinox: str = "mean") -> Optional[float]:
     """Osculating true ascending lunar node on the mean equinox of date.
 
     The geocentric Moon state is rotated into the ecliptic of date; the node
@@ -262,7 +284,8 @@ def _true_node_tropical_deg(r_icrs_km, v_icrs_km_s, t) -> Optional[float]:
         return None
     node_lon = math.degrees(math.atan2(h[0], -h[1]))  # direction of k x h = (-h_y, h_x, 0)
     # n = k x h is the ascending-node vector for any inclination.
-    return (node_lon - float(_nutation_longitude_deg(t))) % DEGREES_IN_CIRCLE
+    dpsi = float(_nutation_longitude_deg(t)) if equinox != "true" else 0.0
+    return (node_lon - dpsi) % DEGREES_IN_CIRCLE
 
 
 # Reduced two-body gravitational parameter for geocentric Moon vectors (km^3/s^2).
@@ -290,7 +313,7 @@ def _mean_lilith_lon_deg(jd_ut: float) -> float:
     return apogee
 
 
-def _true_lilith_tropical_deg(r_icrs_km, v_icrs_km_s, t) -> Optional[float]:
+def _true_lilith_tropical_deg(r_icrs_km, v_icrs_km_s, t, equinox: str = "mean") -> Optional[float]:
     """Osculating true Black Moon Lilith (lunar apogee) on the mean equinox of date.
 
     Same family of computation as `_true_node_tropical_deg`, but built from the
@@ -309,7 +332,8 @@ def _true_lilith_tropical_deg(r_icrs_km, v_icrs_km_s, t) -> Optional[float]:
         return None
     # Eccentricity vector points toward perigee; apogee is the opposite direction.
     apogee_lon = math.degrees(math.atan2(-e_vec[1], -e_vec[0]))
-    return (apogee_lon - float(_nutation_longitude_deg(t))) % DEGREES_IN_CIRCLE
+    dpsi = float(_nutation_longitude_deg(t)) if equinox != "true" else 0.0
+    return (apogee_lon - dpsi) % DEGREES_IN_CIRCLE
 
 
 # ─────────────────────
@@ -324,7 +348,8 @@ def _position_for_mode(body, eph, observer, t, position_mode: PositionMode):
 
 
 def _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset: float = 0.0,
-                                       position_mode: PositionMode = PositionMode.APPARENT) -> Optional[float]:
+                                       position_mode: PositionMode = PositionMode.APPARENT,
+                                       equinox: str = "mean") -> Optional[float]:
     """Geocentric ecliptic longitude on the mean equinox of date, degrees [0, 360).
 
     `observer` and `vernal_equinox_offset` are accepted for backward
@@ -333,7 +358,7 @@ def _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_of
     """
     try:
         position = _geocentric_position(body, eph, t, position_mode)
-        longitude, _latitude, _rate = _mean_ecliptic_of_date(position, t)
+        longitude, _latitude, _rate = _mean_ecliptic_of_date(position, t, equinox)
         return float(longitude)
     except (KeyError, ValueError, AttributeError) as e:
         logger.warning("Could not compute planet position: %s", e)
@@ -344,7 +369,8 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
                                       include_physical: bool = False,
                                       include_topocentric: bool = False,
                                       sun_astrometric=None,
-                                      position_mode: PositionMode = PositionMode.APPARENT) -> Optional[Dict[str, float]]:
+                                      position_mode: PositionMode = PositionMode.APPARENT,
+                                      equinox: str = "mean") -> Optional[Dict[str, float]]:
     """Compute extended position data for a body using Skyfield.
 
     Args:
@@ -369,7 +395,7 @@ def _compute_planet_extended_position(body, eph, observer, t, vernal_equinox_off
     """
     try:
         position = _geocentric_position(body, eph, t, position_mode)
-        longitude, latitude, rate = _mean_ecliptic_of_date(position, t)
+        longitude, latitude, rate = _mean_ecliptic_of_date(position, t, equinox)
         ra, dec, distance = position.radec(epoch='date')
         result = {
             'longitude': float(longitude),
@@ -415,7 +441,8 @@ def _compute_planet_extended_positions_vectorized(body, eph, observer, t_array, 
                                                     include_physical: bool = False,
                                                     include_topocentric: bool = False,
                                                     sun_astrometric=None,
-                                                    position_mode: PositionMode = PositionMode.APPARENT) -> Optional[Dict[str, Any]]:
+                                                    position_mode: PositionMode = PositionMode.APPARENT,
+                                                    equinox: str = "mean") -> Optional[Dict[str, Any]]:
     """Batched equivalent of `_compute_planet_extended_position` over an array-valued
     Skyfield `Time` (one vectorized Skyfield call instead of one per timestamp).
 
@@ -425,7 +452,7 @@ def _compute_planet_extended_positions_vectorized(body, eph, observer, t_array, 
     """
     try:
         position = _geocentric_position(body, eph, t_array, position_mode)
-        longitude, latitude, rate = _mean_ecliptic_of_date(position, t_array)
+        longitude, latitude, rate = _mean_ecliptic_of_date(position, t_array, equinox)
         ra, dec, distance = position.radec(epoch='date')
         result: Dict[str, Any] = {
             'longitude': np.asarray(longitude),
@@ -466,7 +493,8 @@ def _compute_planet_extended_positions_vectorized(body, eph, observer, t_array, 
 
 def _compute_single_planet_position(planet: str, eph, observer, t, is_de421: bool, 
                                      vernal_equinox_offset: float,
-                                     position_mode: PositionMode = PositionMode.APPARENT) -> Optional[float]:
+                                     position_mode: PositionMode = PositionMode.APPARENT,
+                                     equinox: str = "mean") -> Optional[float]:
     """Compute position for a single planet.
     
     Args:
@@ -487,7 +515,7 @@ def _compute_single_planet_position(planet: str, eph, observer, t, is_de421: boo
         body_name = f"{planet} barycenter"
         try:
             body = eph[body_name]
-            return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode)
+            return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode, equinox)
         except (KeyError, ValueError, AttributeError) as e:
             logger.warning("Could not compute %s barycenter position: %s", planet, e)
             return None
@@ -495,14 +523,14 @@ def _compute_single_planet_position(planet: str, eph, observer, t, is_de421: boo
     # For non-de421 or inner planets, try direct name first
     try:
         body = eph[planet]
-        return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode)
+        return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode, equinox)
     except KeyError:
         # If direct access fails, try barycenter for outer planets (for other ephemeris files)
         if planet in outer_planets:
             try:
                 body_name = f"{planet} barycenter"
                 body = eph[body_name]
-                return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode)
+                return _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode, equinox)
             except (KeyError, ValueError, AttributeError) as e:
                 logger.warning("Could not compute %s position: %s", planet, e)
                 return None
@@ -514,7 +542,8 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                           include_physical: bool = False,
                           include_topocentric: bool = False,
                           extended: bool = False,
-                          position_mode: PositionMode = PositionMode.APPARENT) -> Dict[str, Union[float, Dict[str, float]]]:
+                          position_mode: PositionMode = PositionMode.APPARENT,
+                          equinox: str = "mean") -> Dict[str, Union[float, Dict[str, float]]]:
     """Compute planetary positions using Skyfield JPL ephemerides.
 
     Parameters:
@@ -602,12 +631,13 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                         include_topocentric=include_topocentric,
                         sun_astrometric=sun_astrometric,
                         position_mode=position_mode,
+                        equinox=equinox,
                     )
                     if extended_pos is not None:
                         positions[planet] = extended_pos
             else:
                 # Legacy mode: return only longitude
-                lon_deg_tropical = _compute_single_planet_position(planet, eph, observer, t, is_de421, vernal_equinox_offset, position_mode)
+                lon_deg_tropical = _compute_single_planet_position(planet, eph, observer, t, is_de421, vernal_equinox_offset, position_mode, equinox)
                 if lon_deg_tropical is not None:
                     positions[planet] = lon_deg_tropical
 
@@ -631,11 +661,12 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                         include_topocentric=include_topocentric,
                         sun_astrometric=sun_astrometric,
                         position_mode=position_mode,
+                        equinox=equinox,
                     )
                     if minor_pos is not None:
                         positions[body_id] = minor_pos
                 else:
-                    lon_deg_tropical = _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode)
+                    lon_deg_tropical = _compute_planet_ecliptic_longitude(body, eph, observer, t, vernal_equinox_offset, position_mode, equinox)
                     if lon_deg_tropical is not None:
                         positions[body_id] = lon_deg_tropical
 
@@ -653,6 +684,10 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
             jd_ut = _jd_ut_from_datetime_utc(dt_aware)
             mean_lon = _mean_lunar_node_lon_deg(jd_ut)
             mean_lilith_lon = _mean_lilith_lon_deg(jd_ut)
+            if equinox == "true":  # mean-element formulas are referred to the mean equinox
+                shift = float(_nutation_longitude_deg(t))
+                mean_lon = (mean_lon + shift) % DEGREES_IN_CIRCLE
+                mean_lilith_lon = (mean_lilith_lon + shift) % DEGREES_IN_CIRCLE
             ro = requested_objects
 
             def w(key: str) -> bool:
@@ -669,8 +704,8 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
                 geom = (eph["moon"] - eph["earth"]).at(t)
                 r = geom.position.km
                 v = geom.velocity.km_per_s
-                true_nn = _true_node_tropical_deg(r, v, t)
-                true_lilith_lon = _true_lilith_tropical_deg(r, v, t)
+                true_nn = _true_node_tropical_deg(r, v, t, equinox)
+                true_lilith_lon = _true_lilith_tropical_deg(r, v, t, equinox)
             except Exception as exc:
                 logger.warning("JPL lunar node/Lilith computation failed: %s", exc)
 
@@ -1326,6 +1361,7 @@ def compute_jpl_positions_for_chart(
         include_topocentric=include_topocentric,
         extended=True,
         position_mode=_safe_get_attr(cfg, 'position_mode') or PositionMode.APPARENT,
+        equinox=_resolve_convention(chart).equinox,
     )
 
 
@@ -1463,6 +1499,9 @@ def compute_chart_data_for_chart(
     zodiac_type = _safe_get_attr(cfg, 'zodiac_type') if cfg else None
     zodiac_value = str(getattr(zodiac_type, 'value', zodiac_type) or '').lower()
     _extend_unique(chart_data.warnings, engine_substitution_warnings(chart))
+    convention_warning = _resolve_convention(chart).warning
+    if convention_warning:
+        _extend_unique(chart_data.warnings, [convention_warning])
     _extend_unique(chart_data.warnings, _mpc_two_body_warnings(chart, chart_data.positions))
     if zodiac_value == "sidereal":
         ayanamsa = _safe_get_attr(cfg, 'ayanamsa') if cfg else None

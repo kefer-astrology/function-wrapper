@@ -47,6 +47,7 @@ try:
         TransitSeriesStep,
     )
     from module._contract_catalog import CALCULATION_CONVENTION
+    from module.conventions import for_chart as _convention_for_chart
     from module.astronomy import (
         backend_for_chart,
         compute_normalized_chart_aspects,
@@ -82,6 +83,7 @@ except ImportError:
         TransitSeriesStep,
     )
     from _contract_catalog import CALCULATION_CONVENTION
+    from conventions import for_chart as _convention_for_chart
     from astronomy import (
         backend_for_chart,
         compute_normalized_chart_aspects,
@@ -196,7 +198,7 @@ def _build_chart_response_from_chart_data(chart: Any, chart_data: Any, aspects: 
         fallback_used=False,
         ephemeris_source=_resolve_ephemeris_source(chart),
         warnings=warnings,
-        calculation_convention=CALCULATION_CONVENTION,
+        calculation_convention=_convention_for_chart(chart).id,
     )
     result = _to_primitive(calculation)
     result["stored"] = stored

@@ -129,7 +129,8 @@ class ReferenceConformanceTests(unittest.TestCase):
         from module._contract_catalog import CALCULATION_CONVENTION
         caps = load("capabilities.json")["implementations"]["python"]
         self.assertEqual(caps["house_systems_native"], list(NATIVE_HOUSE_SYSTEMS))
-        self.assertEqual(caps["conventions"], [CALCULATION_CONVENTION])
+        from module.conventions import IMPLEMENTED
+        self.assertEqual(caps["conventions"], list(IMPLEMENTED))
         self.assertEqual(load("conventions.json")["default"], CALCULATION_CONVENTION)
         self.assertEqual(sorted(caps["approximate_bodies"]), sorted(services._MPC_MINOR_BODY_IDS))
         for flag in ("aspect_dynamics", "event_search", "tradition_presets"):
@@ -152,6 +153,82 @@ class ReferenceConformanceTests(unittest.TestCase):
         for aspect in response["aspects"]:
             for field in schema["properties"]["aspects"]["items"]["required"]:
                 self.assertIn(field, aspect)
+
+
+TRUE_EQUINOX = "kefer-positions/1-true-equinox"
+
+
+class TrueEquinoxConformanceTests(unittest.TestCase):
+    """kefer-positions/1-true-equinox: same checks as Rust contract_conformance.rs."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tolerances = load("reference/tolerances.json")
+
+    def test_positions_match_horizons_true_equinox_directly(self):
+        horizons = load("reference/positions-horizons.json")
+        tol = self.tolerances["positions_true_equinox_arcsec"]
+        bodies = load("capabilities.json")["implementations"]["python"]["ephemeris_grade_bodies"]
+        for i, epoch in enumerate(horizons["epochs_utc"]):
+            data = services.compute_chart_data_for_chart(
+                chart_at(epoch, bodies, calculation_convention=TRUE_EQUINOX))
+            for body in bodies:
+                with self.subTest(epoch=epoch, body=body):
+                    err = arcsec(lon(data.positions[body]), horizons["positions"][body][i]["lon_true_deg"])
+                    self.assertLessEqual(abs(err), tol.get(body, tol["default"]))
+
+    def test_axes_match_erfa_gast_and_true_obliquity(self):
+        limit = self.tolerances["axes_true_convention_arcsec"]
+        for epoch in load("reference/earth-orientation-erfa.json")["epochs"]:
+            data = services.compute_chart_data_for_chart(
+                chart_at(epoch["utc"], ["sun"], calculation_convention=TRUE_EQUINOX))
+            ramc = math.radians(epoch["gast_deg"] + PRAGUE[1])
+            eps = math.radians(epoch["true_obliquity_deg"])
+            lat = math.radians(PRAGUE[0])
+            mc = math.degrees(math.atan2(math.sin(ramc), math.cos(ramc) * math.cos(eps)))
+            asc = math.degrees(math.atan2(-math.cos(ramc), math.sin(eps) * math.tan(lat) + math.cos(eps) * math.sin(ramc))) + 180.0
+            with self.subTest(epoch=epoch["utc"]):
+                self.assertLessEqual(abs(arcsec(data.axes["mc"], mc)), limit)
+                self.assertLessEqual(abs(arcsec(data.axes["asc"], asc)), limit)
+
+    def test_true_equinox_house_fixture_parity(self):
+        from module.astronomy import (
+            _compute_axes_with, _house_cusps_for_system_with, _local_sidereal_time_deg,
+            _mean_obliquity_deg, _normalize_deg,
+        )
+        from datetime import datetime, timezone
+        fixture = load("houses/cusps-true-equinox.json")
+        tol = fixture["tolerance_deg"]
+        for case in fixture["cases"]:
+            _dpsi, deps, ee = services._true_equinox_terms(
+                datetime.fromisoformat(case["utc"].replace("Z", "+00:00")).astimezone(timezone.utc))
+            ramc = _normalize_deg(_local_sidereal_time_deg(case["jd_ut"], case["longitude"]) + ee)
+            eps = _mean_obliquity_deg(case["jd_ut"]) + deps
+            with self.subTest(case=case["id"]):
+                self.assertLessEqual(abs(arcsec(ramc, case["ramc_deg"])) / 3600, tol)
+                self.assertLessEqual(abs(eps - case["obliquity_deg"]), tol)
+                axes = _compute_axes_with(case["ramc_deg"], case["obliquity_deg"], case["latitude"])
+                for system, expected in case["systems"].items():
+                    cusps, warnings = _house_cusps_for_system_with(
+                        system, case["ramc_deg"], case["obliquity_deg"], case["latitude"], axes["asc"], axes["mc"])
+                    self.assertEqual(warnings, expected["warnings"], system)
+                    for got, want in zip(cusps, expected["cusps"]):
+                        self.assertLessEqual(abs(arcsec(got, want)) / 3600, 1e-9, system)
+
+    def test_results_report_the_convention_and_never_switch_silently(self):
+        def run(convention):
+            extra = {"calculation_convention": convention} if convention else {}
+            chart = chart_at("2024-01-01T12:00:00Z", ["sun", "moon"], **extra)
+            data = services.compute_chart_data_for_chart(chart)
+            return _build_chart_response_from_chart_data(chart, data, [], "c", False)
+        default, true_eq, unknown = run(None), run(TRUE_EQUINOX), run("kefer-positions/9")
+        self.assertEqual(default["calculation_convention"], "kefer-positions/1")
+        self.assertEqual(true_eq["calculation_convention"], TRUE_EQUINOX)
+        self.assertNotEqual(lon(default["positions"]["sun"]), lon(true_eq["positions"]["sun"]))
+        self.assertEqual(unknown["calculation_convention"], "kefer-positions/1")
+        self.assertEqual(lon(unknown["positions"]["sun"]), lon(default["positions"]["sun"]))
+        self.assertIn("calculation_convention_unsupported: kefer-positions/9; kefer-positions/1_used",
+                      unknown["warnings"])
 
 
 if __name__ == "__main__":

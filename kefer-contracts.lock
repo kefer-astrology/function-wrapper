@@ -1,7 +1,7 @@
 {
   "name": "kefer-contracts",
-  "version": "0.2.0",
-  "tag": "v0.2.0",
+  "version": "0.3.0",
+  "tag": "v0.3.0",
   "repository": "https://github.com/kefer-astrology/kefer-contracts",
-  "manifest_sha256": "c097d41993271a0b887f8d039ea2261d4291fec5583d01f9f898e3d52b0667d4"
+  "manifest_sha256": "3a730a9b953e7b9a883559766f8cd7c2d1d8fbe577f341c9bbec499ecca6cf8a"
 }

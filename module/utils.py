@@ -1007,6 +1007,7 @@ def parse_chart_config(data: Optional[dict]) -> ChartConfig:
         observable_objects=None if observable_raw is None else list(observable_raw),
         time_system=_enum_or(cfg_d.get("time_system"), TimeSystem, None),
         model_overrides=_model_overrides(cfg_d.get("model_overrides")),
+        calculation_convention=(data or {}).get("calculation_convention"),
     )
 
 

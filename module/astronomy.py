@@ -386,8 +386,13 @@ def _ascendant_lon(ramc_deg: float, obliquity_deg: float, geo_lat_deg: float) ->
 
 
 def _compute_axes(jd_ut: float, geo_lat_deg: float, geo_lon_deg: float) -> Dict[str, float]:
-    eps = _mean_obliquity_deg(jd_ut)
-    ramc = _local_sidereal_time_deg(jd_ut, geo_lon_deg)
+    return _compute_axes_with(
+        _local_sidereal_time_deg(jd_ut, geo_lon_deg), _mean_obliquity_deg(jd_ut), geo_lat_deg
+    )
+
+
+def _compute_axes_with(ramc: float, eps: float, geo_lat_deg: float) -> Dict[str, float]:
+    """Axes for an explicit RAMC and obliquity (degrees)."""
     mc = _midheaven_lon(ramc, eps)
     asc = _ascendant_lon(ramc, eps, geo_lat_deg)
     return {
@@ -447,12 +452,30 @@ def _house_cusps_for_system(
     mc_lon_deg: float,
 ) -> tuple[List[float], List[str]]:
     """Mirror of Rust `house_cusps_for_system`; never substitutes silently."""
+    return _house_cusps_for_system_with(
+        system_value,
+        _local_sidereal_time_deg(jd_ut, geo_lon_deg),
+        _mean_obliquity_deg(jd_ut),
+        geo_lat_deg,
+        asc_lon_deg,
+        mc_lon_deg,
+    )
+
+
+def _house_cusps_for_system_with(
+    system_value: Optional[str],
+    ramc: float,
+    eps: float,
+    geo_lat_deg: float,
+    asc_lon_deg: float,
+    mc_lon_deg: float,
+) -> tuple[List[float], List[str]]:
     if system_value in (None, "Whole Sign"):
         return _whole_sign_cusps(asc_lon_deg), []
     if system_value == "Placidus":
-        return _placidus_cusps(jd_ut, geo_lat_deg, geo_lon_deg, asc_lon_deg, mc_lon_deg)
+        return _placidus_cusps_with(ramc, eps, geo_lat_deg, asc_lon_deg, mc_lon_deg)
     if system_value == "Campanus":
-        return _campanus_cusps(jd_ut, geo_lat_deg, geo_lon_deg, asc_lon_deg, mc_lon_deg)
+        return _campanus_cusps_with(ramc, eps, geo_lat_deg, asc_lon_deg, mc_lon_deg)
     if system_value == "Equal":
         return _equal_cusps(asc_lon_deg), []
     if system_value == "Porphyry":
@@ -506,14 +529,29 @@ def _placidus_cusps(
     asc_lon_deg: float,
     mc_lon_deg: float,
 ) -> tuple[List[float], List[str]]:
-    eps_deg = _mean_obliquity_deg(jd_ut)
+    return _placidus_cusps_with(
+        _local_sidereal_time_deg(jd_ut, geo_lon_deg),
+        _mean_obliquity_deg(jd_ut),
+        geo_lat_deg,
+        asc_lon_deg,
+        mc_lon_deg,
+    )
+
+
+def _placidus_cusps_with(
+    ramc: float,
+    eps_deg: float,
+    geo_lat_deg: float,
+    asc_lon_deg: float,
+    mc_lon_deg: float,
+) -> tuple[List[float], List[str]]:
+    """Same as _placidus_cusps for an explicit RAMC and obliquity (degrees)."""
     if abs(geo_lat_deg) >= 90.0 - eps_deg:
         return (
             _whole_sign_cusps(asc_lon_deg),
             ["placidus_undefined_at_latitude; whole_sign_used"],
         )
 
-    ramc = _local_sidereal_time_deg(jd_ut, geo_lon_deg)
     lat = math.radians(geo_lat_deg)
     desc = _normalize_deg(asc_lon_deg + 180.0)
     ic = _normalize_deg(mc_lon_deg + 180.0)
@@ -594,8 +632,23 @@ def _campanus_cusps(
     asc_lon_deg: float,
     mc_lon_deg: float,
 ) -> tuple[List[float], List[str]]:
-    eps = _mean_obliquity_deg(jd_ut)
-    ramc = _local_sidereal_time_deg(jd_ut, geo_lon_deg)
+    return _campanus_cusps_with(
+        _local_sidereal_time_deg(jd_ut, geo_lon_deg),
+        _mean_obliquity_deg(jd_ut),
+        geo_lat_deg,
+        asc_lon_deg,
+        mc_lon_deg,
+    )
+
+
+def _campanus_cusps_with(
+    ramc: float,
+    eps: float,
+    geo_lat_deg: float,
+    asc_lon_deg: float,
+    mc_lon_deg: float,
+) -> tuple[List[float], List[str]]:
+    """Same as _campanus_cusps for an explicit RAMC and obliquity (degrees)."""
 
     lat = math.radians(geo_lat_deg)
     sin_lat = math.sin(lat)
@@ -650,15 +703,29 @@ def _chart_axes_and_house_cusps(chart: ChartInstance) -> tuple[Dict[str, float],
 
     unix_secs = event_time.timestamp()
     jd_ut = _julian_day_from_unix(unix_secs)
-    axes = _compute_axes(jd_ut, float(latitude), float(longitude))
+    ramc = _local_sidereal_time_deg(jd_ut, float(longitude))
+    eps = _mean_obliquity_deg(jd_ut)
+    try:
+        from module.conventions import for_chart
+    except ImportError:
+        from conventions import for_chart
+    if for_chart(chart).equinox == "true":
+        # Same inputs as the mean convention plus nutation (see conventions.py).
+        try:
+            from module.services import _true_equinox_terms
+        except ImportError:
+            from services import _true_equinox_terms
+        _dpsi, deps, ee = _true_equinox_terms(event_time)
+        ramc, eps = _normalize_deg(ramc + ee), eps + deps
+    axes = _compute_axes_with(ramc, eps, float(latitude))
 
     house_system = getattr(getattr(chart, "config", None), "house_system", None)
     house_system_value = getattr(house_system, "value", house_system)
-    house_cusps, warnings = _house_cusps_for_system(
+    house_cusps, warnings = _house_cusps_for_system_with(
         house_system_value,
-        jd_ut,
+        ramc,
+        eps,
         float(latitude),
-        float(longitude),
         axes["asc"],
         axes["mc"],
     )
