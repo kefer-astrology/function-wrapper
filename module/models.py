@@ -303,7 +303,7 @@ class ChartCalculation:
     fallback_used: bool
     ephemeris_source: Optional[str]
     warnings: List[str]
-    # kefer-contracts conventions.json id (since contracts 0.2.0)
+    # kefer-contracts conventions.json id
     calculation_convention: str = "kefer-positions/1"
 
 
