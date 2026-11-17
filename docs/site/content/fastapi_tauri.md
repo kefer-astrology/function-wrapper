@@ -621,7 +621,6 @@ Example command on Linux or macOS:
 .venv-build/bin/pyinstaller \
   --name kefer-backend \
   --onefile \
-  --collect-all kerykeion \
   --hidden-import module.api.app \
   --hidden-import module.api.schemas \
   -m module.api
@@ -633,7 +632,6 @@ On Windows:
 .venv-build\Scripts\pyinstaller `
   --name kefer-backend `
   --onefile `
-  --collect-all kerykeion `
   --hidden-import module.api.app `
   --hidden-import module.api.schemas `
   -m module.api
