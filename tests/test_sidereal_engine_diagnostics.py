@@ -121,6 +121,15 @@ class ChartDataDiagnosticsTests(unittest.TestCase):
             data = services.compute_chart_data_for_chart(chart(zodiac_type="Sidereal"))
         self.assertIn("zodiac_sidereal_not_applied: tropical_positions_returned", data.warnings)
 
+    def test_mpc_bodies_far_from_element_epoch_are_flagged(self):
+        historical = chart(observable_objects=["sun", "ceres", "chiron"])
+        historical.subject.event_time = historical.subject.event_time.replace(year=1950)
+        data = services.compute_chart_data_for_chart(historical)
+        flagged = [w for w in data.warnings if "_two_body_approximation" in w]
+        self.assertEqual(len(flagged), 2, data.warnings)
+        recent = services.compute_chart_data_for_chart(chart(observable_objects=["ceres"]))
+        self.assertFalse([w for w in recent.warnings if "_two_body_approximation" in w])
+
     def test_jyotish_chart_result_carries_substitution_warning(self):
         data = services.compute_chart_data_for_chart(chart(engine="jyotish"))
         self.assertIn("engine_jyotish_not_implemented: jpl_used", data.warnings)

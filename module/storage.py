@@ -356,7 +356,7 @@ class DuckDBStorage:
 
         # Import position computation helpers
         from module.models import PositionMode
-        from module.services import _compute_planet_extended_positions_vectorized, _load_mpc_orbits, _MPC_MINOR_BODY_IDS, _position_for_mode
+        from module.services import _compute_planet_extended_positions_vectorized, _load_mpc_orbits, _MPC_MINOR_BODY_IDS, _position_for_mode, _geocentric_position
         resolved_position_mode = PositionMode(position_mode)
 
         # Determine which planets/minor bodies to compute
@@ -405,14 +405,12 @@ class DuckDBStorage:
 
             t_array = ts.from_datetimes(chunk_dts)
 
-            # Vernal equinox offset per timestamp (cached per year); a chunk spanning a
-            # year boundary needs one offset value per distinct year, not just one scalar.
-            years = [dt.year for dt in chunk_dts]
-            offset_by_year = {y: compute_vernal_equinox_offset(y, eph, observer, ts) for y in set(years)}
-            vernal_offsets = np.array([offset_by_year[y] for y in years])
+            # The equinox of date comes from Skyfield's precession-nutation model
+            # inside the vectorized helper; no per-year offset is needed any more.
+            vernal_offsets = None
 
             sun_astrometric = (
-                _position_for_mode(eph["sun"], eph, observer, t_array, resolved_position_mode)
+                _geocentric_position(eph["sun"], eph, t_array, resolved_position_mode)
                 if include_physical else None
             )
 

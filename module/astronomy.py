@@ -28,6 +28,13 @@ _NORMALIZED_ASPECT_SPECS: List[tuple[str, float, float]] = [
 ]
 
 
+# Pairs whose separation is fixed by definition; mirrors Rust
+# STRUCTURALLY_LOCKED_PAIRS and kefer-contracts CONVENTIONS.md section 4.
+_STRUCTURALLY_LOCKED_PAIRS = frozenset(
+    frozenset(pair) for pair in (("asc", "desc"), ("ic", "mc"), ("north_node", "south_node"))
+)
+
+
 def _selected_aspect_set(selected_aspects: Optional[List[str]]) -> Optional[set]:
     if selected_aspects is None:
         return None
@@ -166,6 +173,8 @@ def compute_normalized_chart_aspects(
     for index, source_id in enumerate(ids):
         source_lon = normalized_positions[source_id]
         for target_id in ids[index + 1:]:
+            if frozenset((source_id, target_id)) in _STRUCTURALLY_LOCKED_PAIRS:
+                continue  # separation fixed by definition (kefer-contracts CONVENTIONS.md)
             target_lon = normalized_positions[target_id]
             angle = _shortest_arc_deg(source_lon, target_lon)
             for aspect_id, exact_angle, allowed_orb in specs:
