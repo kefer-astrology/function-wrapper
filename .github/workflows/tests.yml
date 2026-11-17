@@ -23,8 +23,7 @@ on:
       - 'pyproject.toml'
   workflow_dispatch:  # Allow manual triggering
   schedule:
-    # Shared contracts live in tauri-application; a weekly run catches
-    # contract changes there that no function-wrapper push would trigger.
+    # Weekly run against the pinned kefer-contracts tag (and dependency drift).
     - cron: '17 4 * * 1'
 
 jobs:
@@ -42,12 +41,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Checkout shared Rust/Python contracts
+      - name: Read pinned kefer-contracts version
+        id: contracts
+        run: echo "tag=$(python3 -c "import json; print(json.load(open('kefer-contracts.lock'))['tag'])")" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout pinned kefer-contracts
         uses: actions/checkout@v4
         with:
-          repository: kefer-astrology/tauri-application
-          path: _shared/tauri-application
-          sparse-checkout: contracts
+          repository: kefer-astrology/kefer-contracts
+          ref: ${{ steps.contracts.outputs.tag }}
+          path: _shared/kefer-contracts
       
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -73,7 +76,7 @@ jobs:
       - name: Run test suite
         env:
           PYTHONPATH: ${{ github.workspace }}
-          KEFER_CONTRACTS_DIR: ${{ github.workspace }}/_shared/tauri-application/contracts
+          KEFER_CONTRACTS_DIR: ${{ github.workspace }}/_shared/kefer-contracts/contracts
         working-directory: ${{ github.workspace }}
         run: |
           python -m unittest discover -s tests -p "test_*.py" -v
