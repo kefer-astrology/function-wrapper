@@ -69,9 +69,14 @@ jobs:
           # Install base requirements (must succeed)
           pip install -r requirements/base.txt
       
-      - name: Check third-party notices are current
+      - name: Check third-party notices and generated contract data are current
         if: matrix.python-version == '3.11'
-        run: python -m devtools.generate_third_party_notices --check
+        env:
+          KEFER_CONTRACTS_DIR: ${{ github.workspace }}/_shared/kefer-contracts/contracts
+        run: |
+          python -m pip install -r requirements/api.txt
+          python -m devtools.generate_third_party_notices --check
+          python -m devtools.sync_contracts --check
 
       - name: Run test suite
         env:

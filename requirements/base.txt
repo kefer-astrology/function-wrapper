@@ -87,6 +87,7 @@ pyproject-hooks==1.2.0
     #   pip-tools
 python-dateutil==2.9.0.post0
     # via
+    #   -r requirements/base.in
     #   matplotlib
     #   pandas
 pytz==2026.3.post1

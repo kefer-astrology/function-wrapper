@@ -585,7 +585,7 @@ For local development:
 ```bash
 python -m venv .venv-build
 .venv-build/bin/python -m pip install --upgrade pip
-.venv-build/bin/python -m pip install -e ".[api]" pyinstaller
+.venv-build/bin/python -m pip install -r requirements/api.txt -e . pyinstaller
 ```
 
 On Windows, use:
@@ -593,7 +593,7 @@ On Windows, use:
 ```powershell
 python -m venv .venv-build
 .venv-build\Scripts\python -m pip install --upgrade pip
-.venv-build\Scripts\python -m pip install -e ".[api]" pyinstaller
+.venv-build\Scripts\python -m pip install -r requirements/api.txt -e . pyinstaller
 ```
 
 ### Step 3: verify the backend runs before packaging
@@ -613,29 +613,21 @@ Do this before touching Tauri packaging.
 
 ### Step 4: build a backend sidecar executable
 
-Start with PyInstaller.
-
-Example command on Linux or macOS:
+Use the verified build script (PyInstaller; it adds the hidden imports and
+the ephemeris data the sidecar reads at runtime):
 
 ```bash
-.venv-build/bin/pyinstaller \
-  --name kefer-backend \
-  --onefile \
-  --hidden-import module.api.app \
-  --hidden-import module.api.schemas \
-  -m module.api
+.venv-build/bin/python -m devtools.build_sidecar
 ```
 
 On Windows:
 
 ```powershell
-.venv-build\Scripts\pyinstaller `
-  --name kefer-backend `
-  --onefile `
-  --hidden-import module.api.app `
-  --hidden-import module.api.schemas `
-  -m module.api
+.venv-build\Scripts\python -m devtools.build_sidecar
 ```
+
+The previously documented `pyinstaller ... -m module.api` command was invalid
+(PyInstaller has no `-m` option) and did not bundle `source/de440s.bsp`.
 
 Expected output:
 

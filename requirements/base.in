@@ -10,6 +10,7 @@ plotly>=6.2.0
 
 pyarrow>=21.0.0
 PyYAML>=6.0.2
+python-dateutil>=2.9.0  # imported directly by module/utils.py
 pytz>=2025.2
 skyfield>=1.48
 timezonefinder>=6.6.2
