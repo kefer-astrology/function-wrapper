@@ -188,7 +188,7 @@ ChartAxes(asc: float, desc: float, mc: float, ic: float)
 
 ### class `ChartCalculation` 
 
-ChartCalculation(positions: Dict[str, Any], motion: Dict[str, Any], aspects: List[Dict[str, Any]], axes: Dict[str, float], house_cusps: List[float], moon_details: Optional[Dict[str, Any]], chart_id: str, backend_used: str, fallback_used: bool, ephemeris_source: Optional[str], warnings: List[str])
+ChartCalculation(positions: Dict[str, Any], motion: Dict[str, Any], aspects: List[Dict[str, Any]], axes: Dict[str, float], house_cusps: List[float], moon_details: Optional[Dict[str, Any]], chart_id: str, backend_used: str, fallback_used: bool, ephemeris_source: Optional[str], warnings: List[str], calculation_convention: str = 'kefer-positions/1')
 
 #### Dataclass fields
 
@@ -203,10 +203,11 @@ ChartCalculation(positions: Dict[str, Any], motion: Dict[str, Any], aspects: Lis
 - `fallback_used: bool`
 - `ephemeris_source: Optional`
 - `warnings: List`
+- `calculation_convention: str`
 
 ### class `ChartConfig` 
 
-ChartConfig(definition: module.models.ChartDefinition, house_system: Optional[module.models.HouseSystem], zodiac_type: module.models.ZodiacType, aspect_orbs: Dict[str, float], selected_aspects: Optional[List[str]] = None, override_ephemeris: Optional[str] = None, model: Optional[str] = None, engine: Optional[module.models.EngineType] = None, position_mode: Optional[module.models.PositionMode] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, observable_objects: Optional[List[str]] = None, time_system: Optional[module.models.TimeSystem] = None, model_overrides: Optional[ForwardRef('ModelOverrides')] = None)
+ChartConfig(definition: module.models.ChartDefinition, house_system: Optional[module.models.HouseSystem], zodiac_type: module.models.ZodiacType, aspect_orbs: Dict[str, float], selected_aspects: Optional[List[str]] = None, override_ephemeris: Optional[str] = None, model: Optional[str] = None, engine: Optional[module.models.EngineType] = None, position_mode: Optional[module.models.PositionMode] = None, ayanamsa: Optional[module.models.Ayanamsa] = None, observable_objects: Optional[List[str]] = None, time_system: Optional[module.models.TimeSystem] = None, model_overrides: Optional[ForwardRef('ModelOverrides')] = None, calculation_convention: Optional[str] = None)
 
 #### Dataclass fields
 
@@ -223,6 +224,7 @@ ChartConfig(definition: module.models.ChartDefinition, house_system: Optional[mo
 - `observable_objects: Optional`
 - `time_system: Optional`
 - `model_overrides: Optional`
+- `calculation_convention: Optional`
 
 ### class `ChartDefinition` 
 
@@ -679,7 +681,7 @@ Example:
         owner="astrologer@example.com",
         active_model="western",
         default=WorkspaceDefaults(
-            ephemeris_engine=EngineType.SWISSEPH,
+            ephemeris_engine=EngineType.JPL,
             ephemeris_backend=None,
             default_house_system=HouseSystem.PLACIDUS
         ),

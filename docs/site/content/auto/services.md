@@ -117,7 +117,7 @@ Compute structured chart data using the active backend seam.
 ## `compute_jpl_positions`
 
 ```python
-compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None, include_physical: bool = False, include_topocentric: bool = False, extended: bool = False, position_mode: module.models.PositionMode = <PositionMode.APPARENT: 'apparent'>) -> Dict[str, Union[float, Dict[str, float]]]
+compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: Optional[str] = None, requested_objects: Optional[List[str]] = None, include_physical: bool = False, include_topocentric: bool = False, extended: bool = False, position_mode: module.models.PositionMode = <PositionMode.APPARENT: 'apparent'>, equinox: str = 'mean') -> Dict[str, Union[float, Dict[str, float]]]
 ```
 
 Compute planetary positions using Skyfield JPL ephemerides.
