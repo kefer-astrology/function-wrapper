@@ -171,4 +171,5 @@ for sign, detail in dictionary["planets"].items():
 
 
 # Show the chart
-fig.show()
+if __name__ == "__main__":  # plotting demo; must not open a browser during test discovery
+    fig.show()

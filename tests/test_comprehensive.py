@@ -123,14 +123,12 @@ class TestComprehensive(unittest.TestCase):
         self.assertIsInstance(actual_date.value, datetime)
         
         # Test Actual location parsing
-        loc_str = "Prague, CZ"
+        loc_str = "50.0875,14.4214"  # coordinates: offline-safe (geocoding is tested in test_locations)
         actual_loc = Actual(loc_str, t="loc")
         # Location might be from geopy or our models - check it has expected attributes
         self.assertIsNotNone(actual_loc.value)
         self.assertTrue(hasattr(actual_loc.value, 'name') or hasattr(actual_loc.value, 'latitude'))
         # If it's our Location model, check name; otherwise check it has coordinates
-        if hasattr(actual_loc.value, 'name'):
-            self.assertIn("Prague", actual_loc.value.name)
         if hasattr(actual_loc.value, 'latitude'):
             self.assertIsNotNone(actual_loc.value.latitude)
         

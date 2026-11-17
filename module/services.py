@@ -535,6 +535,11 @@ def compute_jpl_positions(name: str, dt_str: str, loc_str: str, ephemeris_path: 
         ts = load.timescale()
         time = Actual(dt_str, t="date")
         place = Actual(loc_str, t="loc")
+        if getattr(place, "value", None) is None:
+            raise ValueError(
+                f"location_unresolved: '{loc_str}' could not be geocoded (offline or unknown); "
+                "provide 'lat,lon' or a location with stored coordinates"
+            )
 
         # Ensure timezone-aware datetime using centralized utils
         dt_aware = ensure_aware(time.value, getattr(place, 'tz', None))
