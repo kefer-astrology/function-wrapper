@@ -98,41 +98,15 @@ def _body(
     )
 
 
-# Canonical built-in aspects: mirror of tauri-application
-# contracts/catalogs/aspects.json (catalog_version 1.0.0), checked by
-# tests/test_shared_contracts.py. Rust ids and default orbs are canonical
-# (Phase 0 decision D4); this table previously used `semisquare`/
-# `sesquiquadrate` and wider orbs (square/trine 8, sextile 6, ...).
-ASPECT_CATALOG_VERSION = "1.0.0"
-ASPECT_CATALOG: tuple[tuple[str, str, float, float], ...] = (
-    ("conjunction", "Conjunction", 0.0, 8.0),
-    ("semisextile", "Semisextile", 30.0, 1.0),
-    ("undecile", "Undecile", 360.0 / 11.0, 0.5),
-    ("decile", "Decile", 36.0, 1.0),
-    ("novile", "Novile", 40.0, 1.0),
-    ("octile", "Octile", 45.0, 1.5),
-    ("septile", "Septile", 360.0 / 7.0, 1.0),
-    ("sextile", "Sextile", 60.0, 5.0),
-    ("biundecile", "Biundecile", 720.0 / 11.0, 0.5),
-    ("quintile", "Quintile", 72.0, 1.0),
-    ("binovile", "Binovile", 80.0, 1.0),
-    ("triundecile", "Triundecile", 1080.0 / 11.0, 0.5),
-    ("square", "Square", 90.0, 6.0),
-    ("biseptile", "Biseptile", 720.0 / 7.0, 1.0),
-    ("tridecile", "Tridecile", 108.0, 1.0),
-    ("trine", "Trine", 120.0, 6.0),
-    ("quadriundecile", "Quadriundecile", 1440.0 / 11.0, 0.5),
-    ("trioctile", "Trioctile", 135.0, 1.5),
-    ("biquintile", "Biquintile", 144.0, 1.0),
-    ("quincunx", "Quincunx", 150.0, 2.0),
-    ("triseptile", "Triseptile", 1080.0 / 7.0, 1.0),
-    ("quadrinovile", "Quadrinovile", 160.0, 1.0),
-    ("quinundecile", "Quinundecile", 1800.0 / 11.0, 0.5),
-    ("opposition", "Opposition", 180.0, 8.0),
-)
-
-# Legacy ids accepted wherever an aspect id is read; writers emit canonical ids.
-ASPECT_ALIASES = {"semisquare": "octile", "sesquiquadrate": "trioctile"}
+# Canonical built-in aspects and aliases come from the pinned kefer-contracts
+# (catalogs/aspects.json) via the generated module below; regenerate with
+# `python -m devtools.sync_contracts`. Rust ids and default orbs are canonical
+# (Phase 0 decision D4). Legacy ids are accepted wherever an aspect id is read;
+# writers emit canonical ids.
+try:
+    from module._contract_catalog import ASPECT_ALIASES, ASPECT_CATALOG, ASPECT_CATALOG_VERSION
+except ImportError:
+    from _contract_catalog import ASPECT_ALIASES, ASPECT_CATALOG, ASPECT_CATALOG_VERSION
 
 
 def canonical_aspect_id(aspect_id: str) -> str:

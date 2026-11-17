@@ -54,7 +54,7 @@ class ReferenceConformanceTests(unittest.TestCase):
         horizons = load("reference/positions-horizons.json")
         erfa = load("reference/earth-orientation-erfa.json")["epochs"]
         tol = self.tolerances["positions_mean_equinox_arcsec"]
-        bodies = [b for b in self.tolerances["ephemeris_grade_bodies"] if b != "chiron"]  # KC-2
+        bodies = load("capabilities.json")["implementations"]["python"]["ephemeris_grade_bodies"]
         for i, epoch in enumerate(horizons["epochs_utc"]):
             data = services.compute_chart_data_for_chart(chart_at(epoch, bodies))
             for body in bodies:
@@ -123,6 +123,23 @@ class ReferenceConformanceTests(unittest.TestCase):
                 self.assertEqual(sorted(actual), sorted(expected))
                 for k, orb in expected.items():
                     self.assertAlmostEqual(actual[k], orb, delta=1e-6)
+
+    def test_declared_capabilities_match_the_implementation(self):
+        from module.astronomy import NATIVE_HOUSE_SYSTEMS
+        from module._contract_catalog import CALCULATION_CONVENTION
+        caps = load("capabilities.json")["implementations"]["python"]
+        self.assertEqual(caps["house_systems_native"], list(NATIVE_HOUSE_SYSTEMS))
+        self.assertEqual(caps["conventions"], [CALCULATION_CONVENTION])
+        self.assertEqual(load("conventions.json")["default"], CALCULATION_CONVENTION)
+        self.assertEqual(sorted(caps["approximate_bodies"]), sorted(services._MPC_MINOR_BODY_IDS))
+        for flag in ("aspect_dynamics", "event_search", "tradition_presets"):
+            self.assertFalse(caps[flag], flag)  # declared unsupported; flip with the implementation
+
+    def test_generated_contract_catalog_is_current(self):
+        import subprocess, sys
+        result = subprocess.run([sys.executable, "-m", "devtools.sync_contracts", "--check"],
+                                capture_output=True, text=True, cwd=Path(__file__).resolve().parents[1])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_chart_result_has_every_field_required_by_the_api_schema(self):
         schema = load("schemas/api/chart-result.schema.json")
