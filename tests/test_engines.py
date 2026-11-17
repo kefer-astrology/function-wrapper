@@ -48,7 +48,7 @@ class TestJPLSkyfieldEngine(unittest.TestCase):
     def test_jpl_basic_positions(self):
         """Test basic JPL position computation (longitude only)."""
         dt_str = "2024-01-01T12:00:00+00:00"
-        loc_str = "Prague, CZ"
+        loc_str = "50.0875,14.4214"  # Prague; coordinates keep the test offline
         
         positions = compute_jpl_positions(
             name="Test",
@@ -74,7 +74,7 @@ class TestJPLSkyfieldEngine(unittest.TestCase):
     def test_jpl_extended_positions(self):
         """Test extended JPL position computation with all properties."""
         dt_str = "2024-01-01T12:00:00+00:00"
-        loc_str = "Prague, CZ"
+        loc_str = "50.0875,14.4214"  # Prague; coordinates keep the test offline
         
         positions = compute_jpl_positions(
             name="Test",
@@ -154,7 +154,7 @@ class TestJPLSkyfieldEngine(unittest.TestCase):
     def test_jpl_known_date(self):
         """Test JPL positions for a known date (2024-01-01)."""
         dt_str = "2024-01-01T12:00:00+00:00"
-        loc_str = "Prague, CZ"
+        loc_str = "50.0875,14.4214"  # Prague; coordinates keep the test offline
         
         positions = compute_jpl_positions(
             name="Test",
@@ -175,7 +175,7 @@ class TestJPLSkyfieldEngine(unittest.TestCase):
     def test_jpl_outer_planets(self):
         """Test that outer planets (Jupiter, Saturn) are computed correctly."""
         dt_str = "2024-01-01T12:00:00+00:00"
-        loc_str = "Prague, CZ"
+        loc_str = "50.0875,14.4214"  # Prague; coordinates keep the test offline
         
         positions = compute_jpl_positions(
             name="Test",
@@ -231,7 +231,7 @@ class TestJPLSkyfieldEngine(unittest.TestCase):
                 positions = compute_jpl_positions(
                     name="Test",
                     dt_str=dt_value.isoformat(),
-                    loc_str="Prague, CZ",
+                    loc_str="50.0875,14.4214",  # Prague; offline-safe
                     ephemeris_path=self.ephemeris_path,
                     extended=True,
                     include_physical=True,

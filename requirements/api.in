@@ -1,0 +1,6 @@
+# Sidecar HTTP API (the `api` extra) on top of the base runtime.
+# Locked in requirements/api.txt so the bundled sidecar build is reproducible.
+-r base.in
+
+fastapi>=0.115.0
+uvicorn>=0.34.0

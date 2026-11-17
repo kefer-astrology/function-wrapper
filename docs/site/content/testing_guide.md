@@ -313,9 +313,8 @@ python -m unittest tests.test_comprehensive.TestComprehensive.test_02_workspace_
   - Transit series computation
 
 - **`test_engines.py`**: Astrological computation engine tests
-  - JPL engine
-  - Kerykeion engine
-  - Engine comparison
+  - JPL engine (the only engine; see also `test_reference_conformance.py`,
+    which checks positions against JPL Horizons via kefer-contracts)
 
 - **`test_storage.py`**: Storage integration tests
   - Position storage

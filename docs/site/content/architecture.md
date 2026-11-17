@@ -27,7 +27,7 @@ The architecture separates UI, computation, workspace management, and storage so
 ## Storage Model
 
 - **Positions-only**: aspects are computed on demand.
-- **Dual engines**: Kerykeion (fast) and JPL/Skyfield (extended properties).
+- **Single engine**: JPL ephemerides via Skyfield (Kerykeion/Swiss Ephemeris were removed in August 2026).
 - **Radix support**: `radix_chart_id` + `is_radix` for transit comparisons.
 - **Hybrid storage**: DuckDB for active queries, Parquet for time series.
 
@@ -64,9 +64,10 @@ Aspects are computed on demand from positions.
 
 ### Current behavior
 
-1. **Dual engine support**
-   - Default: Kerykeion (Swisseph)
-   - Optional: JPL (extended properties)
+1. **Engine**
+   - JPL/Skyfield only; legacy `swisseph`/`jyotish`/`custom` engine values are
+     accepted for old workspaces and computed with JPL plus an explicit
+     `engine_<e>_not_available|not_implemented` warning
 
 2. **Radix-relative storage**
    - `radix_chart_id` links transits to base charts

@@ -22,6 +22,9 @@ on:
       - 'requirements/**'
       - 'pyproject.toml'
   workflow_dispatch:  # Allow manual triggering
+  schedule:
+    # Weekly run against the pinned kefer-contracts tag (and dependency drift).
+    - cron: '17 4 * * 1'
 
 jobs:
   test:
@@ -29,11 +32,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.12', '3.13']
+        # Supported: 3.11 (sidecar build floor, see tauri-application release
+        # workflows) through 3.14. Lockfiles are compiled with the floor
+        # (pip-compile on 3.11) so every listed version can install them.
+        python-version: ['3.11', '3.12', '3.13', '3.14']
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Read pinned kefer-contracts version
+        id: contracts
+        run: echo "tag=$(python3 -c "import json; print(json.load(open('kefer-contracts.lock'))['tag'])")" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout pinned kefer-contracts
+        uses: actions/checkout@v4
+        with:
+          repository: kefer-astrology/kefer-contracts
+          ref: ${{ steps.contracts.outputs.tag }}
+          path: _shared/kefer-contracts
       
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -52,9 +69,19 @@ jobs:
           # Install base requirements (must succeed)
           pip install -r requirements/base.txt
       
+      - name: Check third-party notices and generated contract data are current
+        if: matrix.python-version == '3.11'
+        env:
+          KEFER_CONTRACTS_DIR: ${{ github.workspace }}/_shared/kefer-contracts/contracts
+        run: |
+          python -m pip install -r requirements/api.txt
+          python -m devtools.generate_third_party_notices --check
+          python -m devtools.sync_contracts --check
+
       - name: Run test suite
         env:
           PYTHONPATH: ${{ github.workspace }}
+          KEFER_CONTRACTS_DIR: ${{ github.workspace }}/_shared/kefer-contracts/contracts
         working-directory: ${{ github.workspace }}
         run: |
           python -m unittest discover -s tests -p "test_*.py" -v

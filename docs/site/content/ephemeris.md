@@ -161,3 +161,30 @@ result = compute_jpl_positions(
 ```
 
 If `ephemeris_path` is `None`, `default_ephemeris_path()` is called, which returns `de440s.bsp` if present, otherwise `de421.bsp`.
+
+## Coordinate convention and accuracy
+
+Positions follow the shared kefer-contracts convention (`CONVENTIONS.md`):
+**geocentric, apparent, ecliptic of date on the mean equinox of date**
+(Skyfield's `ecliptic_frame` minus the IAU 2000A nutation in longitude).
+Altitude/azimuth are the only topocentric values.
+
+`tests/test_reference_conformance.py` checks this against JPL Horizons
+(1950–2049): planets and Moon agree within 1″ from 1985 on (Moon ≤ 7″ in
+1950, a ΔT effect). Until Phase 1 (2026-11) positions were topocentric and
+converted with the J2000 obliquity plus a coarse per-year equinox offset,
+which was 0.06°–0.8° off.
+
+The five MPC bodies use two-body propagation of osculating elements: under
+1′ within a few years of the element epoch (2026-06-09), degrees decades
+away. Charts more than five years from that epoch carry a
+`<body>_two_body_approximation` warning.
+
+### Optional true-equinox convention
+
+Set `calculation_convention: kefer-positions/1-true-equinox` in a chart's
+`config` to include IAU 2000A nutation (longitudes + Δψ, RAMC from apparent
+sidereal time, true obliquity). Without the field, `kefer-positions/1` (mean
+equinox) is used and existing results are unchanged. Results report the
+convention used; an unknown id falls back to the default with a
+`calculation_convention_unsupported` warning.

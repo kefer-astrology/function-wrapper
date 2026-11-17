@@ -195,6 +195,8 @@ class ChartConfig:
     # Time system for input/output (if different from workspace default)
     time_system: Optional[TimeSystem] = None
     model_overrides: Optional["ModelOverrides"] = None
+    # kefer-contracts calculation convention id; None = "kefer-positions/1" (mean equinox)
+    calculation_convention: Optional[str] = None
 
 
 @dataclass
@@ -301,6 +303,8 @@ class ChartCalculation:
     fallback_used: bool
     ephemeris_source: Optional[str]
     warnings: List[str]
+    # kefer-contracts conventions.json id
+    calculation_convention: str = "kefer-positions/1"
 
 
 # ─── ASTROMODEL & DEFINITIONS ───
@@ -318,8 +322,8 @@ class BodyDefinition:
     # Observable object metadata
     object_type: Optional[ObjectType] = None
     # Mapping of engine type to computation method/attribute name
-    # e.g., {"jpl": "uranus", "swisseph": "uranus", "kerykeion": "uranus"}
-    # or {"kerykeion": "asc", "jpl": null} for angles
+    # e.g., {"jpl": "uranus", "swisseph": "uranus"}; "swisseph" ids are kept
+    # for the Rust app's optional Swiss Ephemeris feature (not used here)
     computation_map: Dict[str, Optional[str]] = field(default_factory=dict)
     # Whether this object requires location (for angles, houses)
     requires_location: bool = False
@@ -612,7 +616,7 @@ class Workspace:
             owner="astrologer@example.com",
             active_model="western",
             default=WorkspaceDefaults(
-                ephemeris_engine=EngineType.SWISSEPH,
+                ephemeris_engine=EngineType.JPL,
                 ephemeris_backend=None,
                 default_house_system=HouseSystem.PLACIDUS
             ),

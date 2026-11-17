@@ -51,13 +51,12 @@ frontends. See [FastAPI + React + Tauri](fastapi_tauri).
 
 ## How it works
 
-All the heavy lifting is made by
-[g-battaglia/kerykeion](https://github.com/g-battaglia/kerykeion), a
-manipulation layer over
-[astrorigin/pyswisseph](https://github.com/astrorigin/pyswisseph) (also known
-as [Swiss Ephemerides](https://www.astro.com/swisseph/swephinfo_e.htm)), thus
-the license is inherited (GNU Affero GPL v3.0). Other dependencies are tracked
-in `requirements/base.in`.
+All computation runs on JPL ephemerides through
+[skyfielders/python-skyfield](https://github.com/skyfielders/python-skyfield)
+(MIT). Earlier versions used kerykeion/pyswisseph (AGPL); neither has been a
+dependency since August 2026. The project is currently licensed under the GNU
+Affero GPL v3.0 (see `LICENSE`, `NOTICE` and `LICENSING.md`). Dependencies are
+tracked in `requirements/base.in` and listed in `THIRD_PARTY_NOTICES.md`.
 
 For NASA JPL ephemerides we use
 [skyfielders/python-skyfield](https://github.com/skyfielders/python-skyfield),

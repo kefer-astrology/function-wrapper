@@ -157,6 +157,10 @@ def compute_vernal_equinox_offset(year: int, eph, observer, ts) -> float:
     # Fallback: return 0 if we couldn't find the vernal equinox
     return 0.0
 
+# Coordinates of the application's hard-coded fallback places (offline use).
+_BUILTIN_DEFAULT_PLACES = {"Prague": (50.0875, 14.4214), "Brno": (49.1951, 16.6068)}
+
+
 class _QuickLoc:
     """Lightweight stand-in for geopy's Location with address/latitude/longitude."""
     def __init__(self, addr: str, lat: float, lon: float):
@@ -398,15 +402,15 @@ class Actual:
                 result = self._geocode(place_name)
                 if result and place_lower in result.address.lower():
                     # The geocoded result contains the search term, likely a false match
-                    self.value = self._geocode("Brno")
+                    self.value = self._default_place("Brno")
                 else:
                     # If geocoding failed (None) or found a reasonable match, use it
-                    self.value = result if result else self._geocode("Brno")
+                    self.value = result if result else self._default_place("Brno")
             else:
                 self.value = self._geocode(place_name)
         else:
             # Fallback to Prague when no place is provided
-            self.value = self._geocode("Prague")
+            self.value = self._default_place("Prague")
         self.tz = self._resolve_timezone() if self.value else None
 
     def __str__(self) -> str:
@@ -421,6 +425,15 @@ class Actual:
             self.value += delta
         elif isinstance(delta, str):
             self.value += parse(delta)
+
+    def _default_place(self, name: str):
+        """Geocode one of the built-in default places, offline-safe.
+
+        These defaults are hard-coded by the application, so they must not
+        depend on the network: when the geocoder is unreachable the built-in
+        coordinates are used (never a silent None).
+        """
+        return self._geocode(name) or _QuickLoc(f"{name} (built-in)", *_BUILTIN_DEFAULT_PLACES[name])
 
     def _geocode(self, name: str) -> Optional[GeoLocation]:
         if not name:
@@ -994,6 +1007,7 @@ def parse_chart_config(data: Optional[dict]) -> ChartConfig:
         observable_objects=None if observable_raw is None else list(observable_raw),
         time_system=_enum_or(cfg_d.get("time_system"), TimeSystem, None),
         model_overrides=_model_overrides(cfg_d.get("model_overrides")),
+        calculation_convention=(data or {}).get("calculation_convention"),
     )
 
 

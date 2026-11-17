@@ -44,7 +44,7 @@ For a `React frontend from Figma + FastAPI backend + Tauri packaging` setup, pre
 
 ## How it works
 
-All the heavy lifting is made by a module [g-battaglia/kerykeion](https://github.com/g-battaglia/kerykeion), manipulation layer over [astrorigin/pyswisseph](https://github.com/astrorigin/pyswisseph) (also known as [swiss ephemerides](https://www.astro.com/swisseph/swephinfo_e.htm)), thus the license is inherited (GNU Affero GPL v3.0). Other dependencies are mentioned in the [requirements file](./requirements/base.in).
+This project is licensed under the GNU Affero GPL v3.0 (see [LICENSE](./LICENSE) and [NOTICE](./NOTICE)). Earlier versions computed charts with [g-battaglia/kerykeion](https://github.com/g-battaglia/kerykeion) over [astrorigin/pyswisseph](https://github.com/astrorigin/pyswisseph) (Swiss Ephemeris, AGPL); since August 2026 neither is a dependency and all computation runs on JPL ephemerides. Dependencies and data sources are listed in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) and the [requirements file](./requirements/base.in).
 
 For NASA JPL ephemerides we use [skyfielders/python-skyfield](https://github.com/skyfielders/python-skyfield) which comes with MIT license.
 

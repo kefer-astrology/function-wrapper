@@ -7,6 +7,8 @@ from types import SimpleNamespace
 import tempfile
 import unittest
 
+from tests.contracts_location import contracts_dir
+
 from module.astronomy import (
     ChartData,
     compute_normalized_chart_aspects,
@@ -65,18 +67,7 @@ def workspace(**changes):
 
 class PythonContractParityTests(unittest.TestCase):
     def test_shared_event_time_fixture_matches_rust_contract(self):
-        fixture_path = (
-            Path(__file__).resolve().parents[2]
-            / "tauri-application"
-            / "contracts"
-            / "event-time.json"
-        )
-        if not fixture_path.exists():
-            fixture_path = (
-                Path(__file__).resolve().parents[2]
-                / "contracts"
-                / "event-time.json"
-            )
+        fixture_path = contracts_dir() / "event-time.json"
         fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
         for case in fixture["accepted"]:
             self.assertEqual(
@@ -244,18 +235,7 @@ class PythonContractParityTests(unittest.TestCase):
         self.assertIn("unknown_layout_analysis", codes)
 
     def test_shared_resolution_fixture_matches_rust_contract(self):
-        fixture_path = (
-            Path(__file__).resolve().parents[2]
-            / "tauri-application"
-            / "contracts"
-            / "settings-resolution.json"
-        )
-        if not fixture_path.exists():
-            fixture_path = (
-                Path(__file__).resolve().parents[2]
-                / "contracts"
-                / "settings-resolution.json"
-            )
+        fixture_path = contracts_dir() / "settings-resolution.json"
         fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
         workspace_layer = settings_layer_from_dict(fixture["workspace"])
         ws = workspace(
@@ -310,7 +290,7 @@ class PythonContractParityTests(unittest.TestCase):
     def test_builtin_catalog_matches_canonical_shape(self):
         model = builtin_standard_model()
         self.assertEqual(len(model.body_definitions), 41)
-        self.assertEqual(len(model.aspect_definitions), 17)
+        self.assertEqual(len(model.aspect_definitions), 24)  # shared catalog (D4)
         self.assertEqual(len(model.signs), 12)
         self.assertEqual(model.settings.degrees_in_circle, 360.0)
         self.assertIn("north_node", model.settings.default_bodies)

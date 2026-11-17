@@ -46,7 +46,10 @@ try:
         TransitSeriesCalculation,
         TransitSeriesStep,
     )
+    from module._contract_catalog import CALCULATION_CONVENTION
+    from module.conventions import for_chart as _convention_for_chart
     from module.astronomy import (
+        backend_for_chart,
         compute_normalized_chart_aspects,
         compute_normalized_cross_aspects,
     )
@@ -79,7 +82,10 @@ except ImportError:
         TransitSeriesCalculation,
         TransitSeriesStep,
     )
+    from _contract_catalog import CALCULATION_CONVENTION
+    from conventions import for_chart as _convention_for_chart
     from astronomy import (
+        backend_for_chart,
         compute_normalized_chart_aspects,
         compute_normalized_cross_aspects,
     )
@@ -138,31 +144,24 @@ def _build_axes_and_house_cusps(positions: Dict[str, Any]) -> tuple[Dict[str, fl
 
 
 def _resolve_backend_used(chart: Any) -> Optional[str]:
-    """Infer the backend label used for computation from chart config."""
-    cfg = getattr(chart, "config", None)
-    engine = getattr(cfg, "engine", None) if cfg else None
-    if engine is not None:
-        return _enum_value(engine)
-    override_ephemeris = getattr(cfg, "override_ephemeris", None) if cfg else None
-    if override_ephemeris:
-        return "jpl"
-    return None
+    """Return the id of the astronomy backend that actually runs for the chart.
+
+    Previously this echoed `config.engine` (e.g. "swisseph", "jyotish") even
+    though Skyfield/JPL is the only Python backend, which misreported
+    provenance. Rust reports `backend.backend_id()`; this mirrors it.
+    """
+    try:
+        return backend_for_chart(chart).backend_id()
+    except Exception:
+        return None
 
 
 def _resolve_ephemeris_source(chart: Any) -> Optional[str]:
     """Return the active ephemeris source path when it can be determined."""
-    cfg = getattr(chart, "config", None)
-    override_ephemeris = getattr(cfg, "override_ephemeris", None) if cfg else None
-    if override_ephemeris:
-        return str(override_ephemeris)
-
-    backend_used = _resolve_backend_used(chart)
-    if backend_used == "jpl":
-        try:
-            return str(default_ephemeris_path())
-        except Exception:
-            return None
-    return None
+    try:
+        return backend_for_chart(chart).ephemeris_source(chart)
+    except Exception:
+        return None
 
 
 def _build_chart_response(chart: Any, positions: Dict[str, Any], aspects: List[Dict[str, Any]], chart_id: str, stored: bool) -> Dict[str, Any]:
@@ -199,6 +198,7 @@ def _build_chart_response_from_chart_data(chart: Any, chart_data: Any, aspects: 
         fallback_used=False,
         ephemeris_source=_resolve_ephemeris_source(chart),
         warnings=warnings,
+        calculation_convention=_convention_for_chart(chart).id,
     )
     result = _to_primitive(calculation)
     result["stored"] = stored

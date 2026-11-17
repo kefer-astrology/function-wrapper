@@ -106,7 +106,6 @@ make sync-pyproject
   - `python3 -m module --streamlit`
 
 - Features:
-  - Engine switcher (Kerykeion default vs JPL/Skyfield) in Advanced settings.
   - Default JPL ephemeris file: `source/de421.bsp` (override via the ephemeris path field).
   - Standardized Radix chart rendered with Plotly interactively.
 
@@ -138,9 +137,6 @@ make sync-pyproject
 - Unknown class `WebView` in KV:
   - Install the widget via Kivy Garden: `pip install kivy-garden` then `garden install kivy_garden.webview`.
   - Alternatively, rely on the browser fallback.
-
-- Kerykeion Geonames warning:
-  - Set a custom geonames username to avoid default shared rate limits. See the Kerykeion docs.
 
 - JPL not active / ephemeris file not found:
   - Ensure `skyfield` is installed and that `source/de421.bsp` is present.
